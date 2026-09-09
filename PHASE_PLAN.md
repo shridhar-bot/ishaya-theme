@@ -11,18 +11,18 @@ Status legend: `Not started` · `In progress` · `Needs QA` · `Done`
 |---|---|
 | Shopify CLI theme scaffold created | Done |
 | Git initialized, connected to GitHub | Done |
-| GitHub ↔ Shopify store auto-sync connected | Not started |
-| Brand assets collected (logo, fonts, color palette, product photography) | Not started |
-| Color palette + typography system defined (original, not copied) | Not started |
+| GitHub ↔ Shopify store auto-sync connected | In progress |
+| Brand assets collected (logo, fonts, color palette, product photography) | Done |
+| Color palette + typography system defined (original, not copied) | Done |
 
 ## Phase 1 — Global Layout
 | Task | Status |
 |---|---|
-| Header (logo, nav, search, account, cart icons) | Not started |
-| Mobile nav / hamburger menu | Not started |
-| Footer (columns, socials, policy links, newsletter, copyright) | Not started |
-| Global color/typography variables (CSS custom properties) | Not started |
-| 404 / search results page styling | Not started |
+| Header (logo, nav, search, account, cart icons) | Needs QA |
+| Mobile nav / hamburger menu | Needs QA |
+| Footer (columns, socials, policy links, newsletter, copyright) | Needs QA |
+| Global color/typography variables (CSS custom properties) | Needs QA |
+| 404 / search results page styling | Needs QA |
 
 ## Phase 2 — Homepage Sections
 | Task | Status |
@@ -72,4 +72,4 @@ Status legend: `Not started` · `In progress` · `Needs QA` · `Done`
 ## Session Log
 > Add a dated one-line entry each session so any AI agent picking this up knows recent history.
 
-- [Add first entry here after next work session]
+- 2026-09-09: Completed Phase 0 foundations (tokens, typography, brand SVG, schema) & Phase 1 global layout (sticky glass header, mobile drawer, search modal, multi-column footer, 404 & search styling). Verified with clean `shopify theme check` (0 offenses) and cross-device browser tests. Marked Phase 1 tasks as Needs QA.

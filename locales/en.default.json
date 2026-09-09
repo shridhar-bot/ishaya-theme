@@ -1,8 +1,31 @@
 {
   "404": {
     "title": "404",
-    "not_found": "Page not found.",
-    "back_to_shopping": "Back to shopping"
+    "not_found": "Drop Not Found",
+    "subtext": "The piece or collection you are looking for has expired, relocated, or does not exist.",
+    "back_to_shopping": "Explore All Drops",
+    "search_placeholder": "Search the archive..."
+  },
+  "header": {
+    "menu": "Menu",
+    "open_menu": "Open menu",
+    "close_menu": "Close menu",
+    "search": "Search",
+    "account": "Account",
+    "cart": "Shopping bag",
+    "cart_count": "{{ count }} items"
+  },
+  "footer": {
+    "newsletter_title": "Inner Circle",
+    "newsletter_subtext": "Join for early access to seasonal drops, editorial previews, and exclusive releases.",
+    "newsletter_placeholder": "Enter your email address",
+    "newsletter_button": "Join",
+    "newsletter_success": "You have been added to the Ishaya inner circle.",
+    "all_rights_reserved": "All rights reserved.",
+    "brand_statement": "Meticulously engineered streetwear. Architectural silhouettes, heavyweight textiles, and modern utilitarian craftsmanship.",
+    "quick_links": "Navigation",
+    "support": "Customer Care",
+    "socials": "Connect"
   },
   "blog": {
     "article_comments": "Comments",
@@ -44,9 +67,17 @@
   },
   "search": {
     "title": "Search",
-    "placeholder": "Search articles, pages, or products",
+    "placeholder": "Search drops, garments, and stories",
     "submit": "Search",
-    "no_results_html": "No results found for {{ terms }}",
-    "results_for_html": "{{ count }} results found for {{ terms }}"
+    "no_results_html": "No results found for \"{{ terms }}\"",
+    "results_for_html": "{{ count }} results found for \"{{ terms }}\""
+  },
+  "general": {
+    "product": "Product",
+    "article": "Article",
+    "page": "Page"
+  },
+  "customer": {
+    "account_fallback": "My Account"
   }
 }

@@ -4,6 +4,7 @@
     "article": "Article",
     "block": "Block",
     "blog": "Blog",
+    "brand": "Brand",
     "cart": "Cart",
     "collection": "Collection",
     "collections": "Collections",
@@ -19,6 +20,8 @@
     "header": "Header",
     "layout": "Layout",
     "main": "Main",
+    "menu": "Menu",
+    "newsletter": "Newsletter",
     "page": "Page",
     "password": "Password",
     "primary": "Primary",
@@ -29,31 +32,48 @@
     "section": "Section",
     "settings": "Settings",
     "sidebar": "Sidebar",
+    "social_media": "Social media",
     "text": "Text",
     "theme": "Theme",
     "typography": "Typography"
   },
   "labels": {
+    "accent_color": "Accent color",
     "alignment": "Alignment",
+    "announcement_bar": "Announcement bar",
     "background": "Background",
-    "foreground": "Foreground",
+    "border_color": "Border color",
+    "button_corner_radius": "Button corner radius",
+    "customer_account_menu": "Customer account menu",
+    "foreground": "Foreground text",
     "grid_gap": "Grid spacing",
     "grid_item_width": "Grid item width",
+    "heading_font": "Heading font",
+    "heading_letter_spacing": "Heading letter spacing",
+    "heading_uppercase": "Uppercase headings",
     "input_corner_radius": "Input corner radius",
     "layout_direction": "Layout direction",
+    "logo": "Logo image",
+    "logo_width": "Custom logo width",
     "menu": "Menu",
-    "customer_account_menu": "Customer account menu",
+    "muted_color": "Muted text",
     "padding": "Padding",
     "page_margin": "Page margin",
     "page_width": "Page width",
     "show_payment_icons": "Show payment icons",
-    "text_style": "Text style",
-    "text": "Text"
+    "social_instagram": "Instagram",
+    "social_spotify": "Spotify",
+    "social_tiktok": "TikTok",
+    "social_x": "X (Twitter)",
+    "social_youtube": "YouTube",
+    "surface_color": "Surface card background",
+    "text": "Text",
+    "text_style": "Text style"
   },
   "options": {
     "alignment": {
-      "left": "Left",
       "center": "Center",
+      "left": "Left",
       "right": "Right"
     },
     "direction": {
@@ -62,6 +82,7 @@
     },
     "page_width": {
       "narrow": "Narrow",
+      "standard": "Standard",
       "wide": "Wide"
     },
     "size": {
@@ -69,9 +90,9 @@
       "small": "Small"
     },
     "text_style": {
-      "title": "Title",
+      "normal": "Normal text",
       "subtitle": "Subtitle",
-      "normal": "Normal text"
-    },
+      "title": "Title"
+    }
   }
 }

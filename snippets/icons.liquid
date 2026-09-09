@@ -1,0 +1,89 @@
+{% comment %}
+  Reusable SVG Icons for Ishaya Theme
+  Accepts:
+  - name: {String} Icon identifier ('search', 'cart', 'account', 'menu', 'close', 'chevron-down', 'arrow-right', 'mail', 'instagram', 'tiktok', 'twitter', 'youtube', 'spotify')
+  - class: {String} Custom class names
+  - width: {Number|String} Width override
+  - height: {Number|String} Height override
+{% endcomment %}
+{%- case name -%}
+  {%- when 'search' -%}
+    <svg class="{{ class | default: 'icon icon-search' }}" width="{{ width | default: 18 }}" height="{{ height | default: 18 }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+      <circle cx="11" cy="11" r="7.5"></circle>
+      <line x1="21" y1="21" x2="16.5" y2="16.5"></line>
+    </svg>
+
+  {%- when 'cart' or 'bag' -%}
+    <svg class="{{ class | default: 'icon icon-cart' }}" width="{{ width | default: 18 }}" height="{{ height | default: 18 }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+      <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <path d="M16 10a4 4 0 0 1-8 0"></path>
+    </svg>
+
+  {%- when 'account' or 'user' -%}
+    <svg class="{{ class | default: 'icon icon-account' }}" width="{{ width | default: 18 }}" height="{{ height | default: 18 }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+      <circle cx="12" cy="7" r="4"></circle>
+    </svg>
+
+  {%- when 'menu' or 'hamburger' -%}
+    <svg class="{{ class | default: 'icon icon-menu' }}" width="{{ width | default: 16 }}" height="{{ height | default: 16 }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+      <line x1="4" y1="7" x2="20" y2="7"></line>
+      <line x1="4" y1="12" x2="20" y2="12"></line>
+      <line x1="4" y1="17" x2="20" y2="17"></line>
+    </svg>
+
+  {%- when 'close' -%}
+    <svg class="{{ class | default: 'icon icon-close' }}" width="{{ width | default: 18 }}" height="{{ height | default: 18 }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+      <line x1="18" y1="6" x2="6" y2="18"></line>
+      <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>
+
+  {%- when 'chevron-down' -%}
+    <svg class="{{ class | default: 'icon icon-chevron-down' }}" width="{{ width | default: 14 }}" height="{{ height | default: 14 }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+      <polyline points="6 9 12 15 18 9"></polyline>
+    </svg>
+
+  {%- when 'arrow-right' -%}
+    <svg class="{{ class | default: 'icon icon-arrow-right' }}" width="{{ width | default: 16 }}" height="{{ height | default: 16 }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+      <line x1="5" y1="12" x2="19" y2="12"></line>
+      <polyline points="12 5 19 12 12 19"></polyline>
+    </svg>
+
+  {%- when 'mail' -%}
+    <svg class="{{ class | default: 'icon icon-mail' }}" width="{{ width | default: 16 }}" height="{{ height | default: 16 }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+      <polyline points="22,6 12,13 2,6"></polyline>
+    </svg>
+
+  {%- when 'instagram' -%}
+    <svg class="{{ class | default: 'icon icon-instagram' }}" width="{{ width | default: 16 }}" height="{{ height | default: 16 }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+      <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+    </svg>
+
+  {%- when 'tiktok' -%}
+    <svg class="{{ class | default: 'icon icon-tiktok' }}" width="{{ width | default: 16 }}" height="{{ height | default: 16 }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+      <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"></path>
+    </svg>
+
+  {%- when 'twitter' or 'x' -%}
+    <svg class="{{ class | default: 'icon icon-x' }}" width="{{ width | default: 14 }}" height="{{ height | default: 14 }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+      <path d="M4 4l16 16M4 20L20 4"></path>
+    </svg>
+
+  {%- when 'youtube' -%}
+    <svg class="{{ class | default: 'icon icon-youtube' }}" width="{{ width | default: 16 }}" height="{{ height | default: 16 }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+      <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"></path>
+      <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon>
+    </svg>
+
+  {%- when 'spotify' -%}
+    <svg class="{{ class | default: 'icon icon-spotify' }}" width="{{ width | default: 16 }}" height="{{ height | default: 16 }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+      <circle cx="12" cy="12" r="10"></circle>
+      <path d="M8 15c2.5-1 5.5-1 8 0"></path>
+      <path d="M7 12c3-1.2 7-1.2 10 0"></path>
+      <path d="M6 9c3.5-1.5 8.5-1.5 12 0"></path>
+    </svg>
+{%- endcase -%}

@@ -1,0 +1,35 @@
+{% comment %}
+  ISHAYA Brand Wordmark SVG
+  Accepts:
+  - class: {String} CSS classes to apply to the svg (optional)
+  - width: {Number} Optional width override
+  - height: {Number} Optional height override
+{% endcomment %}
+<svg
+  class="{{ class | default: 'ishaya-logo' }}"
+  viewBox="0 0 168 28"
+  fill="currentColor"
+  xmlns="http://www.w3.org/2000/svg"
+  aria-hidden="true"
+  focusable="false"
+  {% if width %}width="{{ width }}"{% endif %}
+  {% if height %}height="{{ height }}"{% endif %}
+>
+  <!-- I -->
+  <rect x="0" y="2" width="6" height="24" rx="1" />
+  
+  <!-- S -->
+  <path d="M30 4.5 C30 3.1 28.5 2 24 2 L17 2 C13 2 11 4 11 7.5 C11 11.5 13.5 13 18.5 14.2 L22.5 15.2 C27 16.3 29.5 18 29.5 21.5 C29.5 25.5 26.5 26 22 26 L14 26 C9.5 26 8 24.5 8 23.2" stroke="currentColor" stroke-width="4.5" stroke-linecap="square" fill="none" stroke-linejoin="miter" />
+  
+  <!-- H -->
+  <path d="M38 2 L38 26 M52 2 L52 26 M38 14 L52 14" stroke="currentColor" stroke-width="4.8" stroke-linecap="square" fill="none" />
+  
+  <!-- A -->
+  <path d="M60 26 L68 2 L76 26 M63 18 L73 18" stroke="currentColor" stroke-width="4.6" stroke-linecap="square" stroke-linejoin="miter" fill="none" />
+  
+  <!-- Y -->
+  <path d="M84 2 L92 14 L100 2 M92 14 L92 26" stroke="currentColor" stroke-width="4.8" stroke-linecap="square" stroke-linejoin="miter" fill="none" />
+  
+  <!-- A -->
+  <path d="M108 26 L116 2 L124 26 M111 18 L121 18" stroke="currentColor" stroke-width="4.6" stroke-linecap="square" stroke-linejoin="miter" fill="none" />
+</svg>

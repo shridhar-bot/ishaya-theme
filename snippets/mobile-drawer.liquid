@@ -1,0 +1,265 @@
+{% comment %}
+  Mobile Navigation Drawer Snippet
+  Accepts:
+  - menu: {LinkList} Navigation menu
+{% endcomment %}
+<div id="MobileNavDrawer" class="mobile-drawer" role="dialog" aria-modal="true" aria-label="{{ 'header.menu' | t }}" hidden>
+  <div class="mobile-drawer__backdrop" data-close-drawer></div>
+  <div class="mobile-drawer__panel">
+    <div class="mobile-drawer__header">
+      <div class="mobile-drawer__logo">
+        {% if settings.logo != blank %}
+          {{ settings.logo | image_url: width: 140 | image_tag: class: 'mobile-drawer__logo-img', alt: shop.name }}
+        {% else %}
+          {% render 'icon-ishaya-logo', class: 'mobile-drawer__logo-svg', width: 110, height: 20 %}
+        {% endif %}
+      </div>
+      <button type="button" class="mobile-drawer__close" data-close-drawer aria-label="{{ 'header.close_menu' | t }}">
+        {% render 'icons', name: 'close', width: 22, height: 22 %}
+      </button>
+    </div>
+
+    <nav class="mobile-drawer__nav" aria-label="{{ 'header.menu' | t }}">
+      <ul class="mobile-drawer__list">
+        {% for link in menu.links %}
+          <li class="mobile-drawer__item">
+            {% if link.links != blank %}
+              <details class="mobile-drawer__submenu-details">
+                <summary class="mobile-drawer__link mobile-drawer__link--parent">
+                  <span>{{ link.title }}</span>
+                  <span class="mobile-drawer__chevron">
+                    {% render 'icons', name: 'chevron-down', width: 16, height: 16 %}
+                  </span>
+                </summary>
+                <ul class="mobile-drawer__submenu-list">
+                  {% for childlink in link.links %}
+                    <li>
+                      <a href="{{ childlink.url }}" class="mobile-drawer__sublink">
+                        {{ childlink.title }}
+                      </a>
+                    </li>
+                  {% endfor %}
+                </ul>
+              </details>
+            {% else %}
+              <a href="{{ link.url }}" class="mobile-drawer__link">
+                {{ link.title }}
+              </a>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    </nav>
+
+    <div class="mobile-drawer__footer">
+      {% if shop.customer_accounts_enabled %}
+        <div class="mobile-drawer__account">
+          <a href="{% if customer %}{{ routes.account_url }}{% else %}{{ routes.account_login_url }}{% endif %}" class="mobile-drawer__account-link">
+            {% render 'icons', name: 'account', width: 18, height: 18 %}
+            <span>
+              {% if customer %}
+                {{ 'customer.account_fallback' | t | default: 'My Account' }}
+              {% else %}
+                {{ 'customers.login.title' | t }}
+              {% endif %}
+            </span>
+          </a>
+        </div>
+      {% endif %}
+
+      <div class="mobile-drawer__socials">
+        {% if settings.social_instagram_link != blank %}
+          <a href="{{ settings.social_instagram_link }}" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="mobile-drawer__social-link">
+            {% render 'icons', name: 'instagram', width: 18, height: 18 %}
+          </a>
+        {% endif %}
+        {% if settings.social_tiktok_link != blank %}
+          <a href="{{ settings.social_tiktok_link }}" target="_blank" rel="noopener noreferrer" aria-label="TikTok" class="mobile-drawer__social-link">
+            {% render 'icons', name: 'tiktok', width: 18, height: 18 %}
+          </a>
+        {% endif %}
+        {% if settings.social_x_link != blank %}
+          <a href="{{ settings.social_x_link }}" target="_blank" rel="noopener noreferrer" aria-label="X" class="mobile-drawer__social-link">
+            {% render 'icons', name: 'twitter', width: 16, height: 16 %}
+          </a>
+        {% endif %}
+        {% if settings.social_youtube_link != blank %}
+          <a href="{{ settings.social_youtube_link }}" target="_blank" rel="noopener noreferrer" aria-label="YouTube" class="mobile-drawer__social-link">
+            {% render 'icons', name: 'youtube', width: 18, height: 18 %}
+          </a>
+        {% endif %}
+        {% if settings.social_spotify_link != blank %}
+          <a href="{{ settings.social_spotify_link }}" target="_blank" rel="noopener noreferrer" aria-label="Spotify" class="mobile-drawer__social-link">
+            {% render 'icons', name: 'spotify', width: 18, height: 18 %}
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .mobile-drawer {
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+    display: flex;
+  }
+  .mobile-drawer[hidden] {
+    display: none;
+  }
+  .mobile-drawer__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    animation: drawerBackdropFade 0.25s ease-out;
+  }
+  .mobile-drawer__panel {
+    position: relative;
+    z-index: 1;
+    width: 85%;
+    max-width: 380px;
+    height: 100%;
+    background: var(--color-background);
+    border-right: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem;
+    overflow-y: auto;
+    animation: drawerSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .mobile-drawer__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .mobile-drawer__logo {
+    display: flex;
+    align-items: center;
+  }
+  .mobile-drawer__logo-img {
+    height: auto;
+    max-height: 28px;
+    object-fit: contain;
+  }
+  .mobile-drawer__logo-svg {
+    height: 20px;
+    width: auto;
+    color: var(--color-foreground);
+  }
+  .mobile-drawer__close {
+    background: transparent;
+    border: none;
+    color: var(--color-foreground);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: var(--radius-pill);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .mobile-drawer__nav {
+    flex: 1;
+    padding: 1.75rem 0;
+  }
+  .mobile-drawer__list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .mobile-drawer__link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-foreground);
+    text-decoration: none;
+    transition: opacity var(--transition-fast), transform var(--transition-fast);
+  }
+  .mobile-drawer__link:hover {
+    opacity: 0.7;
+    transform: translateX(4px);
+  }
+  .mobile-drawer__submenu-details summary {
+    list-style: none;
+    cursor: pointer;
+  }
+  .mobile-drawer__submenu-details summary::-webkit-details-marker {
+    display: none;
+  }
+  .mobile-drawer__submenu-list {
+    list-style: none;
+    padding: 0.25rem 0 0.5rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .mobile-drawer__sublink {
+    display: block;
+    padding: 0.5rem 0;
+    font-size: 0.875rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+  .mobile-drawer__sublink:hover {
+    color: var(--color-foreground);
+  }
+  .mobile-drawer__footer {
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+  .mobile-drawer__account-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--color-foreground);
+    min-height: 44px;
+  }
+  .mobile-drawer__socials {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .mobile-drawer__social-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--color-border);
+    color: var(--color-muted);
+    transition: color var(--transition-fast), border-color var(--transition-fast);
+  }
+  .mobile-drawer__social-link:hover {
+    color: var(--color-foreground);
+    border-color: var(--color-foreground);
+  }
+  @keyframes drawerBackdropFade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes drawerSlideIn {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(0); }
+  }
+</style>

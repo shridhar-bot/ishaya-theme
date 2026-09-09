@@ -1,61 +1,534 @@
-<header>
-  <h2 class="header__title">
-    {{ shop.name | link_to: routes.root_url }}
-  </h2>
+{% comment %}
+  ISHAYA Exact Structural Streetwear Header
+  Inspired by the floating glass pill layout:
+  - Desktop: Centered floating glass pill with brand, nav pills, and circular action icons
+  - Mobile: Split floating pill layout (left menu pill + right cart pill)
+{% endcomment %}
 
-  <div class="header__menu">
+<!-- Desktop Floating Pill Header -->
+<header
+  id="SiteHeader"
+  class="zb-header-desktop glass-panel"
+  role="banner"
+>
+  <!-- Left: Brand Logo / Wordmark -->
+  <a href="{{ routes.root_url }}" class="zb-header-brand" aria-label="{{ shop.name }}">
+    <div class="zb-header-brand__icon">
+      {% if settings.logo != blank %}
+        {%- assign logo_alt = settings.logo.alt | default: shop.name | escape -%}
+        {{ settings.logo | image_url: width: 60 | image_tag:
+          class: 'zb-header-brand__img',
+          alt: logo_alt
+        }}
+      {% else %}
+        <svg class="zb-header-brand__svg-mark" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+          <polyline points="2 17 12 22 22 17"></polyline>
+          <polyline points="2 12 12 17 22 12"></polyline>
+        </svg>
+      {% endif %}
+    </div>
+    <span class="zb-header-brand__name">ISHAYA</span>
+  </a>
+
+  <!-- Center: Nav Link Pills -->
+  <nav class="zb-header-nav" aria-label="{{ 'header.menu' | t }}">
     {% for link in section.settings.menu.links %}
-      {{ link.title | link_to: link.url }}
+      <div class="zb-header-nav__item{% if link.links != blank %} zb-header-nav__item--has-dropdown{% endif %}">
+        <a
+          href="{{ link.url }}"
+          class="zb-header-nav__pill{% if link.active %} zb-header-nav__pill--active{% endif %}"
+        >
+          {{ link.title }}
+          {% if link.links != blank %}
+            {% render 'icons', name: 'chevron-down', width: 10, height: 10, class: 'zb-header-nav__chevron' %}
+          {% endif %}
+        </a>
+        {% if link.links != blank %}
+          <div class="zb-header-nav__dropdown glass-panel">
+            {% for childlink in link.links %}
+              <a href="{{ childlink.url }}" class="zb-header-nav__sublink{% if childlink.active %} zb-header-nav__sublink--active{% endif %}">
+                {{ childlink.title }}
+              </a>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
     {% endfor %}
-  </div>
+  </nav>
 
-  <div class="header__icons">
+  <!-- Right: Action Icons (Search, Account, Cart) -->
+  <div class="zb-header-actions">
+    <button
+      type="button"
+      class="zb-action-btn"
+      id="SearchOpenBtn"
+      aria-label="{{ 'header.search' | t }}"
+    >
+      {% render 'icons', name: 'search', width: 15, height: 15 %}
+    </button>
+
     {% if shop.customer_accounts_enabled %}
-      <shopify-account menu="{{ section.settings.customer_account_menu }}">
-        {{ 'icon-account.svg' | inline_asset_content }}
-      </shopify-account>
+      <a
+        href="{% if customer %}{{ routes.account_url }}{% else %}{{ routes.account_login_url }}{% endif %}"
+        class="zb-action-btn"
+        aria-label="{{ 'header.account' | t }}"
+      >
+        {% render 'icons', name: 'account', width: 15, height: 15 %}
+      </a>
     {% endif %}
 
-    <a href="{{ routes.cart_url }}">
-      {% if cart.item_count > 0 %}
-        <sup>{{ cart.item_count }}</sup>
-      {% endif %}
-
-      {{ 'icon-cart.svg' | inline_asset_content }}
+    <a
+      href="{{ routes.cart_url }}"
+      class="zb-action-btn zb-cart-btn"
+      aria-label="{{ 'header.cart' | t }}"
+    >
+      {% render 'icons', name: 'cart', width: 15, height: 15 %}
+      <span id="HeaderCartCount" class="zb-cart-count{% if cart.item_count == 0 %} zb-cart-count--hidden{% endif %}" aria-hidden="true">
+        {{ cart.item_count }}
+      </span>
     </a>
   </div>
 </header>
 
-{% stylesheet %}
-  header {
-    height: 5rem;
-    display: flex;
+<!-- Mobile Split Floating Pill Bar -->
+<div class="zb-header-mobile">
+  <!-- Left Pill: Hamburger Menu Toggle + Brand Icon & Text -->
+  <div class="zb-mobile-left-pill glass-panel">
+    <button
+      type="button"
+      class="zb-mobile-menu-btn"
+      id="MobileNavToggle"
+      aria-expanded="false"
+      aria-controls="MobileNavDrawer"
+      aria-label="{{ 'header.open_menu' | t }}"
+    >
+      {% render 'icons', name: 'menu', width: 14, height: 14 %}
+    </button>
+    <a href="{{ routes.root_url }}" class="zb-mobile-brand-link" aria-label="{{ shop.name }}">
+      <div class="zb-mobile-brand-icon">
+        {% if settings.logo != blank %}
+          {%- assign logo_alt = settings.logo.alt | default: shop.name | escape -%}
+          {{ settings.logo | image_url: width: 36 | image_tag: class: 'zb-mobile-brand-img', alt: logo_alt }}
+        {% else %}
+          <svg class="zb-mobile-brand-svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square">
+            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+            <polyline points="2 17 12 22 22 17"></polyline>
+            <polyline points="2 12 12 17 22 12"></polyline>
+          </svg>
+        {% endif %}
+      </div>
+      <span class="zb-mobile-brand-name">ISHAYA</span>
+    </a>
+  </div>
+
+  <!-- Right Pill: Search, Account & Cart Actions -->
+  <div class="zb-mobile-right-pill">
+    <button
+      type="button"
+      class="zb-mobile-action-btn glass-panel"
+      id="MobileSearchOpenBtn"
+      aria-label="{{ 'header.search' | t }}"
+    >
+      {% render 'icons', name: 'search', width: 15, height: 15 %}
+    </button>
+
+    {% if shop.customer_accounts_enabled %}
+      <a
+        href="{% if customer %}{{ routes.account_url }}{% else %}{{ routes.account_login_url }}{% endif %}"
+        class="zb-mobile-action-btn glass-panel"
+        aria-label="{{ 'header.account' | t }}"
+      >
+        {% render 'icons', name: 'account', width: 15, height: 15 %}
+      </a>
+    {% endif %}
+
+    <a
+      href="{{ routes.cart_url }}"
+      class="zb-mobile-action-btn glass-panel"
+      aria-label="{{ 'header.cart' | t }}"
+    >
+      {% render 'icons', name: 'cart', width: 15, height: 15 %}
+      <span class="zb-cart-count{% if cart.item_count == 0 %} zb-cart-count--hidden{% endif %}" aria-hidden="true">
+        {{ cart.item_count }}
+      </span>
+    </a>
+  </div>
+</div>
+
+{% render 'mobile-drawer', menu: section.settings.menu %}
+{% render 'search-modal' %}
+
+<style>
+  /* ==========================================================================
+     Desktop Floating Pill Header
+     ========================================================================== */
+  .zb-header-desktop {
+    display: none;
+    position: fixed;
+    top: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 3rem);
+    max-width: 64rem; /* 1024px */
+    height: 2.875rem; /* 46px */
+    z-index: 100;
+    padding: 0 1.25rem;
+    border-radius: 9999px;
     align-items: center;
     justify-content: space-between;
+    background: rgba(14, 14, 17, 0.78);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.45);
+    transition: background var(--transition-smooth), border-color var(--transition-smooth), box-shadow var(--transition-smooth);
   }
-  header a {
-    position: relative;
+  @media (min-width: 768px) {
+    .zb-header-desktop {
+      display: flex;
+    }
+  }
+
+  /* Brand */
+  .zb-header-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.65rem;
+    border-radius: 9999px;
     text-decoration: none;
     color: var(--color-foreground);
+    transition: background-color var(--transition-fast), transform var(--transition-fast);
+  }
+  .zb-header-brand:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+  }
+  .zb-header-brand:active {
+    transform: scale(0.96);
+  }
+  .zb-header-brand__icon {
     display: flex;
     align-items: center;
     justify-content: center;
   }
-  header a sup {
-    position: absolute;
-    left: 100%;
-    overflow: hidden;
-    max-width: var(--page-margin);
+  .zb-header-brand__svg-mark {
+    color: var(--color-foreground);
   }
-  header svg {
-    width: 2rem;
+  .zb-header-brand__img {
+    height: 18px;
+    width: auto;
+    object-fit: contain;
   }
-  header .header__menu,
-  header .header__icons {
+  .zb-header-brand__name {
+    font-size: 0.625rem; /* 10px */
+    font-weight: 800;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--color-foreground);
+    padding-top: 1px;
+  }
+
+  /* Center Nav Pills */
+  .zb-header-nav {
     display: flex;
-    gap: 1rem;
+    align-items: center;
+    gap: 0.35rem;
   }
-{% endstylesheet %}
+  .zb-header-nav__item {
+    position: relative;
+  }
+  .zb-header-nav__pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.5625rem; /* 9px */
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.55);
+    padding: 0.35rem 0.85rem;
+    border-radius: 9999px;
+    text-decoration: none;
+    transition: color var(--transition-fast), background-color var(--transition-fast);
+  }
+  .zb-header-nav__pill:hover,
+  .zb-header-nav__pill--active {
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+  .zb-header-nav__chevron {
+    opacity: 0.6;
+    transition: transform var(--transition-fast);
+  }
+  .zb-header-nav__item:hover .zb-header-nav__chevron {
+    transform: rotate(180deg);
+  }
+  .zb-header-nav__dropdown {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    left: 50%;
+    transform: translateX(-50%) translateY(6px);
+    background: rgba(14, 14, 17, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    padding: 0.5rem 0;
+    min-width: 160px;
+    opacity: 0;
+    visibility: hidden;
+    transition: all var(--transition-fast);
+    z-index: 50;
+  }
+  .zb-header-nav__item:hover .zb-header-nav__dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+  }
+  .zb-header-nav__sublink {
+    display: block;
+    padding: 0.5rem 1rem;
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.6);
+    text-decoration: none;
+    transition: color var(--transition-fast), background-color var(--transition-fast);
+  }
+  .zb-header-nav__sublink:hover {
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+
+  /* Right Actions */
+  .zb-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .zb-action-btn {
+    width: 1.875rem; /* 30px */
+    height: 1.875rem; /* 30px */
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid transparent;
+    color: rgba(255, 255, 255, 0.55);
+    cursor: pointer;
+    text-decoration: none;
+    position: relative;
+    transition: color var(--transition-fast), background-color var(--transition-fast), transform var(--transition-fast);
+  }
+  .zb-action-btn:hover {
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.08);
+    transform: scale(1.05);
+  }
+  .zb-action-btn:active {
+    transform: scale(0.92);
+  }
+  .zb-cart-count {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    background-color: #ffffff;
+    color: #000000;
+    font-size: 0.5625rem;
+    font-weight: 800;
+    width: 14px;
+    height: 14px;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+  .zb-cart-count--hidden {
+    display: none;
+  }
+
+  /* ==========================================================================
+     Mobile Split Floating Pill Bar
+     ========================================================================== */
+  .zb-header-mobile {
+    display: flex;
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    right: 1rem;
+    z-index: 100;
+    align-items: center;
+    justify-content: space-between;
+    pointer-events: none;
+  }
+  @media (min-width: 768px) {
+    .zb-header-mobile {
+      display: none;
+    }
+  }
+  .zb-mobile-left-pill {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.85rem 0.35rem 0.4rem;
+    border-radius: 9999px;
+    background: rgba(14, 14, 17, 0.78);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    pointer-events: auto;
+  }
+  .zb-mobile-menu-btn {
+    width: 1.75rem; /* 28px */
+    height: 1.75rem;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: var(--color-foreground);
+    cursor: pointer;
+    transition: transform var(--transition-fast), background-color var(--transition-fast);
+  }
+  .zb-mobile-menu-btn:active {
+    transform: scale(0.92);
+  }
+  .zb-mobile-brand-link {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    text-decoration: none;
+    color: var(--color-foreground);
+    padding: 0 0.4rem;
+  }
+  .zb-mobile-brand-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .zb-mobile-brand-svg {
+    color: var(--color-foreground);
+    display: block;
+  }
+  .zb-mobile-brand-img {
+    height: 14px;
+    width: auto;
+    object-fit: contain;
+  }
+  .zb-mobile-brand-name {
+    font-size: 0.5625rem; /* 9px */
+    font-weight: 800;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    padding-top: 1px;
+    display: block;
+  }
+  .zb-mobile-right-pill {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    pointer-events: auto;
+  }
+  .zb-mobile-action-btn {
+    width: 2.25rem; /* 36px */
+    height: 2.25rem;
+    border-radius: 9999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(14, 14, 17, 0.78);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    color: rgba(255, 255, 255, 0.8);
+    cursor: pointer;
+    text-decoration: none;
+    position: relative;
+    padding: 0;
+    transition: transform var(--transition-fast);
+  }
+  .zb-mobile-action-btn svg,
+  .zb-mobile-menu-btn svg,
+  .zb-action-btn svg {
+    display: block;
+    margin: auto;
+    flex-shrink: 0;
+  }
+  .zb-mobile-action-btn:active {
+    transform: scale(0.92);
+  }
+</style>
+
+<script>
+  (function() {
+    const drawerToggle = document.getElementById('MobileNavToggle');
+    const drawer = document.getElementById('MobileNavDrawer');
+    const searchModal = document.getElementById('SearchModal');
+    const searchOpenBtn = document.getElementById('SearchOpenBtn');
+    const mobileSearchOpenBtn = document.getElementById('MobileSearchOpenBtn');
+    const searchInput = document.getElementById('SearchModalInput');
+
+    function openDrawer() {
+      if (!drawer) return;
+      drawer.removeAttribute('hidden');
+      document.body.classList.add('drawer-open');
+      if (drawerToggle) drawerToggle.setAttribute('aria-expanded', 'true');
+    }
+
+    function closeDrawer() {
+      if (!drawer) return;
+      drawer.setAttribute('hidden', '');
+      document.body.classList.remove('drawer-open');
+      if (drawerToggle) drawerToggle.setAttribute('aria-expanded', 'false');
+    }
+
+    if (drawerToggle) {
+      drawerToggle.addEventListener('click', openDrawer);
+    }
+
+    if (drawer) {
+      drawer.querySelectorAll('[data-close-drawer]').forEach(function(el) {
+        el.addEventListener('click', closeDrawer);
+      });
+    }
+
+    function openSearch() {
+      if (!searchModal) return;
+      searchModal.removeAttribute('hidden');
+      document.body.classList.add('drawer-open');
+      setTimeout(function() {
+        if (searchInput) searchInput.focus();
+      }, 100);
+    }
+
+    function closeSearch() {
+      if (!searchModal) return;
+      searchModal.setAttribute('hidden', '');
+      document.body.classList.remove('drawer-open');
+    }
+
+    if (searchOpenBtn) searchOpenBtn.addEventListener('click', openSearch);
+    if (mobileSearchOpenBtn) mobileSearchOpenBtn.addEventListener('click', openSearch);
+
+    if (searchModal) {
+      searchModal.querySelectorAll('[data-close-search]').forEach(function(el) {
+        el.addEventListener('click', closeSearch);
+      });
+    }
+
+    document.addEventListener('keydown', function(evt) {
+      if (evt.key === 'Escape') {
+        closeDrawer();
+        closeSearch();
+      }
+    });
+  })();
+</script>
 
 {% schema %}
 {
@@ -64,13 +537,8 @@
     {
       "type": "link_list",
       "id": "menu",
-      "label": "t:labels.menu"
-    },
-    {
-      "type": "link_list",
-      "id": "customer_account_menu",
-      "label": "t:labels.customer_account_menu",
-      "default": "customer-account-main-menu"
+      "label": "t:labels.menu",
+      "default": "main-menu"
     }
   ]
 }

@@ -1,0 +1,139 @@
+{% comment %}
+  Search Modal / Drawer Snippet
+{% endcomment %}
+<div id="SearchModal" class="search-modal" role="dialog" aria-modal="true" aria-label="{{ 'search.title' | t }}" hidden>
+  <div class="search-modal__backdrop" data-close-search></div>
+  <div class="search-modal__content glass-panel">
+    <div class="search-modal__header">
+      <span class="search-modal__title">{{ 'search.title' | t }}</span>
+      <button type="button" class="search-modal__close" data-close-search aria-label="{{ 'header.close_menu' | t }}">
+        {% render 'icons', name: 'close', width: 22, height: 22 %}
+      </button>
+    </div>
+
+    <form action="{{ routes.search_url }}" method="get" role="search" class="search-modal__form">
+      <input type="hidden" name="type" value="product,article,page">
+      <div class="search-modal__input-wrapper">
+        <span class="search-modal__icon">
+          {% render 'icons', name: 'search', width: 20, height: 20 %}
+        </span>
+        <input
+          type="search"
+          name="q"
+          id="SearchModalInput"
+          class="search-modal__input"
+          placeholder="{{ 'search.placeholder' | t }}"
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
+        >
+        <button type="submit" class="search-modal__submit btn btn--primary">
+          {{ 'search.submit' | t }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+  .search-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 3rem 1.5rem;
+  }
+  .search-modal[hidden] {
+    display: none;
+  }
+  .search-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    animation: searchFadeIn 0.2s ease-out;
+  }
+  .search-modal__content {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 680px;
+    background: var(--color-surface);
+    border-radius: var(--radius-card);
+    padding: 1.75rem;
+    animation: searchSlideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .search-modal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+  }
+  .search-modal__title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+  .search-modal__close {
+    background: transparent;
+    border: none;
+    color: var(--color-foreground);
+    cursor: pointer;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-pill);
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .search-modal__close:hover {
+    background: var(--glass-bg-hover);
+  }
+  .search-modal__input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: var(--color-background);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-input);
+    padding: 0.35rem 0.5rem 0.35rem 1rem;
+  }
+  .search-modal__input-wrapper:focus-within {
+    border-color: var(--color-foreground);
+  }
+  .search-modal__icon {
+    display: flex;
+    align-items: center;
+    color: var(--color-muted);
+  }
+  .search-modal__input {
+    border: none !important;
+    padding: 0.5rem 0 !important;
+    box-shadow: none !important;
+    outline: none !important;
+    background: transparent !important;
+    font-size: 1rem;
+    flex: 1;
+  }
+  .search-modal__submit {
+    min-height: 40px;
+    padding: 0.5rem 1.25rem;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+  }
+  @keyframes searchFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes searchSlideDown {
+    from { opacity: 0; transform: translateY(-16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>

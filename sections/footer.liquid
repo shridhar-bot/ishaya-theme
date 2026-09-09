@@ -1,56 +1,747 @@
-<footer>
-  <div class="footer__copyright">
-    &copy;
-    {{ 'now' | date: '%Y' }}
-    {{ shop.name | link_to: routes.root_url }}, {{ powered_by_link }}
+{% comment %}
+  ISHAYA Exact Structural Streetwear Footer
+  Inspired by the architectural 12-column grid and mobile accordion structure:
+  - Desktop: 12-col grid (Brand, Discover, Account, Connect, Newsletter) + bottom legal bar
+  - Mobile: Centered brand, circular social pills, accordion blocks, and newsletter box
+{% endcomment %}
+
+<footer class="zb-footer" role="contentinfo" aria-label="Storefront Footer">
+  <!-- Hairline gradient divider -->
+  <div class="zb-footer-divider"></div>
+
+  <!-- Desktop Footer View -->
+  <div class="zb-footer-desktop">
+    <div class="zb-footer-grid">
+      <!-- Col 1: Brand (Span 3) -->
+      <div class="zb-footer-col zb-footer-col--brand">
+        <div class="zb-footer-brand-header">
+          <div class="zb-footer-logo-box">
+            {% if settings.logo != blank %}
+              {%- assign logo_alt = settings.logo.alt | default: shop.name | escape -%}
+              {{ settings.logo | image_url: width: 72 | image_tag: class: 'zb-footer-logo-img', alt: logo_alt }}
+            {% else %}
+              <svg class="zb-footer-logo-svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square">
+                <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                <polyline points="2 17 12 22 22 17"></polyline>
+                <polyline points="2 12 12 17 22 12"></polyline>
+              </svg>
+            {% endif %}
+          </div>
+          <h2 class="zb-footer-brand-title">ISHAYA</h2>
+        </div>
+        <p class="zb-footer-brand-statement">
+          {{ section.settings.brand_text | default: 'Meticulously engineered streetwear. Architectural silhouettes, heavyweight textiles, and modern utilitarian craftsmanship.' }}
+        </p>
+      </div>
+
+      <!-- Col 2: Discover (Span 2) -->
+      <div class="zb-footer-col zb-footer-col--nav">
+        <h3 class="zb-footer-heading">{{ section.settings.nav_1_title | default: 'DISCOVER' }}</h3>
+        <ul class="zb-footer-links">
+          {% for link in section.settings.nav_1_menu.links %}
+            <li>
+              <a href="{{ link.url }}" class="zb-footer-link">
+                {{ link.title }}
+              </a>
+            </li>
+          {% else %}
+            <li><a href="{{ routes.all_products_collection_url }}" class="zb-footer-link">Catalog</a></li>
+            <li><a href="{{ routes.collections_url }}" class="zb-footer-link">Collections</a></li>
+            <li><a href="/blogs/news" class="zb-footer-link">Journal</a></li>
+            <li><a href="/pages/archive" class="zb-footer-link">Archive</a></li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <!-- Col 3: Account (Span 2) -->
+      <div class="zb-footer-col zb-footer-col--nav">
+        <h3 class="zb-footer-heading">{{ section.settings.nav_2_title | default: 'ACCOUNT' }}</h3>
+        <ul class="zb-footer-links">
+          {% for link in section.settings.nav_2_menu.links %}
+            <li>
+              <a href="{{ link.url }}" class="zb-footer-link">
+                {{ link.title }}
+              </a>
+            </li>
+          {% else %}
+            <li><a href="{% if customer %}{{ routes.account_url }}{% else %}{{ routes.account_login_url }}{% endif %}" class="zb-footer-link">Profile</a></li>
+            <li><a href="{{ routes.account_url }}" class="zb-footer-link">Orders</a></li>
+            <li><a href="{{ routes.cart_url }}" class="zb-footer-link">Bag</a></li>
+            <li><a href="/pages/contact" class="zb-footer-link">Support</a></li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <!-- Col 4: Connect (Span 2) -->
+      <div class="zb-footer-col zb-footer-col--connect">
+        <h3 class="zb-footer-heading">CONNECT</h3>
+        <div class="zb-footer-connect-list">
+          <a href="{{ settings.social_instagram_link | default: 'https://instagram.com' }}" target="_blank" rel="noopener noreferrer" class="zb-footer-connect-row">
+            <span>Instagram</span>
+            {% render 'icons', name: 'instagram', width: 12, height: 12 %}
+          </a>
+          <a href="{{ settings.social_spotify_link | default: 'https://spotify.com' }}" target="_blank" rel="noopener noreferrer" class="zb-footer-connect-row">
+            <span>Spotify</span>
+            {% render 'icons', name: 'spotify', width: 12, height: 12 %}
+          </a>
+          <a href="{{ settings.social_youtube_link | default: 'https://youtube.com' }}" target="_blank" rel="noopener noreferrer" class="zb-footer-connect-row">
+            <span>YouTube</span>
+            {% render 'icons', name: 'youtube', width: 12, height: 12 %}
+          </a>
+          <a href="{{ settings.social_x_link | default: 'https://x.com' }}" target="_blank" rel="noopener noreferrer" class="zb-footer-connect-row">
+            <span>X (Twitter)</span>
+            {% render 'icons', name: 'twitter', width: 11, height: 11 %}
+          </a>
+        </div>
+      </div>
+
+      <!-- Col 5: Newsletter (Span 3) -->
+      <div class="zb-footer-col zb-footer-col--newsletter">
+        <h3 class="zb-footer-heading">STAY IN THE LOOP</h3>
+        <p class="zb-footer-newsletter-text">Join our inner circle for private releases and early access to drops.</p>
+
+        {% form 'customer', id: 'FooterDesktopNewsletter', class: 'zb-footer-newsletter-form' %}
+          <input type="hidden" name="contact[tags]" value="newsletter">
+          {% if form.posted_successfully? %}
+            <p class="zb-newsletter-success">Thank you for joining Ishaya.</p>
+          {% else %}
+            <div class="zb-newsletter-input-group">
+              <div class="zb-newsletter-input-wrapper">
+                <input
+                  type="email"
+                  name="contact[email]"
+                  class="zb-newsletter-input"
+                  placeholder="Enter your email"
+                  value="{{ form.email }}"
+                  required
+                >
+                <div class="zb-newsletter-mail-icon">
+                  {% render 'icons', name: 'mail', width: 12, height: 12 %}
+                </div>
+              </div>
+              <button type="submit" class="zb-newsletter-submit-btn">
+                SUBSCRIBE
+              </button>
+            </div>
+            {% if form.errors %}
+              <small class="zb-newsletter-error">{{ form.errors.messages.email }}</small>
+            {% endif %}
+          {% endif %}
+        {% endform %}
+      </div>
+    </div>
+
+    <!-- Desktop Bottom Bar -->
+    <div class="zb-footer-bottom">
+      <div class="zb-footer-legal-links">
+        <p class="zb-footer-copyright">
+          &copy; {{ 'now' | date: '%Y' }} ISHAYA &middot; ALL RIGHTS RESERVED
+        </p>
+        {% if shop.policies.size > 0 %}
+          {% for policy in shop.policies %}
+            <a href="{{ policy.url }}" class="zb-footer-policy-link">{{ policy.title }}</a>
+          {% endfor %}
+        {% else %}
+          <a href="/pages/about" class="zb-footer-policy-link">About</a>
+          <a href="/pages/contact" class="zb-footer-policy-link">Contact</a>
+          <a href="/policies/privacy-policy" class="zb-footer-policy-link">Privacy</a>
+          <a href="/policies/refund-policy" class="zb-footer-policy-link">Returns</a>
+          <a href="/policies/shipping-policy" class="zb-footer-policy-link">Shipping</a>
+          <a href="/policies/terms-of-service" class="zb-footer-policy-link">Terms</a>
+        {% endif %}
+      </div>
+
+      <div class="zb-footer-origin">
+        <p class="zb-footer-origin-text">ARCHITECTURAL SILHOUETTES &middot; CRAFTED FOR THE STREETS</p>
+      </div>
+    </div>
   </div>
 
-  <div class="footer__links">
-    {% for link in section.settings.menu.links %}
-      {{ link.title | link_to: link.url }}
-    {% endfor %}
-  </div>
+  <!-- Mobile Footer View -->
+  <div class="zb-footer-mobile">
+    <!-- Centered Brand -->
+    <div class="zb-mobile-footer-brand">
+      <div class="zb-mobile-footer-logo-box">
+        {% if settings.logo != blank %}
+          {%- assign logo_alt = settings.logo.alt | default: shop.name | escape -%}
+          {{ settings.logo | image_url: width: 64 | image_tag: class: 'zb-footer-logo-img', alt: logo_alt }}
+        {% else %}
+          <svg class="zb-footer-logo-svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square">
+            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+            <polyline points="2 17 12 22 22 17"></polyline>
+            <polyline points="2 12 12 17 22 12"></polyline>
+          </svg>
+        {% endif %}
+      </div>
+      <h2 class="zb-mobile-footer-title">ISHAYA</h2>
+    </div>
 
-  <div class="footer__payment">
-    {% if section.settings.show_payment_icons %}
-      {% for type in shop.enabled_payment_types %}
-        {{ type | payment_type_svg_tag }}
-      {% endfor %}
-    {% endif %}
+    <!-- Centered Circular Social Pills -->
+    <div class="zb-mobile-socials">
+      <a href="{{ settings.social_instagram_link | default: 'https://instagram.com' }}" target="_blank" rel="noopener noreferrer" class="zb-mobile-social-btn" aria-label="Instagram">
+        {% render 'icons', name: 'instagram', width: 14, height: 14 %}
+      </a>
+      <a href="{{ settings.social_spotify_link | default: 'https://spotify.com' }}" target="_blank" rel="noopener noreferrer" class="zb-mobile-social-btn" aria-label="Spotify">
+        {% render 'icons', name: 'spotify', width: 14, height: 14 %}
+      </a>
+      <a href="{{ settings.social_youtube_link | default: 'https://youtube.com' }}" target="_blank" rel="noopener noreferrer" class="zb-mobile-social-btn" aria-label="YouTube">
+        {% render 'icons', name: 'youtube', width: 14, height: 14 %}
+      </a>
+      <a href="{{ settings.social_x_link | default: 'https://x.com' }}" target="_blank" rel="noopener noreferrer" class="zb-mobile-social-btn" aria-label="X">
+        {% render 'icons', name: 'twitter', width: 13, height: 13 %}
+      </a>
+    </div>
+
+    <!-- Mobile Accordion Cards -->
+    <div class="zb-mobile-accordions">
+      <!-- SHOP Card -->
+      <details class="zb-accordion-card">
+        <summary class="zb-accordion-header">
+          <span class="zb-accordion-title">SHOP</span>
+          <span class="zb-accordion-chevron">
+            {% render 'icons', name: 'chevron-down', width: 14, height: 14 %}
+          </span>
+        </summary>
+        <div class="zb-accordion-body">
+          <ul class="zb-accordion-links">
+            {% for link in section.settings.nav_1_menu.links %}
+              <li><a href="{{ link.url }}" class="zb-accordion-link">{{ link.title }}</a></li>
+            {% else %}
+              <li><a href="{{ routes.all_products_collection_url }}" class="zb-accordion-link">All Products</a></li>
+              <li><a href="{{ routes.collections_url }}" class="zb-accordion-link">Collections</a></li>
+              <li><a href="/blogs/news" class="zb-accordion-link">Journal</a></li>
+            {% endfor %}
+          </ul>
+        </div>
+      </details>
+
+      <!-- CUSTOMER CARE Card -->
+      <details class="zb-accordion-card">
+        <summary class="zb-accordion-header">
+          <span class="zb-accordion-title">CUSTOMER CARE</span>
+          <span class="zb-accordion-chevron">
+            {% render 'icons', name: 'chevron-down', width: 14, height: 14 %}
+          </span>
+        </summary>
+        <div class="zb-accordion-body">
+          <ul class="zb-accordion-links">
+            <li><a href="/pages/contact" class="zb-accordion-link">Contact</a></li>
+            <li><a href="/policies/shipping-policy" class="zb-accordion-link">Shipping Policy</a></li>
+            <li><a href="/policies/refund-policy" class="zb-accordion-link">Returns</a></li>
+            <li><a href="/policies/terms-of-service" class="zb-accordion-link">Terms of Service</a></li>
+            <li><a href="/policies/privacy-policy" class="zb-accordion-link">Privacy Policy</a></li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- Newsletter Card -->
+      <div class="zb-mobile-newsletter-card">
+        <span class="zb-mobile-newsletter-title">STAY IN THE LOOP</span>
+        <p class="zb-mobile-newsletter-text">Join our newsletter for drop notifications.</p>
+
+        {% form 'customer', id: 'FooterMobileNewsletter', class: 'zb-footer-newsletter-form' %}
+          <input type="hidden" name="contact[tags]" value="newsletter">
+          {% if form.posted_successfully? %}
+            <p class="zb-newsletter-success">Subscribed to Ishaya.</p>
+          {% else %}
+            <div class="zb-newsletter-input-group">
+              <div class="zb-newsletter-input-wrapper">
+                <input
+                  type="email"
+                  name="contact[email]"
+                  class="zb-newsletter-input"
+                  placeholder="Enter your email"
+                  required
+                >
+                <div class="zb-newsletter-mail-icon">
+                  {% render 'icons', name: 'mail', width: 12, height: 12 %}
+                </div>
+              </div>
+              <button type="submit" class="zb-newsletter-submit-btn">
+                SUBSCRIBE
+              </button>
+            </div>
+          {% endif %}
+        {% endform %}
+      </div>
+    </div>
+
+    <!-- Mobile Bottom Tag -->
+    <div class="zb-mobile-bottom-tag">
+      <span>&copy; {{ 'now' | date: '%Y' }} ISHAYA</span>
+      <span>&bull;</span>
+      <span>CRAFTED FOR THE STREETS</span>
+    </div>
   </div>
 </footer>
 
-{% stylesheet %}
-  footer {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 2rem;
+<style>
+  .zb-footer {
+    width: 100%;
+    background: #000000;
+    color: #ffffff;
+    position: relative;
+    z-index: 10;
+    margin-top: auto;
   }
-  footer a {
+  .zb-footer-divider {
+    height: 1px;
+    width: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+  }
+
+  /* ==========================================================================
+     Desktop Footer Styles
+     ========================================================================== */
+  .zb-footer-desktop {
+    display: none;
+    max-width: 80rem; /* 1280px */
+    margin: 0 auto;
+    padding: 6rem 2rem 3rem 2rem;
+  }
+  @media (min-width: 768px) {
+    .zb-footer-desktop {
+      display: block;
+    }
+  }
+  .zb-footer-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 2rem;
+    align-items: start;
+  }
+  .zb-footer-col--brand {
+    grid-column: span 3;
+  }
+  .zb-footer-col--nav {
+    grid-column: span 2;
+    padding-top: 0.5rem;
+  }
+  .zb-footer-col--connect {
+    grid-column: span 2;
+    padding-top: 0.5rem;
+  }
+  .zb-footer-col--newsletter {
+    grid-column: span 3;
+    padding-top: 0.5rem;
+  }
+
+  /* Brand Column */
+  .zb-footer-brand-header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+  .zb-footer-logo-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .zb-footer-brand-title {
+    font-size: 0.5625rem; /* 9px */
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #ffffff;
+    line-height: 1;
+  }
+  .zb-footer-brand-statement {
+    font-size: 0.625rem; /* 10px */
+    color: rgba(255, 255, 255, 0.4);
+    line-height: 2;
+    letter-spacing: 0.05em;
+    max-width: 18rem;
+  }
+
+  /* Section Headings */
+  .zb-footer-heading {
+    font-size: 0.53125rem; /* 8.5px */
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.3);
+    margin-bottom: 1.25rem;
+  }
+
+  /* Navigation Links */
+  .zb-footer-links {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+  .zb-footer-link {
+    font-size: 0.59375rem; /* 9.5px */
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.45);
     text-decoration: none;
-    color: var(--color-foreground);
+    display: inline-block;
+    transition: color var(--transition-fast), transform var(--transition-fast);
   }
-  footer .footer__links,
-  footer .footer__payment {
+  .zb-footer-link:hover {
+    color: #ffffff;
+    transform: translateX(2px);
+  }
+
+  /* Connect Column */
+  .zb-footer-connect-list {
     display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    width: 100%;
+    max-width: 140px;
+  }
+  .zb-footer-connect-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 0.35rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 0.59375rem; /* 9.5px */
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.45);
+    text-decoration: none;
+    transition: color var(--transition-fast), border-color var(--transition-fast);
+  }
+  .zb-footer-connect-row:hover {
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  /* Newsletter Column */
+  .zb-footer-newsletter-text {
+    font-size: 0.625rem; /* 10px */
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.45);
+    line-height: 1.6;
+    margin-bottom: 1rem;
+  }
+  .zb-newsletter-input-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .zb-newsletter-input-wrapper {
+    position: relative;
+    flex: 1;
+  }
+  .zb-newsletter-input {
+    width: 100%;
+    height: 2.5rem; /* 40px */
+    background: transparent !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 9999px !important;
+    padding: 0 2.25rem 0 1rem !important;
+    font-size: 0.65625rem !important; /* 10.5px */
+    color: #ffffff !important;
+    outline: none !important;
+    box-shadow: none !important;
+    transition: border-color var(--transition-fast);
+  }
+  .zb-newsletter-input:focus {
+    border-color: rgba(255, 255, 255, 0.3) !important;
+  }
+  .zb-newsletter-mail-icon {
+    position: absolute;
+    right: 0.85rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255, 255, 255, 0.35);
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+  }
+  .zb-newsletter-mail-icon svg {
+    width: 14px !important;
+    height: 14px !important;
+    max-width: 14px !important;
+    display: block !important;
+  }
+  .zb-newsletter-submit-btn {
+    height: 2.5rem;
+    background: #ffffff;
+    color: #000000;
+    border: none;
+    border-radius: 9999px;
+    padding: 0 1rem;
+    font-size: 0.53125rem; /* 8.5px */
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: opacity var(--transition-fast), transform var(--transition-fast);
+  }
+  .zb-newsletter-submit-btn:hover {
+    opacity: 0.9;
+  }
+  .zb-newsletter-submit-btn:active {
+    transform: scale(0.95);
+  }
+  .zb-newsletter-success {
+    font-size: 0.6875rem;
+    color: rgba(255, 255, 255, 0.7);
+    padding: 0.5rem 0;
+  }
+  .zb-newsletter-error {
+    display: block;
+    color: #ff6b6b;
+    font-size: 0.625rem;
+    margin-top: 0.35rem;
+  }
+
+  /* Desktop Bottom Bar */
+  .zb-footer-bottom {
+    margin-top: 5rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     gap: 1rem;
   }
-{% endstylesheet %}
+  .zb-footer-legal-links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.25rem 1rem;
+  }
+  .zb-footer-copyright {
+    font-size: 0.5rem; /* 8px */
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.25);
+  }
+  .zb-footer-policy-link {
+    font-size: 0.5rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.35);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+  }
+  .zb-footer-policy-link:hover {
+    color: rgba(255, 255, 255, 0.85);
+  }
+  .zb-footer-origin-text {
+    font-size: 0.5rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.2);
+  }
+
+  /* ==========================================================================
+     Mobile Footer Styles
+     ========================================================================== */
+  .zb-footer-mobile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 3rem 1.25rem 2.5rem 1.25rem;
+  }
+  @media (min-width: 768px) {
+    .zb-footer-mobile {
+      display: none;
+    }
+  }
+  .zb-mobile-footer-brand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .zb-mobile-footer-logo-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .zb-mobile-footer-title {
+    font-size: 0.8125rem; /* 13px */
+    font-weight: 800;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+  .zb-mobile-socials {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.85rem;
+    margin-bottom: 2rem;
+  }
+  .zb-mobile-social-btn {
+    width: 2.25rem; /* 36px */
+    height: 2.25rem;
+    border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.6);
+    text-decoration: none;
+    transition: all var(--transition-fast);
+  }
+  .zb-mobile-social-btn svg {
+    width: 14px !important;
+    height: 14px !important;
+    max-width: 14px !important;
+    display: block !important;
+    margin: auto;
+    flex-shrink: 0;
+  }
+  .zb-mobile-social-btn:active {
+    transform: scale(0.9);
+  }
+
+  /* Mobile Accordions */
+  .zb-mobile-accordions {
+    width: 100%;
+    max-width: 26rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .zb-accordion-card {
+    background: #0c0c0e;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    overflow: hidden;
+  }
+  .zb-accordion-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem;
+    cursor: pointer;
+    list-style: none;
+  }
+  .zb-accordion-header::-webkit-details-marker {
+    display: none;
+  }
+  .zb-accordion-title {
+    font-size: 0.625rem; /* 10px */
+    font-weight: 800;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: #ffffff;
+  }
+  .zb-accordion-chevron {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    color: rgba(255, 255, 255, 0.5);
+    transition: transform var(--transition-fast);
+    flex-shrink: 0;
+  }
+  .zb-accordion-chevron svg {
+    width: 14px !important;
+    height: 14px !important;
+    max-width: 14px !important;
+    display: block !important;
+    margin: auto;
+  }
+  .zb-accordion-card[open] .zb-accordion-chevron {
+    transform: rotate(180deg);
+  }
+  .zb-accordion-body {
+    padding: 0 1.25rem 1.25rem 1.25rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+    padding-top: 0.75rem;
+  }
+  .zb-accordion-links {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .zb-accordion-link {
+    font-size: 0.625rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.55);
+    text-decoration: none;
+  }
+
+  /* Mobile Newsletter Card */
+  .zb-mobile-newsletter-card {
+    background: #0c0c0e;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    padding: 1.25rem;
+    text-align: left;
+  }
+  .zb-mobile-newsletter-title {
+    font-size: 0.625rem;
+    font-weight: 800;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 0.25rem;
+  }
+  .zb-mobile-newsletter-text {
+    font-size: 0.65625rem;
+    color: rgba(255, 255, 255, 0.45);
+    margin-bottom: 1rem;
+    line-height: 1.4;
+  }
+  .zb-mobile-bottom-tag {
+    margin-top: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.5rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.25);
+  }
+</style>
 
 {% schema %}
 {
   "name": "t:general.footer",
   "settings": [
     {
-      "type": "link_list",
-      "id": "menu",
-      "label": "t:labels.menu"
+      "type": "textarea",
+      "id": "brand_text",
+      "label": "Brand statement",
+      "default": "Meticulously engineered streetwear. Architectural silhouettes, heavyweight textiles, and modern utilitarian craftsmanship."
     },
     {
-      "type": "checkbox",
-      "id": "show_payment_icons",
-      "label": "t:labels.show_payment_icons",
-      "default": true
+      "type": "text",
+      "id": "nav_1_title",
+      "label": "Column 1 Title",
+      "default": "DISCOVER"
+    },
+    {
+      "type": "link_list",
+      "id": "nav_1_menu",
+      "label": "Column 1 Menu"
+    },
+    {
+      "type": "text",
+      "id": "nav_2_title",
+      "label": "Column 2 Title",
+      "default": "ACCOUNT"
+    },
+    {
+      "type": "link_list",
+      "id": "nav_2_menu",
+      "label": "Column 2 Menu"
     }
   ]
 }

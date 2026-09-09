@@ -1,18 +1,49 @@
 {% style %}
-  {% # Loads all font variantions with display: swap %}
+  {% # Primary Body Font variants %}
   {{ settings.type_primary_font | font_face: font_display: 'swap' }}
   {{ settings.type_primary_font | font_modify: 'weight', 'bold' | font_face: font_display: 'swap' }}
   {{ settings.type_primary_font | font_modify: 'weight', 'bold' | font_modify: 'style', 'italic' | font_face: font_display: 'swap' }}
   {{ settings.type_primary_font | font_modify: 'style', 'italic' | font_face: font_display: 'swap' }}
 
+  {% # Heading Font variants %}
+  {% if settings.type_heading_font.family != settings.type_primary_font.family %}
+    {{ settings.type_heading_font | font_face: font_display: 'swap' }}
+    {{ settings.type_heading_font | font_modify: 'weight', 'bold' | font_face: font_display: 'swap' }}
+  {% endif %}
+
   :root {
     --font-primary--family: {{ settings.type_primary_font.family }}, {{ settings.type_primary_font.fallback_families }};
     --font-primary--style: {{ settings.type_primary_font.style }};
     --font-primary--weight: {{ settings.type_primary_font.weight }};
+
+    --font-heading--family: {{ settings.type_heading_font.family }}, {{ settings.type_heading_font.fallback_families }};
+    --font-heading--style: {{ settings.type_heading_font.style }};
+    --font-heading--weight: {{ settings.type_heading_font.weight }};
+    --font-heading--letter-spacing: {{ settings.heading_letter_spacing }}px;
+    --font-heading--transform: {% if settings.heading_uppercase %}uppercase{% else %}none{% endif %};
+
     --page-width: {{ settings.max_page_width }};
     --page-margin: {{ settings.min_page_margin }}px;
+
     --color-background: {{ settings.background_color }};
     --color-foreground: {{ settings.foreground_color }};
-    --style-border-radius-inputs: {{ settings.input_corner_radius }}px;
+    --color-muted: {{ settings.muted_color }};
+    --color-border: {{ settings.border_color }};
+    --color-surface: {{ settings.surface_color }};
+    --color-accent: {{ settings.accent_color }};
+
+    --radius-input: {{ settings.input_corner_radius }}px;
+    --radius-button: {{ settings.button_corner_radius }}px;
+    --radius-card: 16px;
+    --radius-pill: 9999px;
+
+    --glass-bg: rgba(255, 255, 255, 0.04);
+    --glass-bg-hover: rgba(255, 255, 255, 0.08);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-blur: blur(20px);
+    --glass-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.5);
+
+    --transition-fast: 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    --transition-smooth: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
 {% endstyle %}

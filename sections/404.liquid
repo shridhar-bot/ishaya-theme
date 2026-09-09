@@ -1,19 +1,137 @@
 {% comment %}
-  This section is used in the 404 template to render page shown when customers
-  enter an invalid store URL.
-
-  https://shopify.dev/docs/storefronts/themes/architecture/templates/404
+  ISHAYA Architectural Streetwear 404 Error Section
 {% endcomment %}
 
-<h1>{{ '404.title' | t }}</h1>
+<div class="not-found-page page-container">
+  <div class="not-found-card glass-panel">
+    <span class="not-found-badge">ERR // 404</span>
+    <h1 class="not-found-title">{{ '404.title' | t }}</h1>
+    <h2 class="not-found-subtitle">{{ '404.not_found' | t }}</h2>
+    <p class="not-found-text">{{ '404.subtext' | t }}</p>
 
-<p>
-  {{ '404.not_found' | t }}
-</p>
+    <!-- In-page Search Bar -->
+    <form action="{{ routes.search_url }}" method="get" role="search" class="not-found-search">
+      <input type="hidden" name="type" value="product,article,page">
+      <div class="not-found-search__wrapper">
+        <span class="not-found-search__icon">
+          {% render 'icons', name: 'search', width: 18, height: 18 %}
+        </span>
+        <input
+          type="search"
+          name="q"
+          class="not-found-search__input"
+          placeholder="{{ '404.search_placeholder' | t }}"
+          autocomplete="off"
+        >
+        <button type="submit" class="not-found-search__btn btn btn--secondary">
+          {{ 'search.submit' | t }}
+        </button>
+      </div>
+    </form>
 
-<a href="{{ routes.all_products_collection_url }}">
-  {{ '404.back_to_shopping' | t }}
-</a>
+    <div class="not-found-actions">
+      <a href="{{ routes.all_products_collection_url }}" class="btn btn--primary">
+        {{ '404.back_to_shopping' | t }}
+        {% render 'icons', name: 'arrow-right', width: 16, height: 16 %}
+      </a>
+    </div>
+  </div>
+</div>
+
+<style>
+  .not-found-page {
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-top: 4rem;
+    padding-bottom: 5rem;
+  }
+  .not-found-card {
+    width: 100%;
+    max-width: 620px;
+    padding: 3.5rem 2rem;
+    text-align: center;
+    border-radius: var(--radius-card);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .not-found-badge {
+    display: inline-block;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    border: 1px solid var(--color-border);
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-pill);
+    margin-bottom: 1.5rem;
+  }
+  .not-found-title {
+    font-size: clamp(3.5rem, 12vw, 6.5rem);
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    line-height: 0.95;
+    margin-bottom: 0.5rem;
+    color: var(--color-foreground);
+    opacity: 0.85;
+  }
+  .not-found-subtitle {
+    font-size: clamp(1.125rem, 3vw, 1.5rem);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+  .not-found-text {
+    font-size: 0.875rem;
+    color: var(--color-muted);
+    line-height: 1.6;
+    max-width: 440px;
+    margin-bottom: 2rem;
+  }
+  .not-found-search {
+    width: 100%;
+    max-width: 460px;
+    margin-bottom: 2rem;
+  }
+  .not-found-search__wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--color-background);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-input);
+    padding: 0.35rem 0.5rem 0.35rem 1rem;
+  }
+  .not-found-search__wrapper:focus-within {
+    border-color: var(--color-foreground);
+  }
+  .not-found-search__icon {
+    color: var(--color-muted);
+    display: flex;
+    align-items: center;
+  }
+  .not-found-search__input {
+    border: none !important;
+    background: transparent !important;
+    outline: none !important;
+    box-shadow: none !important;
+    padding: 0.5rem 0 !important;
+    font-size: 0.875rem;
+    flex: 1;
+  }
+  .not-found-search__btn {
+    min-height: 38px;
+    padding: 0.4rem 1rem;
+    font-size: 0.6875rem;
+  }
+  .not-found-actions {
+    display: flex;
+    gap: 1rem;
+  }
+</style>
 
 {% schema %}
 {
