@@ -1,5 +1,8 @@
 # AGENTS.md
 
+## Before Starting Any Work
+Read `PROJECT_BRIEF.md`, `PHASE_PLAN.md`, and `QA_QC_STANDARDS.md` in the repo root before making any changes. Follow the standards, phase order, and content rules defined there.
+
 🚨 MANDATORY: YOU MUST CALL "learn_shopify_api" ONCE WHEN WORKING WITH LIQUID THEMES.
 
 Use the [Shopify AI Toolkit](https://shopify.dev/docs/apps/build/ai-toolkit) for all Shopify API and platform work. If missing, install it in the agent host per that page (or `npx skills add Shopify/shopify-ai-toolkit --list` for skill-compatible hosts).
