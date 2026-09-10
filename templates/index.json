@@ -12,16 +12,17 @@
     "hero": {
       "type": "hero",
       "settings": {
+        "video": "shopify://files/videos/1104464_1080p_4k_1280x720.mp4",
+        "overlay_opacity": 45,
+        "height": "full",
+        "content_alignment": "left",
         "tag": "EDITION 01 // FW26",
         "heading": "ARCHITECTURAL UTILITY",
         "subheading": "Engineered garments built with heavyweight technical textiles, modular silhouettes, and utilitarian precision.",
         "button_label_1": "EXPLORE COLLECTION",
         "button_link_1": "",
         "button_label_2": "VIEW LOOKBOOK",
-        "button_link_2": "",
-        "height": "full",
-        "content_alignment": "left",
-        "overlay_opacity": 45
+        "button_link_2": ""
       }
     },
     "promo_marquee": {
@@ -30,25 +31,29 @@
         "item_1": {
           "type": "announcement",
           "settings": {
-            "text": "GLOBAL DISPATCH ON ORDERS OVER $250"
+            "text": "GLOBAL DISPATCH ON ORDERS OVER $250",
+            "link": ""
           }
         },
         "item_2": {
           "type": "announcement",
           "settings": {
-            "text": "EDITION 01 // ARCHIVE CATALOG OPEN"
+            "text": "EDITION 01 // ARCHIVE CATALOG OPEN",
+            "link": ""
           }
         },
         "item_3": {
           "type": "announcement",
           "settings": {
-            "text": "NUMBERED DROPS — ZERO RESTOCKS"
+            "text": "NUMBERED DROPS — ZERO RESTOCKS",
+            "link": ""
           }
         },
         "item_4": {
           "type": "announcement",
           "settings": {
-            "text": "ENGINEERED TEXTILES & INDUSTRIAL UTILITY"
+            "text": "ENGINEERED TEXTILES & INDUSTRIAL UTILITY",
+            "link": ""
           }
         }
       },
@@ -67,6 +72,7 @@
     "featured_products": {
       "type": "featured-products",
       "settings": {
+        "collection": "",
         "tag": "CURATED ARCHIVE",
         "title": "LATEST DROPS",
         "description": "Constructed with heavyweight textiles and utilitarian form.",
@@ -86,6 +92,7 @@
         "tile_1": {
           "type": "collection_tile",
           "settings": {
+            "collection": "",
             "title": "OUTERWEAR",
             "subtitle": "WATERPROOF SHELLS",
             "width": "wide"
@@ -94,6 +101,7 @@
         "tile_2": {
           "type": "collection_tile",
           "settings": {
+            "collection": "",
             "title": "CARGO & TROUSERS",
             "subtitle": "UTILITARIAN POCKETING",
             "width": "wide"
@@ -102,6 +110,7 @@
         "tile_3": {
           "type": "collection_tile",
           "settings": {
+            "collection": "",
             "title": "HEAVY FLEECE",
             "subtitle": "500GSM COTTON",
             "width": "standard"
@@ -110,6 +119,7 @@
         "tile_4": {
           "type": "collection_tile",
           "settings": {
+            "collection": "",
             "title": "TACTICAL ACCESSORIES",
             "subtitle": "MODULAR POUCHES",
             "width": "standard"
@@ -118,6 +128,7 @@
         "tile_5": {
           "type": "collection_tile",
           "settings": {
+            "collection": "",
             "title": "FOOTWEAR & OBJECTS",
             "subtitle": "EDITION RELEASES",
             "width": "standard"
@@ -157,6 +168,7 @@
     "secondary_products": {
       "type": "featured-products",
       "settings": {
+        "collection": "",
         "tag": "CORE PROGRAM",
         "title": "ESSENTIAL PIECES",
         "description": "Foundational utilitarian garments designed for year-round rotation.",
