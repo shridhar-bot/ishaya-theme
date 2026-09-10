@@ -1,0 +1,368 @@
+{% comment %}
+  ISHAYA Lifestyle & Manifesto Banner
+  High-contrast editorial banner expressing Ishaya's brand philosophy,
+  architectural typography, textile specifications strip, and lookbook CTA.
+{% endcomment %}
+
+{%- liquid
+  assign overlay_opacity_val = section.settings.overlay_opacity | divided_by: 100.0
+-%}
+
+<section
+  id="Manifesto-{{ section.id }}"
+  class="ishaya-manifesto full-width"
+  aria-label="{{ section.settings.heading | escape }}"
+>
+  <!-- Background Media -->
+  <div class="ishaya-manifesto__media">
+    {%- if section.settings.image != blank -%}
+      {{
+        section.settings.image
+        | image_url: width: 2560
+        | image_tag:
+          loading: 'lazy',
+          class: 'ishaya-manifesto__image',
+          alt: section.settings.heading | escape
+      }}
+    {%- else -%}
+      <div class="ishaya-manifesto__ambient-bg">
+        <div class="ishaya-manifesto__ambient-lines" aria-hidden="true"></div>
+      </div>
+    {%- endif -%}
+
+    <div
+      class="ishaya-manifesto__overlay"
+      style="--manifesto-overlay-opacity: {{ overlay_opacity_val }};"
+      aria-hidden="true"
+    ></div>
+  </div>
+
+  <!-- Foreground Content -->
+  <div class="page-container ishaya-manifesto__container">
+    <div class="ishaya-manifesto__content">
+      {%- if section.settings.tag != blank -%}
+        <div class="ishaya-manifesto__tag-wrapper">
+          <span class="ishaya-manifesto__tag glass-panel">
+            <span class="ishaya-manifesto__tag-pulse" aria-hidden="true"></span>
+            {{ section.settings.tag }}
+          </span>
+        </div>
+      {%- endif -%}
+
+      {%- if section.settings.heading != blank -%}
+        <blockquote class="ishaya-manifesto__quote">
+          "{{ section.settings.heading }}"
+        </blockquote>
+      {%- endif -%}
+
+      {%- if section.settings.subtext != blank -%}
+        <p class="ishaya-manifesto__body">
+          {{ section.settings.subtext }}
+        </p>
+      {%- endif -%}
+
+      {%- if section.settings.button_label != blank -%}
+        <div class="ishaya-manifesto__actions">
+          <a
+            href="{{ section.settings.button_link | default: routes.root_url }}"
+            class="btn btn--primary ishaya-manifesto__btn"
+          >
+            <span>{{ section.settings.button_label }}</span>
+            {% render 'icons', name: 'arrow-right', width: 14, height: 14 %}
+          </a>
+        </div>
+      {%- endif -%}
+    </div>
+
+    <!-- Utilitarian Specs Strip -->
+    <div class="ishaya-manifesto__specs glass-panel">
+      <div class="ishaya-manifesto__spec-item">
+        <span class="ishaya-manifesto__spec-num">SPEC 01</span>
+        <strong class="ishaya-manifesto__spec-title">{{ section.settings.spec_1_title | default: '500GSM TERRY' }}</strong>
+        <span class="ishaya-manifesto__spec-desc">{{ section.settings.spec_1_desc | default: 'Custom-milled organic French terry' }}</span>
+      </div>
+
+      <div class="ishaya-manifesto__spec-item">
+        <span class="ishaya-manifesto__spec-num">SPEC 02</span>
+        <strong class="ishaya-manifesto__spec-title">{{ section.settings.spec_2_title | default: 'MODULAR HARDWARE' }}</strong>
+        <span class="ishaya-manifesto__spec-desc">{{ section.settings.spec_2_desc | default: 'Matte coated industrial zippers' }}</span>
+      </div>
+
+      <div class="ishaya-manifesto__spec-item">
+        <span class="ishaya-manifesto__spec-num">SPEC 03</span>
+        <strong class="ishaya-manifesto__spec-title">{{ section.settings.spec_3_title | default: 'LIMITED EDITIONS' }}</strong>
+        <span class="ishaya-manifesto__spec-desc">{{ section.settings.spec_3_desc | default: 'Numbered release batches, zero re-runs' }}</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .ishaya-manifesto {
+    position: relative;
+    padding-top: clamp(4rem, 8vw, 8rem);
+    padding-bottom: clamp(4rem, 8vw, 8rem);
+    background-color: #09090b;
+    color: #ffffff;
+    overflow: hidden;
+  }
+
+  .ishaya-manifesto__media {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+  }
+
+  .ishaya-manifesto__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    filter: grayscale(80%) contrast(110%);
+  }
+
+  .ishaya-manifesto__ambient-bg {
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(ellipse at center, #18181b 0%, #09090b 100%);
+  }
+
+  .ishaya-manifesto__ambient-lines {
+    position: absolute;
+    inset: 0;
+    background-size: 80px 80px;
+    background-image: linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                      linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  }
+
+  .ishaya-manifesto__overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      180deg,
+      rgba(9, 9, 11, 0.85) 0%,
+      rgba(9, 9, 11, var(--manifesto-overlay-opacity, 0.75)) 50%,
+      rgba(9, 9, 11, 0.95) 100%
+    );
+  }
+
+  .ishaya-manifesto__container {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(3rem, 6vw, 5rem);
+  }
+
+  .ishaya-manifesto__content {
+    max-width: 920px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .ishaya-manifesto__tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.9rem;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: #ffffff;
+    border-radius: var(--radius-pill);
+  }
+
+  .ishaya-manifesto__tag-pulse {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--color-foreground);
+    animation: manifestoPulse 2s infinite;
+  }
+
+  @keyframes manifestoPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.85); }
+  }
+
+  .ishaya-manifesto__quote {
+    font-size: clamp(1.75rem, 4.5vw, 3.5rem);
+    font-weight: 800;
+    line-height: 1.12;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+    color: #ffffff;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .ishaya-manifesto__body {
+    font-size: clamp(0.95rem, 1.6vw, 1.15rem);
+    color: #a1a1aa;
+    line-height: 1.65;
+    max-width: 680px;
+    margin: 0;
+  }
+
+  .ishaya-manifesto__actions {
+    margin-top: 0.5rem;
+  }
+
+  .ishaya-manifesto__btn {
+    font-size: 0.78rem;
+    letter-spacing: 0.16em;
+    padding: 0.85rem 2rem;
+  }
+
+  /* Specs Strip */
+  .ishaya-manifesto__specs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    padding: clamp(1.5rem, 3vw, 2.5rem);
+    border-radius: var(--radius-input);
+  }
+
+  .ishaya-manifesto__spec-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .ishaya-manifesto__spec-num {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: var(--color-muted);
+  }
+
+  .ishaya-manifesto__spec-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #ffffff;
+  }
+
+  .ishaya-manifesto__spec-desc {
+    font-size: 0.82rem;
+    color: #a1a1aa;
+    line-height: 1.45;
+  }
+
+  @media (max-width: 767px) {
+    .ishaya-manifesto__specs {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      padding: 1.5rem;
+    }
+
+    .ishaya-manifesto__spec-item:not(:last-child) {
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+  }
+</style>
+
+{% schema %}
+{
+  "name": "Lifestyle Manifesto",
+  "tag": "section",
+  "class": "section-manifesto",
+  "settings": [
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Background image"
+    },
+    {
+      "type": "range",
+      "id": "overlay_opacity",
+      "min": 20,
+      "max": 95,
+      "step": 5,
+      "unit": "%",
+      "label": "Dark overlay opacity",
+      "default": 75
+    },
+    {
+      "type": "text",
+      "id": "tag",
+      "label": "Badge text",
+      "default": "ISHAYA PHILOSOPHY // MANIFESTO"
+    },
+    {
+      "type": "textarea",
+      "id": "heading",
+      "label": "Manifesto statement",
+      "default": "WE DO NOT FOLLOW CONVENTIONAL SEASONS. WE ENGINEER SILHOUETTES DESIGNED FOR URBAN RESISTANCE AND ARCHITECTURAL CLARITY."
+    },
+    {
+      "type": "textarea",
+      "id": "subtext",
+      "label": "Narrative paragraph",
+      "default": "Heavyweight custom-milled textiles, industrial hardware, and articulated cuts developed in strictly limited, non-repeating numbered editions."
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Button label",
+      "default": "DISCOVER THE PROCESS"
+    },
+    {
+      "type": "url",
+      "id": "button_link",
+      "label": "Button link"
+    },
+    {
+      "type": "header",
+      "content": "Specification Highlights"
+    },
+    {
+      "type": "text",
+      "id": "spec_1_title",
+      "label": "Spec 1 Title",
+      "default": "500GSM TERRY"
+    },
+    {
+      "type": "text",
+      "id": "spec_1_desc",
+      "label": "Spec 1 Description",
+      "default": "Custom-milled organic French terry"
+    },
+    {
+      "type": "text",
+      "id": "spec_2_title",
+      "label": "Spec 2 Title",
+      "default": "MODULAR HARDWARE"
+    },
+    {
+      "type": "text",
+      "id": "spec_2_desc",
+      "label": "Spec 2 Description",
+      "default": "Matte coated industrial zippers"
+    },
+    {
+      "type": "text",
+      "id": "spec_3_title",
+      "label": "Spec 3 Title",
+      "default": "LIMITED EDITIONS"
+    },
+    {
+      "type": "text",
+      "id": "spec_3_desc",
+      "label": "Spec 3 Description",
+      "default": "Numbered release batches, zero re-runs"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Lifestyle Manifesto"
+    }
+  ]
+}
+{% endschema %}

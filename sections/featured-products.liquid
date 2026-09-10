@@ -1,0 +1,329 @@
+{% comment %}
+  ISHAYA Featured Products Row
+  Schema-driven product row with collection picker, responsive columns,
+  dual-image hover swap, quick add, and editorial header.
+{% endcomment %}
+
+{%- liquid
+  assign collection = section.settings.collection
+  assign products_limit = section.settings.products_to_show | default: 4
+  assign cols_desktop = section.settings.columns_desktop | default: 4
+  assign cols_mobile = section.settings.columns_mobile | default: '2'
+-%}
+
+<section
+  id="FeaturedProducts-{{ section.id }}"
+  class="ishaya-product-row full-width"
+  aria-label="{{ section.settings.title | escape }}"
+>
+  <div class="page-container">
+    <!-- Header Row -->
+    <div class="ishaya-product-row__header">
+      <div class="ishaya-product-row__headings">
+        {%- if section.settings.tag != blank -%}
+          <span class="ishaya-product-row__tag">
+            {{ section.settings.tag }}
+          </span>
+        {%- endif -%}
+
+        {%- if section.settings.title != blank -%}
+          <h2 class="ishaya-product-row__title">
+            {{ section.settings.title }}
+          </h2>
+        {%- endif -%}
+
+        {%- if section.settings.description != blank -%}
+          <p class="ishaya-product-row__desc">
+            {{ section.settings.description }}
+          </p>
+        {%- endif -%}
+      </div>
+
+      {%- if section.settings.show_view_all and collection != blank -%}
+        <div class="ishaya-product-row__view-all-desktop">
+          <a
+            href="{{ collection.url }}"
+            class="btn btn--secondary ishaya-product-row__view-all-btn glass-panel"
+            aria-label="{{ section.settings.view_all_label | default: 'View all' }} {{ collection.title | escape }}"
+          >
+            <span>{{ section.settings.view_all_label | default: 'View All' }}</span>
+            {% render 'icons', name: 'arrow-right', width: 12, height: 12 %}
+          </a>
+        </div>
+      {%- endif -%}
+    </div>
+
+    <!-- Product Grid -->
+    <div
+      class="ishaya-product-grid ishaya-product-grid--cols-{{ cols_desktop }} ishaya-product-grid--mobile-{{ cols_mobile }}"
+    >
+      {%- if collection != blank and collection.products.size > 0 -%}
+        {%- for product in collection.products limit: products_limit -%}
+          <div class="ishaya-product-grid__item">
+            {% render 'product-card',
+              product: product,
+              show_secondary_image: section.settings.show_secondary_image,
+              show_vendor: section.settings.show_vendor,
+              show_quick_add: section.settings.show_quick_add
+            %}
+          </div>
+        {%- endfor -%}
+      {%- else -%}
+        <!-- Fallback Placeholder Demo Cards for Onboarding -->
+        {%- for i in (1..products_limit) -%}
+          <div class="ishaya-product-grid__item">
+            <div class="ishaya-product-card">
+              <div class="ishaya-product-card__media-wrapper ishaya-product-card__media-wrapper--portrait">
+                <div class="ishaya-product-card__placeholder">
+                  {%- capture current_idx -%}{% cycle 1, 2, 3, 4, 5, 6 %}{%- endcapture -%}
+                  {{ 'product-' | append: current_idx | placeholder_svg_tag: 'placeholder-svg' }}
+                </div>
+                <div class="ishaya-product-card__badges" aria-hidden="true">
+                  <span class="ishaya-product-badge ishaya-product-badge--new">New</span>
+                </div>
+              </div>
+              <div class="ishaya-product-card__info">
+                <span class="ishaya-product-card__vendor">ISHAYA // ARCHIVE</span>
+                <h3 class="ishaya-product-card__title">
+                  <span>Sample Garment {{ forloop.index }}</span>
+                </h3>
+                <div class="ishaya-product-card__price-row">
+                  <span class="ishaya-product-card__price">$185.00</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        {%- endfor -%}
+      {%- endif -%}
+    </div>
+
+    <!-- Mobile View All Link -->
+    {%- if section.settings.show_view_all and collection != blank -%}
+      <div class="ishaya-product-row__view-all-mobile">
+        <a
+          href="{{ collection.url }}"
+          class="btn btn--secondary ishaya-product-row__view-all-mobile-btn glass-panel"
+        >
+          <span>{{ section.settings.view_all_label | default: 'View All' }}</span>
+          {% render 'icons', name: 'arrow-right', width: 12, height: 12 %}
+        </a>
+      </div>
+    {%- endif -%}
+  </div>
+</section>
+
+<style>
+  .ishaya-product-row {
+    padding-top: clamp(3rem, 6vw, 6rem);
+    padding-bottom: clamp(3rem, 6vw, 6rem);
+    background-color: var(--color-background);
+  }
+
+  .ishaya-product-row__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: clamp(1.75rem, 3.5vw, 3rem);
+    gap: 1.5rem;
+  }
+
+  .ishaya-product-row__headings {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-width: 600px;
+  }
+
+  .ishaya-product-row__tag {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .ishaya-product-row__title {
+    font-size: clamp(1.75rem, 4vw, 2.75rem);
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+    line-height: 1.1;
+    color: var(--color-foreground);
+    margin: 0;
+  }
+
+  .ishaya-product-row__desc {
+    font-size: 0.9rem;
+    color: var(--color-muted);
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  .ishaya-product-row__view-all-btn {
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    padding: 0.65rem 1.5rem;
+    white-space: nowrap;
+  }
+
+  /* Product Grid */
+  .ishaya-product-grid {
+    display: grid;
+    gap: 1.5rem;
+    width: 100%;
+  }
+
+  .ishaya-product-grid--cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .ishaya-product-grid--cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .ishaya-product-grid--cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .ishaya-product-grid__item {
+    display: flex;
+    width: 100%;
+  }
+
+  .ishaya-product-row__view-all-mobile {
+    display: none;
+    margin-top: 2rem;
+  }
+
+  @media (max-width: 1024px) {
+    .ishaya-product-grid--cols-4 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 767px) {
+    .ishaya-product-row__view-all-desktop {
+      display: none;
+    }
+
+    .ishaya-product-row__view-all-mobile {
+      display: block;
+    }
+
+    .ishaya-product-row__view-all-mobile-btn {
+      width: 100%;
+    }
+
+    .ishaya-product-grid {
+      gap: 1rem;
+    }
+
+    .ishaya-product-grid--mobile-1 {
+      grid-template-columns: 1fr;
+    }
+
+    .ishaya-product-grid--mobile-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>
+
+{% schema %}
+{
+  "name": "Featured Products Row",
+  "tag": "section",
+  "class": "section-featured-products",
+  "settings": [
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "Collection"
+    },
+    {
+      "type": "text",
+      "id": "tag",
+      "label": "Category / Season tag",
+      "default": "CURATED ARCHIVE"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Heading",
+      "default": "LATEST DROPS"
+    },
+    {
+      "type": "text",
+      "id": "description",
+      "label": "Subheading",
+      "default": "Constructed with heavyweight textiles and utilitarian form."
+    },
+    {
+      "type": "range",
+      "id": "products_to_show",
+      "min": 2,
+      "max": 12,
+      "step": 1,
+      "label": "Maximum products to show",
+      "default": 4
+    },
+    {
+      "type": "range",
+      "id": "columns_desktop",
+      "min": 2,
+      "max": 4,
+      "step": 1,
+      "label": "Columns on desktop",
+      "default": 4
+    },
+    {
+      "type": "select",
+      "id": "columns_mobile",
+      "label": "Columns on mobile",
+      "options": [
+        {
+          "value": "1",
+          "label": "1"
+        },
+        {
+          "value": "2",
+          "label": "2"
+        }
+      ],
+      "default": "2"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_secondary_image",
+      "label": "Show secondary image on hover",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_vendor",
+      "label": "Show product vendor",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "show_quick_add",
+      "label": "Show quick add to bag",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_view_all",
+      "label": "Show 'View All' button",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "view_all_label",
+      "label": "'View All' button label",
+      "default": "VIEW ALL PIECES"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Featured Products Row"
+    }
+  ]
+}
+{% endschema %}
