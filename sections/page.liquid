@@ -1,17 +1,591 @@
 {% comment %}
-  This section is used in the page template to render store pages like About us
-  or Contact us.
-
-  https://shopify.dev/docs/storefronts/themes/architecture/templates/page
+  ISHAYA Architectural Document & Policy Reader
+  Two-column layout with sticky policy directory navigation
+  and editorial typography optimized for legal and informational documents.
 {% endcomment %}
 
-<h1>{{ page.title }}</h1>
+<section
+  id="PageSection-{{ section.id }}"
+  class="ishaya-page full-width"
+  aria-label="{{ page.title | escape }}"
+>
+  <!-- Page Header -->
+  <div class="ishaya-page__header">
+    <div class="page-container">
+      <div class="ishaya-page__header-inner">
+        <span class="ishaya-page__badge glass-panel">
+          <span class="ishaya-page__badge-dot" aria-hidden="true"></span>
+          {{ section.settings.badge | default: 'PROTOCOL // ARCHIVAL DOCUMENT' }}
+        </span>
 
-{{ page.content }}
+        <h1 class="ishaya-page__title">
+          {{ page.title }}
+        </h1>
+      </div>
+    </div>
+  </div>
+
+  <!-- Document Layout -->
+  <div class="page-container">
+    <div class="ishaya-page__layout{% unless section.settings.show_sidebar %} ishaya-page__layout--no-sidebar{% endunless %}">
+      {%- if section.settings.show_sidebar -%}
+        <!-- Sidebar Navigation -->
+        <aside class="ishaya-page__sidebar" aria-label="{{ section.settings.sidebar_title | default: 'Document Directory' | escape }}">
+          <div class="ishaya-page__sidebar-sticky glass-panel">
+            <h2 class="ishaya-page__sidebar-heading">
+              {{ section.settings.sidebar_title | default: 'DOCUMENT DIRECTORY' }}
+            </h2>
+
+            <nav class="ishaya-page__nav" aria-label="Policy pages">
+              <ul class="ishaya-page__nav-list" role="list">
+                {%- if section.blocks.size > 0 -%}
+                  {%- for block in section.blocks -%}
+                    {%- if block.type == 'policy_link' and block.settings.title != blank -%}
+                      {%- assign is_current = false -%}
+                      {%- if request.path == block.settings.url -%}
+                        {%- assign is_current = true -%}
+                      {%- endif -%}
+                      <li class="ishaya-page__nav-item" {{ block.shopify_attributes }}>
+                        <a
+                          href="{{ block.settings.url | default: '#' }}"
+                          class="ishaya-page__nav-link{% if is_current %} is-active{% endif %}"
+                          {% if is_current %}aria-current="page"{% endif %}
+                        >
+                          <span class="ishaya-page__nav-bullet" aria-hidden="true"></span>
+                          <span class="ishaya-page__nav-text">{{ block.settings.title }}</span>
+                        </a>
+                      </li>
+                    {%- endif -%}
+                  {%- endfor -%}
+                {%- else -%}
+                  <!-- Default Policy Links -->
+                  <li class="ishaya-page__nav-item">
+                    <a
+                      href="{{ routes.root_url }}policies/shipping-policy"
+                      class="ishaya-page__nav-link{% if request.path contains 'shipping-policy' %} is-active{% endif %}"
+                    >
+                      <span class="ishaya-page__nav-bullet" aria-hidden="true"></span>
+                      <span class="ishaya-page__nav-text">SHIPPING & DISPATCH</span>
+                    </a>
+                  </li>
+                  <li class="ishaya-page__nav-item">
+                    <a
+                      href="{{ routes.root_url }}policies/refund-policy"
+                      class="ishaya-page__nav-link{% if request.path contains 'refund-policy' %} is-active{% endif %}"
+                    >
+                      <span class="ishaya-page__nav-bullet" aria-hidden="true"></span>
+                      <span class="ishaya-page__nav-text">RETURNS & EXCHANGES</span>
+                    </a>
+                  </li>
+                  <li class="ishaya-page__nav-item">
+                    <a
+                      href="{{ routes.root_url }}policies/terms-of-service"
+                      class="ishaya-page__nav-link{% if request.path contains 'terms-of-service' %} is-active{% endif %}"
+                    >
+                      <span class="ishaya-page__nav-bullet" aria-hidden="true"></span>
+                      <span class="ishaya-page__nav-text">TERMS OF SERVICE</span>
+                    </a>
+                  </li>
+                  <li class="ishaya-page__nav-item">
+                    <a
+                      href="{{ routes.root_url }}policies/privacy-policy"
+                      class="ishaya-page__nav-link{% if request.path contains 'privacy-policy' %} is-active{% endif %}"
+                    >
+                      <span class="ishaya-page__nav-bullet" aria-hidden="true"></span>
+                      <span class="ishaya-page__nav-text">PRIVACY PROTOCOL</span>
+                    </a>
+                  </li>
+                  <li class="ishaya-page__nav-item">
+                    <a
+                      href="{{ routes.root_url }}pages/contact"
+                      class="ishaya-page__nav-link{% if request.path contains 'contact' %} is-active{% endif %}"
+                    >
+                      <span class="ishaya-page__nav-bullet" aria-hidden="true"></span>
+                      <span class="ishaya-page__nav-text">CLIENT LIAISON</span>
+                    </a>
+                  </li>
+                {%- endif -%}
+              </ul>
+            </nav>
+
+            <!-- Sidebar Concierge Help -->
+            <div class="ishaya-page__sidebar-help">
+              <span class="ishaya-page__help-label">NEED ASSISTANCE?</span>
+              <p class="ishaya-page__help-text">
+                For order clarification or bespoke requests, reach our client liaison team directly.
+              </p>
+              <a href="{{ routes.root_url }}pages/contact" class="ishaya-page__help-link">
+                <span>CONNECT WITH ATELIER</span>
+                {% render 'icons', name: 'arrow-right', width: 12, height: 12 %}
+              </a>
+            </div>
+          </div>
+        </aside>
+      {%- endif -%}
+
+      <!-- Document Content -->
+      <main class="ishaya-page__content-wrap">
+        <article class="ishaya-page__article">
+          {%- if page.content != blank -%}
+            <div class="ishaya-page__rte rte">
+              {{ page.content }}
+            </div>
+          {%- else -%}
+            <div class="ishaya-page__empty glass-panel">
+              <span class="ishaya-page__empty-code">STATUS // 204 DOCUMENT EMPTY</span>
+              <h2 class="ishaya-page__empty-title">DOCUMENT UNDER ACTIVE COMPILATION</h2>
+              <p class="ishaya-page__empty-text">
+                The content for this document is being codified by the Ishaya archival department. Please check back shortly or consult our client concierge.
+              </p>
+              <a href="{{ routes.root_url }}pages/contact" class="btn btn--primary ishaya-page__empty-btn">
+                <span>CONSULT CLIENT CONCIERGE</span>
+                {% render 'icons', name: 'arrow-right', width: 14, height: 14 %}
+              </a>
+            </div>
+          {%- endif -%}
+        </article>
+      </main>
+    </div>
+  </div>
+</section>
+
+<style>
+  .ishaya-page {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    padding-bottom: clamp(4rem, 8vw, 8rem);
+  }
+
+  /* Header */
+  .ishaya-page__header {
+    padding-top: clamp(3rem, 6vw, 5rem);
+    padding-bottom: clamp(2rem, 4vw, 3.5rem);
+    border-bottom: 1px solid var(--color-border);
+    background: radial-gradient(circle at 50% 0%, #151518 0%, var(--color-background) 80%);
+    margin-bottom: clamp(2rem, 5vw, 4rem);
+  }
+
+  .ishaya-page__header-inner {
+    max-width: 900px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .ishaya-page__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.85rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    border-radius: var(--radius-sm);
+    width: fit-content;
+  }
+
+  .ishaya-page__badge-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #3b82f6;
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
+  }
+
+  .ishaya-page__title {
+    font-size: clamp(2rem, 4vw, 3.25rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    text-transform: uppercase;
+    margin: 0;
+  }
+
+  /* Layout */
+  .ishaya-page__layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+    align-items: start;
+  }
+
+  @media (min-width: 990px) {
+    .ishaya-page__layout {
+      grid-template-columns: 280px 1fr;
+      gap: 4rem;
+    }
+  }
+
+  .ishaya-page__layout--no-sidebar {
+    grid-template-columns: 1fr;
+    max-width: 840px;
+    margin: 0 auto;
+  }
+
+  /* Sidebar */
+  .ishaya-page__sidebar {
+    width: 100%;
+  }
+
+  .ishaya-page__sidebar-sticky {
+    position: static;
+    padding: 1.75rem;
+    border-radius: var(--radius-md);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  @media (min-width: 990px) {
+    .ishaya-page__sidebar-sticky {
+      position: sticky;
+      top: calc(var(--header-height, 70px) + 2rem);
+    }
+  }
+
+  .ishaya-page__sidebar-heading {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    margin: 0;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .ishaya-page__nav-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .ishaya-page__nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 0.75rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--color-muted);
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+    transition: all var(--duration-fast) ease;
+  }
+
+  .ishaya-page__nav-bullet {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background-color: var(--color-muted);
+    opacity: 0.4;
+    transition: all var(--duration-fast) ease;
+    flex-shrink: 0;
+  }
+
+  .ishaya-page__nav-link:hover {
+    color: var(--color-foreground);
+    background-color: rgba(255, 255, 255, 0.04);
+  }
+
+  .ishaya-page__nav-link:hover .ishaya-page__nav-bullet {
+    opacity: 1;
+    background-color: var(--color-foreground);
+  }
+
+  .ishaya-page__nav-link.is-active {
+    color: var(--color-foreground);
+    background-color: rgba(255, 255, 255, 0.06);
+    font-weight: 600;
+  }
+
+  .ishaya-page__nav-link.is-active .ishaya-page__nav-bullet {
+    opacity: 1;
+    background-color: #3b82f6;
+    box-shadow: 0 0 6px rgba(59, 130, 246, 0.8);
+  }
+
+  /* Help Card */
+  .ishaya-page__sidebar-help {
+    margin-top: 0.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .ishaya-page__help-label {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .ishaya-page__help-text {
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: var(--color-muted);
+    margin: 0;
+  }
+
+  .ishaya-page__help-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: var(--color-foreground);
+    text-decoration: none;
+    margin-top: 0.25rem;
+    transition: color var(--duration-fast) ease;
+  }
+
+  .ishaya-page__help-link:hover {
+    color: #3b82f6;
+  }
+
+  /* Content Column */
+  .ishaya-page__content-wrap {
+    min-width: 0;
+  }
+
+  .ishaya-page__article {
+    max-width: 780px;
+  }
+
+  /* RTE Content Typography */
+  .ishaya-page__rte {
+    font-size: 0.9375rem;
+    line-height: 1.8;
+    color: rgba(255, 255, 255, 0.85);
+  }
+
+  .ishaya-page__rte > *:first-child {
+    margin-top: 0;
+  }
+
+  .ishaya-page__rte h2 {
+    font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    color: var(--color-foreground);
+    margin-top: 3rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .ishaya-page__rte h3 {
+    font-size: clamp(1.1rem, 2vw, 1.35rem);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+    color: var(--color-foreground);
+    margin-top: 2.25rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .ishaya-page__rte h4 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    margin-top: 1.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .ishaya-page__rte p {
+    margin-bottom: 1.5rem;
+  }
+
+  .ishaya-page__rte a {
+    color: #3b82f6;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: color var(--duration-fast) ease;
+  }
+
+  .ishaya-page__rte a:hover {
+    color: #60a5fa;
+  }
+
+  .ishaya-page__rte strong {
+    color: var(--color-foreground);
+    font-weight: 600;
+  }
+
+  .ishaya-page__rte ul,
+  .ishaya-page__rte ol {
+    margin: 0 0 1.5rem 1.5rem;
+    padding: 0;
+  }
+
+  .ishaya-page__rte li {
+    margin-bottom: 0.5rem;
+  }
+
+  .ishaya-page__rte blockquote {
+    margin: 2rem 0;
+    padding: 1.25rem 1.75rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-left: 2px solid #3b82f6;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    font-style: italic;
+    color: var(--color-muted);
+  }
+
+  .ishaya-page__rte table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 2rem 0;
+    font-size: 0.875rem;
+  }
+
+  .ishaya-page__rte th,
+  .ishaya-page__rte td {
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--color-border);
+    text-align: left;
+  }
+
+  .ishaya-page__rte th {
+    background: rgba(255, 255, 255, 0.04);
+    font-weight: 600;
+    color: var(--color-foreground);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.75rem;
+  }
+
+  /* Empty state */
+  .ishaya-page__empty {
+    padding: 3rem 2rem;
+    border-radius: var(--radius-md);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .ishaya-page__empty-code {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: #f59e0b;
+  }
+
+  .ishaya-page__empty-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    margin: 0;
+  }
+
+  .ishaya-page__empty-text {
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: var(--color-muted);
+    margin: 0;
+    max-width: 580px;
+  }
+
+  .ishaya-page__empty-btn {
+    margin-top: 1rem;
+  }
+</style>
 
 {% schema %}
 {
-  "name": "t:general.page",
-  "settings": []
+  "name": "Page Content",
+  "tag": "section",
+  "class": "section-page",
+  "settings": [
+    {
+      "type": "text",
+      "id": "badge",
+      "label": "Header Badge",
+      "default": "PROTOCOL // ARCHIVAL DOCUMENT"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_sidebar",
+      "label": "Show Directory Sidebar",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "sidebar_title",
+      "label": "Sidebar Heading",
+      "default": "DOCUMENT DIRECTORY"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "policy_link",
+      "name": "Directory Link",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Link Title",
+          "default": "DOCUMENT TITLE"
+        },
+        {
+          "type": "url",
+          "id": "url",
+          "label": "Link URL"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Default Page",
+      "blocks": [
+        {
+          "type": "policy_link",
+          "settings": {
+            "title": "SHIPPING & DISPATCH"
+          }
+        },
+        {
+          "type": "policy_link",
+          "settings": {
+            "title": "RETURNS & EXCHANGES"
+          }
+        },
+        {
+          "type": "policy_link",
+          "settings": {
+            "title": "TERMS OF SERVICE"
+          }
+        },
+        {
+          "type": "policy_link",
+          "settings": {
+            "title": "PRIVACY PROTOCOL"
+          }
+        },
+        {
+          "type": "policy_link",
+          "settings": {
+            "title": "CLIENT LIAISON"
+          }
+        }
+      ]
+    }
+  ]
 }
 {% endschema %}

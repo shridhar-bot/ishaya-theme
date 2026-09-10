@@ -1,0 +1,270 @@
+{% comment %}
+  ISHAYA Promo Banner & Marquee Ticker
+  Seamless infinite horizontal streetwear marquee ticker with customizable items,
+  pause-on-hover, and reduced-motion accessibility support.
+{% endcomment %}
+
+{%- liquid
+  assign anim_speed = section.settings.speed | default: 30
+  assign bg_style = section.settings.background_style | default: 'dark'
+-%}
+
+<div
+  id="PromoMarquee-{{ section.id }}"
+  class="ishaya-marquee full-width ishaya-marquee--{{ bg_style }} ishaya-marquee--size-{{ section.settings.font_size }}"
+  role="region"
+  aria-label="Promotions and Announcements"
+  style="--marquee-duration: {{ anim_speed }}s;"
+>
+  <div class="ishaya-marquee__inner">
+    <!-- First sequence for continuous loop -->
+    <div class="ishaya-marquee__track" aria-hidden="false">
+      {%- for i in (1..2) -%}
+        {%- for block in section.blocks -%}
+          <div class="ishaya-marquee__item" {{ block.shopify_attributes }}>
+            {%- if block.settings.link != blank -%}
+              <a href="{{ block.settings.link }}" class="ishaya-marquee__link">
+                <span>{{ block.settings.text }}</span>
+              </a>
+            {%- else -%}
+              <span>{{ block.settings.text }}</span>
+            {%- endif -%}
+            <span class="ishaya-marquee__separator" aria-hidden="true">///</span>
+          </div>
+        {%- endfor -%}
+      {%- endfor -%}
+    </div>
+
+    <!-- Duplicate clone sequence for seamless infinite CSS animation -->
+    <div class="ishaya-marquee__track" aria-hidden="true">
+      {%- for i in (1..2) -%}
+        {%- for block in section.blocks -%}
+          <div class="ishaya-marquee__item">
+            {%- if block.settings.link != blank -%}
+              <a href="{{ block.settings.link }}" class="ishaya-marquee__link" tabindex="-1">
+                <span>{{ block.settings.text }}</span>
+              </a>
+            {%- else -%}
+              <span>{{ block.settings.text }}</span>
+            {%- endif -%}
+            <span class="ishaya-marquee__separator" aria-hidden="true">///</span>
+          </div>
+        {%- endfor -%}
+      {%- endfor -%}
+    </div>
+  </div>
+</div>
+
+<style>
+  .ishaya-marquee {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    user-select: none;
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+    padding: 0.85rem 0;
+  }
+
+  .ishaya-marquee--dark {
+    background-color: #0d0d10;
+    color: var(--color-foreground);
+  }
+
+  .ishaya-marquee--accent {
+    background-color: var(--color-foreground);
+    color: var(--color-background);
+    border-color: transparent;
+  }
+
+  .ishaya-marquee--glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: var(--color-foreground);
+  }
+
+  .ishaya-marquee--size-small {
+    font-size: 0.6875rem;
+    padding: 0.65rem 0;
+  }
+  .ishaya-marquee--size-medium {
+    font-size: 0.78rem;
+    padding: 0.85rem 0;
+  }
+  .ishaya-marquee--size-large {
+    font-size: 0.95rem;
+    padding: 1.1rem 0;
+  }
+
+  .ishaya-marquee__inner {
+    display: flex;
+    width: max-content;
+  }
+
+  .ishaya-marquee__track {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    animation: ishayaMarqueeScroll var(--marquee-duration) linear infinite;
+  }
+
+  .ishaya-marquee:hover .ishaya-marquee__track {
+    animation-play-state: paused;
+  }
+
+  .ishaya-marquee__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding-right: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  .ishaya-marquee__link {
+    color: inherit;
+    text-decoration: none;
+    transition: opacity var(--transition-fast);
+  }
+
+  .ishaya-marquee__link:hover {
+    opacity: 0.75;
+  }
+
+  .ishaya-marquee__separator {
+    color: var(--color-muted);
+    font-size: 0.7em;
+    opacity: 0.6;
+  }
+
+  @keyframes ishayaMarqueeScroll {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-100%);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ishaya-marquee {
+      overflow-x: auto;
+    }
+    .ishaya-marquee__track {
+      animation: none;
+    }
+  }
+</style>
+
+{% schema %}
+{
+  "name": "Marquee Announcement",
+  "tag": "section",
+  "class": "section-marquee",
+  "settings": [
+    {
+      "type": "range",
+      "id": "speed",
+      "min": 10,
+      "max": 60,
+      "step": 5,
+      "unit": "s",
+      "label": "Scroll loop duration (speed)",
+      "default": 30
+    },
+    {
+      "type": "select",
+      "id": "background_style",
+      "label": "Color style",
+      "options": [
+        {
+          "value": "dark",
+          "label": "Dark Surface"
+        },
+        {
+          "value": "accent",
+          "label": "Inverted Accent"
+        },
+        {
+          "value": "glass",
+          "label": "Glassmorphism"
+        }
+      ],
+      "default": "dark"
+    },
+    {
+      "type": "select",
+      "id": "font_size",
+      "label": "Text size",
+      "options": [
+        {
+          "value": "small",
+          "label": "Small"
+        },
+        {
+          "value": "medium",
+          "label": "Medium"
+        },
+        {
+          "value": "large",
+          "label": "Large"
+        }
+      ],
+      "default": "medium"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "announcement",
+      "name": "Announcement Item",
+      "settings": [
+        {
+          "type": "text",
+          "id": "text",
+          "label": "Announcement text",
+          "default": "WORLDWIDE DISPATCH ON ORDERS OVER $250"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "Optional link"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Marquee Announcement",
+      "blocks": [
+        {
+          "type": "announcement",
+          "settings": {
+            "text": "GLOBAL DISPATCH ON ORDERS OVER $250"
+          }
+        },
+        {
+          "type": "announcement",
+          "settings": {
+            "text": "EDITION 01 // ARCHIVE CATALOG OPEN"
+          }
+        },
+        {
+          "type": "announcement",
+          "settings": {
+            "text": "NUMBERED DROPS — ZERO RESTOCKS"
+          }
+        },
+        {
+          "type": "announcement",
+          "settings": {
+            "text": "ENGINEERED TEXTILES & INDUSTRIAL UTILITY"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

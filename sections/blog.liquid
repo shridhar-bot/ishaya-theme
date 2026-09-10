@@ -1,35 +1,837 @@
 {% comment %}
-  This section is used in the blog template to render the blog page listing all
-  articles within a blog.
-
-  https://shopify.dev/docs/storefronts/themes/architecture/templates/blog
+  ISHAYA Editorial Journal & Dispatch Archive
+  Lookbook-style blog layout featuring high-impact hero dispatches,
+  category tag filters, and architectural article cards.
 {% endcomment %}
 
-<h1>{{ blog.title }}</h1>
+{%- assign articles_per_page = section.settings.articles_per_page | default: 9 -%}
 
-{% paginate blog.articles by 5 %}
-  {% for article in blog.articles %}
-    <div>
-      {% if article.image %}
-        {{ article.image | image_url: width: 1000 | image_tag }}
-      {% endif %}
-      <h2>
-        {{ article.title | link_to: article.url }}
-      </h2>
-      {% assign date = article.published_at | time_tag: format: 'date' %}
-      <p>{{ 'blog.article_metadata_html' | t: date: date, author: article.author }}</p>
-      <p>{{ article.excerpt }}</p>
+<section
+  id="BlogSection-{{ section.id }}"
+  class="ishaya-blog full-width"
+  aria-label="{{ blog.title | escape }}"
+>
+  <!-- Blog Header -->
+  <div class="ishaya-blog__header">
+    <div class="page-container">
+      <div class="ishaya-blog__header-inner">
+        <span class="ishaya-blog__badge glass-panel">
+          <span class="ishaya-blog__badge-dot" aria-hidden="true"></span>
+          {{ section.settings.badge | default: 'THE ISHAYA JOURNAL // DISPATCH ARCHIVE' }}
+        </span>
+
+        <h1 class="ishaya-blog__title">
+          {{ blog.title }}
+        </h1>
+
+        {%- if section.settings.description != blank -%}
+          <p class="ishaya-blog__description">
+            {{ section.settings.description }}
+          </p>
+        {%- endif -%}
+
+        {%- if section.settings.show_tags and blog.all_tags.size > 0 -%}
+          <!-- Tag Filter Bar -->
+          <nav class="ishaya-blog__tags-nav" aria-label="Filter journal articles by tag">
+            <ul class="ishaya-blog__tags-list" role="list">
+              <li class="ishaya-blog__tag-item">
+                <a
+                  href="{{ blog.url }}"
+                  class="ishaya-blog__tag-link{% if current_tags == blank %} is-active{% endif %}"
+                  {% if current_tags == blank %}aria-current="page"{% endif %}
+                >
+                  ALL DISPATCHES
+                </a>
+              </li>
+              {%- for tag in blog.all_tags -%}
+                {%- assign is_tag_active = false -%}
+                {%- if current_tags contains tag -%}
+                  {%- assign is_tag_active = true -%}
+                {%- endif -%}
+                <li class="ishaya-blog__tag-item">
+                  <a
+                    href="{{ blog.url }}/tagged/{{ tag | handle }}"
+                    class="ishaya-blog__tag-link{% if is_tag_active %} is-active{% endif %}"
+                    {% if is_tag_active %}aria-current="page"{% endif %}
+                  >
+                    {{ tag | upcase }}
+                  </a>
+                </li>
+              {%- endfor -%}
+            </ul>
+          </nav>
+        {%- endif -%}
+      </div>
     </div>
-  {% endfor %}
+  </div>
 
-  {%- if paginate.pages > 1 -%}
-    {{- paginate | default_pagination -}}
-  {%- endif -%}
-{% endpaginate %}
+  <!-- Articles Content -->
+  <div class="page-container">
+    {%- paginate blog.articles by articles_per_page -%}
+      {%- if blog.articles.size > 0 -%}
+        {%- if section.settings.show_hero and paginate.current_page == 1 and current_tags == blank -%}
+          {%- assign hero_article = blog.articles.first -%}
+          {%- assign word_count = hero_article.content | strip_html | split: ' ' | size -%}
+          {%- assign read_minutes = word_count | divided_by: 200 | plus: 1 -%}
+
+          <!-- Featured Hero Article -->
+          <div class="ishaya-blog__hero glass-panel">
+            <div class="ishaya-blog__hero-media">
+              <a href="{{ hero_article.url }}" class="ishaya-blog__hero-img-link" aria-label="{{ hero_article.title | escape }}">
+                {%- if hero_article.image -%}
+                  {{ hero_article.image | image_url: width: 1400 | image_tag:
+                    loading: 'eager',
+                    sizes: '(min-width: 990px) 55vw, 100vw',
+                    widths: '500, 800, 1000, 1200, 1400',
+                    class: 'ishaya-blog__hero-img'
+                  }}
+                {%- else -%}
+                  <div class="ishaya-blog__hero-placeholder" aria-hidden="true">
+                    <span class="ishaya-blog__placeholder-text">ISHAYA // ATELIER DISPATCH</span>
+                  </div>
+                {%- endif -%}
+              </a>
+              <span class="ishaya-blog__hero-tag glass-panel">
+                FEATURED DISPATCH
+              </span>
+            </div>
+
+            <div class="ishaya-blog__hero-content">
+              <div class="ishaya-blog__meta">
+                {%- if hero_article.tags.size > 0 and section.settings.show_tags -%}
+                  <span class="ishaya-blog__meta-tag">{{ hero_article.tags.first | upcase }}</span>
+                  <span class="ishaya-blog__meta-sep" aria-hidden="true">//</span>
+                {%- endif -%}
+                {%- if section.settings.show_date -%}
+                  <time datetime="{{ hero_article.published_at | date: '%Y-%m-%d' }}" class="ishaya-blog__meta-date">
+                    {{ hero_article.published_at | date: '%B %d, %Y' }}
+                  </time>
+                  <span class="ishaya-blog__meta-sep" aria-hidden="true">//</span>
+                {%- endif -%}
+                <span class="ishaya-blog__meta-read">{{ read_minutes }} MIN READ</span>
+              </div>
+
+              <h2 class="ishaya-blog__hero-title">
+                <a href="{{ hero_article.url }}">{{ hero_article.title }}</a>
+              </h2>
+
+              {%- if section.settings.show_excerpt -%}
+                <div class="ishaya-blog__hero-excerpt">
+                  {%- if hero_article.excerpt != blank -%}
+                    {{ hero_article.excerpt | strip_html | truncatewords: 35 }}
+                  {%- else -%}
+                    {{ hero_article.content | strip_html | truncatewords: 35 }}
+                  {%- endif -%}
+                </div>
+              {%- endif -%}
+
+              <div class="ishaya-blog__hero-footer">
+                <a href="{{ hero_article.url }}" class="btn btn--primary ishaya-blog__read-btn">
+                  <span>READ TRANSMISSION</span>
+                  {% render 'icons', name: 'arrow-right', width: 14, height: 14 %}
+                </a>
+              </div>
+            </div>
+          </div>
+        {%- endif -%}
+
+        <!-- Grid of Articles -->
+        <div class="ishaya-blog__grid">
+          {%- for article in blog.articles -%}
+            {%- if forloop.first and section.settings.show_hero and paginate.current_page == 1 and current_tags == blank -%}
+              {%- continue -%}
+            {%- endif -%}
+
+            {%- assign article_words = article.content | strip_html | split: ' ' | size -%}
+            {%- assign article_read_time = article_words | divided_by: 200 | plus: 1 -%}
+
+            <article class="ishaya-blog__card glass-panel">
+              <a href="{{ article.url }}" class="ishaya-blog__card-media" aria-label="{{ article.title | escape }}">
+                {%- if article.image -%}
+                  {{ article.image | image_url: width: 800 | image_tag:
+                    loading: 'lazy',
+                    sizes: '(min-width: 990px) 33vw, (min-width: 750px) 50vw, 100vw',
+                    widths: '360, 540, 720, 900',
+                    class: 'ishaya-blog__card-img'
+                  }}
+                {%- else -%}
+                  <div class="ishaya-blog__card-placeholder" aria-hidden="true">
+                    <span class="ishaya-blog__placeholder-text">ISHAYA // DISPATCH</span>
+                  </div>
+                {%- endif -%}
+                {%- if article.tags.size > 0 and section.settings.show_tags -%}
+                  <span class="ishaya-blog__card-tag glass-panel">
+                    {{ article.tags.first | upcase }}
+                  </span>
+                {%- endif -%}
+              </a>
+
+              <div class="ishaya-blog__card-body">
+                <div class="ishaya-blog__meta">
+                  {%- if section.settings.show_date -%}
+                    <time datetime="{{ article.published_at | date: '%Y-%m-%d' }}" class="ishaya-blog__meta-date">
+                      {{ article.published_at | date: '%b %d, %Y' }}
+                    </time>
+                    <span class="ishaya-blog__meta-sep" aria-hidden="true">//</span>
+                  {%- endif -%}
+                  {%- if section.settings.show_author -%}
+                    <span class="ishaya-blog__meta-author">{{ article.author }}</span>
+                    <span class="ishaya-blog__meta-sep" aria-hidden="true">//</span>
+                  {%- endif -%}
+                  <span class="ishaya-blog__meta-read">{{ article_read_time }} MIN</span>
+                </div>
+
+                <h3 class="ishaya-blog__card-title">
+                  <a href="{{ article.url }}">{{ article.title }}</a>
+                </h3>
+
+                {%- if section.settings.show_excerpt -%}
+                  <p class="ishaya-blog__card-excerpt">
+                    {%- if article.excerpt != blank -%}
+                      {{ article.excerpt | strip_html | truncatewords: 20 }}
+                    {%- else -%}
+                      {{ article.content | strip_html | truncatewords: 20 }}
+                    {%- endif -%}
+                  </p>
+                {%- endif -%}
+
+                <div class="ishaya-blog__card-action">
+                  <a href="{{ article.url }}" class="ishaya-blog__card-link">
+                    <span>EXPLORE DISPATCH</span>
+                    {% render 'icons', name: 'arrow-right', width: 12, height: 12 %}
+                  </a>
+                </div>
+              </div>
+            </article>
+          {%- endfor -%}
+        </div>
+
+        <!-- Pagination -->
+        {%- if paginate.pages > 1 -%}
+          <div class="ishaya-blog__pagination" aria-label="Journal pagination">
+            <div class="ishaya-blog__pagination-inner glass-panel">
+              {%- if paginate.previous -%}
+                <a href="{{ paginate.previous.url }}" class="ishaya-blog__page-btn ishaya-blog__page-btn--prev" aria-label="Previous page">
+                  {% render 'icons', name: 'arrow-left', width: 14, height: 14 %}
+                  <span>PREV</span>
+                </a>
+              {%- else -%}
+                <span class="ishaya-blog__page-btn ishaya-blog__page-btn--disabled" aria-hidden="true">
+                  {% render 'icons', name: 'arrow-left', width: 14, height: 14 %}
+                  <span>PREV</span>
+                </span>
+              {%- endif -%}
+
+              <div class="ishaya-blog__page-numbers">
+                {%- for part in paginate.parts -%}
+                  {%- if part.is_link -%}
+                    <a href="{{ part.url }}" class="ishaya-blog__page-num">
+                      {{ part.title }}
+                    </a>
+                  {%- else -%}
+                    {%- if part.title == paginate.current_page -%}
+                      <span class="ishaya-blog__page-num is-current" aria-current="page">
+                        {{ part.title }}
+                      </span>
+                    {%- else -%}
+                      <span class="ishaya-blog__page-num is-ellipsis">
+                        {{ part.title }}
+                      </span>
+                    {%- endif -%}
+                  {%- endif -%}
+                {%- endfor -%}
+              </div>
+
+              {%- if paginate.next -%}
+                <a href="{{ paginate.next.url }}" class="ishaya-blog__page-btn ishaya-blog__page-btn--next" aria-label="Next page">
+                  <span>NEXT</span>
+                  {% render 'icons', name: 'arrow-right', width: 14, height: 14 %}
+                </a>
+              {%- else -%}
+                <span class="ishaya-blog__page-btn ishaya-blog__page-btn--disabled" aria-hidden="true">
+                  <span>NEXT</span>
+                  {% render 'icons', name: 'arrow-right', width: 14, height: 14 %}
+                </span>
+              {%- endif -%}
+            </div>
+          </div>
+        {%- endif -%}
+
+      {%- else -%}
+        <!-- Empty State -->
+        <div class="ishaya-blog__empty glass-panel">
+          <span class="ishaya-blog__empty-tag">DISPATCH ARCHIVE // STATUS 204</span>
+          <h2 class="ishaya-blog__empty-title">NO TRANSMISSIONS CURRENTLY RECORDED</h2>
+          <p class="ishaya-blog__empty-text">
+            The Ishaya research and design studio is compiling new articles and lookbooks. Return shortly for archival updates.
+          </p>
+          <a href="{{ routes.all_products_collection_url }}" class="btn btn--primary ishaya-blog__empty-btn">
+            <span>EXPLORE CURRENT COLLECTION</span>
+            {% render 'icons', name: 'arrow-right', width: 14, height: 14 %}
+          </a>
+        </div>
+      {%- endif -%}
+    {%- endpaginate -%}
+  </div>
+</section>
+
+<style>
+  .ishaya-blog {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    padding-bottom: clamp(4rem, 8vw, 8rem);
+  }
+
+  /* Header */
+  .ishaya-blog__header {
+    padding-top: clamp(3rem, 6vw, 5rem);
+    padding-bottom: clamp(2rem, 4vw, 3.5rem);
+    border-bottom: 1px solid var(--color-border);
+    background: radial-gradient(circle at 50% 0%, #151518 0%, var(--color-background) 80%);
+    margin-bottom: clamp(2.5rem, 5vw, 4rem);
+  }
+
+  .ishaya-blog__header-inner {
+    max-width: 900px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .ishaya-blog__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.85rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    border-radius: var(--radius-sm);
+    width: fit-content;
+  }
+
+  .ishaya-blog__badge-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #3b82f6;
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
+  }
+
+  .ishaya-blog__title {
+    font-size: clamp(2rem, 4.5vw, 3.5rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    text-transform: uppercase;
+    margin: 0;
+  }
+
+  .ishaya-blog__description {
+    font-size: clamp(0.95rem, 1.5vw, 1.125rem);
+    line-height: 1.6;
+    color: var(--color-muted);
+    margin: 0;
+    max-width: 650px;
+  }
+
+  /* Tag Navigation */
+  .ishaya-blog__tags-nav {
+    margin-top: 1rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding-bottom: 0.5rem;
+  }
+
+  .ishaya-blog__tags-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ishaya-blog__tags-list {
+    display: flex;
+    gap: 0.5rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  .ishaya-blog__tag-link {
+    display: inline-block;
+    padding: 0.45rem 1rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-decoration: none;
+    color: var(--color-muted);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    transition: all var(--duration-fast) ease;
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  .ishaya-blog__tag-link:hover {
+    color: var(--color-foreground);
+    border-color: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .ishaya-blog__tag-link.is-active {
+    color: var(--color-foreground);
+    background: var(--color-border);
+    border-color: rgba(255, 255, 255, 0.4);
+    font-weight: 700;
+  }
+
+  /* Hero Featured Article */
+  .ishaya-blog__hero {
+    display: grid;
+    grid-template-columns: 1fr;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin-bottom: clamp(3rem, 6vw, 5rem);
+    border: 1px solid var(--color-border);
+    transition: border-color var(--duration-normal) ease;
+  }
+
+  @media (min-width: 990px) {
+    .ishaya-blog__hero {
+      grid-template-columns: 1.15fr 1fr;
+    }
+  }
+
+  .ishaya-blog__hero:hover {
+    border-color: rgba(255, 255, 255, 0.25);
+  }
+
+  .ishaya-blog__hero-media {
+    position: relative;
+    min-height: 320px;
+    overflow: hidden;
+    background: #111114;
+  }
+
+  @media (min-width: 990px) {
+    .ishaya-blog__hero-media {
+      min-height: 480px;
+    }
+  }
+
+  .ishaya-blog__hero-img-link {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .ishaya-blog__hero-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .ishaya-blog__hero:hover .ishaya-blog__hero-img {
+    transform: scale(1.03);
+  }
+
+  .ishaya-blog__hero-placeholder {
+    width: 100%;
+    height: 100%;
+    min-height: 320px;
+    background: radial-gradient(circle at center, #1c1c22 0%, #0d0d10 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .ishaya-blog__placeholder-text {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: var(--color-muted);
+  }
+
+  .ishaya-blog__hero-tag {
+    position: absolute;
+    top: 1.25rem;
+    left: 1.25rem;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--color-foreground);
+    border-radius: var(--radius-sm);
+  }
+
+  .ishaya-blog__hero-content {
+    padding: clamp(2rem, 4vw, 3.5rem);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1.25rem;
+  }
+
+  .ishaya-blog__meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--color-muted);
+  }
+
+  .ishaya-blog__meta-tag {
+    color: #3b82f6;
+  }
+
+  .ishaya-blog__meta-sep {
+    opacity: 0.4;
+  }
+
+  .ishaya-blog__hero-title {
+    font-size: clamp(1.65rem, 3vw, 2.5rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    text-transform: uppercase;
+    margin: 0;
+  }
+
+  .ishaya-blog__hero-title a {
+    color: var(--color-foreground);
+    text-decoration: none;
+    transition: color var(--duration-fast) ease;
+  }
+
+  .ishaya-blog__hero-title a:hover {
+    color: #3b82f6;
+  }
+
+  .ishaya-blog__hero-excerpt {
+    font-size: 0.9375rem;
+    line-height: 1.7;
+    color: var(--color-muted);
+  }
+
+  .ishaya-blog__hero-footer {
+    margin-top: 0.75rem;
+  }
+
+  .ishaya-blog__read-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  /* Articles Grid */
+  .ishaya-blog__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  @media (min-width: 640px) {
+    .ishaya-blog__grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 990px) {
+    .ishaya-blog__grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2.5rem;
+    }
+  }
+
+  /* Card */
+  .ishaya-blog__card {
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    transition: transform var(--duration-fast) ease, border-color var(--duration-fast) ease;
+  }
+
+  .ishaya-blog__card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(255, 255, 255, 0.25);
+  }
+
+  .ishaya-blog__card-media {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    background: #111114;
+    display: block;
+  }
+
+  .ishaya-blog__card-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .ishaya-blog__card:hover .ishaya-blog__card-img {
+    transform: scale(1.05);
+  }
+
+  .ishaya-blog__card-placeholder {
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, #1c1c22 0%, #0d0d10 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .ishaya-blog__card-tag {
+    position: absolute;
+    top: 0.85rem;
+    left: 0.85rem;
+    padding: 0.25rem 0.6rem;
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--color-foreground);
+    border-radius: var(--radius-sm);
+  }
+
+  .ishaya-blog__card-body {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    gap: 0.75rem;
+  }
+
+  .ishaya-blog__card-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+    text-transform: uppercase;
+    margin: 0;
+  }
+
+  .ishaya-blog__card-title a {
+    color: var(--color-foreground);
+    text-decoration: none;
+    transition: color var(--duration-fast) ease;
+  }
+
+  .ishaya-blog__card-title a:hover {
+    color: #3b82f6;
+  }
+
+  .ishaya-blog__card-excerpt {
+    font-size: 0.84375rem;
+    line-height: 1.6;
+    color: var(--color-muted);
+    margin: 0;
+    flex-grow: 1;
+  }
+
+  .ishaya-blog__card-action {
+    margin-top: 0.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .ishaya-blog__card-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--color-foreground);
+    text-decoration: none;
+    transition: color var(--duration-fast) ease, transform var(--duration-fast) ease;
+  }
+
+  .ishaya-blog__card-link:hover {
+    color: #3b82f6;
+    transform: translateX(4px);
+  }
+
+  /* Pagination */
+  .ishaya-blog__pagination {
+    margin-top: clamp(3rem, 6vw, 5rem);
+    display: flex;
+    justify-content: center;
+  }
+
+  .ishaya-blog__pagination-inner {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border-radius: var(--radius-md);
+  }
+
+  .ishaya-blog__page-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--color-foreground);
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+    transition: background-color var(--duration-fast) ease;
+    min-height: 44px;
+  }
+
+  .ishaya-blog__page-btn:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .ishaya-blog__page-btn--disabled {
+    opacity: 0.3;
+    pointer-events: none;
+  }
+
+  .ishaya-blog__page-numbers {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0 0.5rem;
+  }
+
+  .ishaya-blog__page-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-muted);
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+    transition: all var(--duration-fast) ease;
+  }
+
+  .ishaya-blog__page-num:hover {
+    color: var(--color-foreground);
+    background-color: rgba(255, 255, 255, 0.06);
+  }
+
+  .ishaya-blog__page-num.is-current {
+    color: var(--color-foreground);
+    background-color: rgba(255, 255, 255, 0.12);
+    font-weight: 700;
+  }
+
+  .ishaya-blog__page-num.is-ellipsis {
+    opacity: 0.5;
+  }
+
+  /* Empty State */
+  .ishaya-blog__empty {
+    padding: 4rem 2rem;
+    border-radius: var(--radius-md);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    max-width: 650px;
+    margin: 2rem auto;
+  }
+
+  .ishaya-blog__empty-tag {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: #f59e0b;
+  }
+
+  .ishaya-blog__empty-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    margin: 0;
+  }
+
+  .ishaya-blog__empty-text {
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: var(--color-muted);
+    margin: 0;
+  }
+
+  .ishaya-blog__empty-btn {
+    margin-top: 1rem;
+  }
+</style>
 
 {% schema %}
 {
-  "name": "t:general.blog",
-  "settings": []
+  "name": "Journal Archive",
+  "tag": "section",
+  "class": "section-blog",
+  "settings": [
+    {
+      "type": "text",
+      "id": "badge",
+      "label": "Header Badge",
+      "default": "THE ISHAYA JOURNAL // DISPATCH ARCHIVE"
+    },
+    {
+      "type": "textarea",
+      "id": "description",
+      "label": "Description",
+      "default": "Chronicles of structural tailoring, textile engineering, and brutalist design language."
+    },
+    {
+      "type": "range",
+      "id": "articles_per_page",
+      "label": "Articles per page",
+      "min": 6,
+      "max": 24,
+      "step": 3,
+      "default": 9
+    },
+    {
+      "type": "checkbox",
+      "id": "show_hero",
+      "label": "Show Featured Hero Article",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_tags",
+      "label": "Show Tags",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_date",
+      "label": "Show Published Date",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_author",
+      "label": "Show Author",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "show_excerpt",
+      "label": "Show Excerpt",
+      "default": true
+    }
+  ]
 }
 {% endschema %}

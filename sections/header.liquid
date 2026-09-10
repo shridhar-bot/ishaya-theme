@@ -82,6 +82,7 @@
       href="{{ routes.cart_url }}"
       class="zb-action-btn zb-cart-btn"
       aria-label="{{ 'header.cart' | t }}"
+      data-open-cart
     >
       {% render 'icons', name: 'cart', width: 15, height: 15 %}
       <span id="HeaderCartCount" class="zb-cart-count{% if cart.item_count == 0 %} zb-cart-count--hidden{% endif %}" aria-hidden="true">
@@ -147,6 +148,7 @@
       href="{{ routes.cart_url }}"
       class="zb-mobile-action-btn glass-panel"
       aria-label="{{ 'header.cart' | t }}"
+      data-open-cart
     >
       {% render 'icons', name: 'cart', width: 15, height: 15 %}
       <span class="zb-cart-count{% if cart.item_count == 0 %} zb-cart-count--hidden{% endif %}" aria-hidden="true">
@@ -526,6 +528,15 @@
         closeDrawer();
         closeSearch();
       }
+    });
+
+    document.querySelectorAll('[data-open-cart]').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        if (typeof window.openCartDrawer === 'function') {
+          e.preventDefault();
+          window.openCartDrawer();
+        }
+      });
     });
   })();
 </script>

@@ -1,68 +1,907 @@
 {% comment %}
-  This section is used in the article template to render the article page, which
-  displays the full content of the blog post and can optionally include a
-  comments section for customers (not shown in this example).
-
-  https://shopify.dev/docs/storefronts/themes/architecture/templates/article
+  ISHAYA Editorial Article Reader
+  Long-form editorial layout with reading time metrics,
+  pull-quote typography, tag badges, share triggers,
+  previous/next pagination, and moderated discussion threads.
 {% endcomment %}
 
-{% if article.image %}
-  {{ article.image | image_url: width: 1000 | image_tag }}
-{% endif %}
+{%- assign word_count = article.content | strip_html | split: ' ' | size -%}
+{%- assign read_minutes = word_count | divided_by: 200 | plus: 1 -%}
 
-<h1>{{ article.title }}</h1>
+<article
+  id="ArticleSection-{{ section.id }}"
+  class="ishaya-article full-width"
+  aria-label="{{ article.title | escape }}"
+>
+  <!-- Article Header -->
+  <header class="ishaya-article__header">
+    <div class="page-container">
+      <div class="ishaya-article__header-inner">
+        <!-- Back link -->
+        <a href="{{ blog.url }}" class="ishaya-article__back-link">
+          {% render 'icons', name: 'arrow-left', width: 14, height: 14 %}
+          <span>RETURN TO {{ blog.title | upcase }}</span>
+        </a>
 
-{% assign date = article.published_at | time_tag: format: 'date' %}
-<p>{{ 'blog.article_metadata_html' | t: date: date, author: article.author }}</p>
-
-{{ article.content }}
-
-{% if blog.comments_enabled? %}
-  <h2>{{ 'blog.article_comments' | t }}</h2>
-
-  <div id="comments">
-    {% paginate article.comments by 10 %}
-      {% for comment in article.comments %}
-        <div>
-          <p>{{ comment.author }}</p>
-          <p>
-            {{- comment.created_at | time_tag: format: 'date' -}}
-          </p>
-          <p>{{ comment.content }}</p>
+        <div class="ishaya-article__meta-top">
+          {%- if article.tags.size > 0 and section.settings.show_tags -%}
+            <span class="ishaya-article__badge glass-panel">
+              <span class="ishaya-article__badge-dot" aria-hidden="true"></span>
+              {{ article.tags.first | upcase }}
+            </span>
+          {%- endif -%}
         </div>
-      {% endfor %}
 
-      {{ paginate | default_pagination: anchor: 'comments' }}
-    {% endpaginate %}
+        <h1 class="ishaya-article__title">
+          {{ article.title }}
+        </h1>
+
+        <!-- Byline Row -->
+        <div class="ishaya-article__byline">
+          {%- if section.settings.show_date -%}
+            <time datetime="{{ article.published_at | date: '%Y-%m-%d' }}" class="ishaya-article__date">
+              {{ article.published_at | date: '%B %d, %Y' }}
+            </time>
+          {%- endif -%}
+
+          {%- if section.settings.show_author and article.author != blank -%}
+            <span class="ishaya-article__byline-sep" aria-hidden="true">//</span>
+            <span class="ishaya-article__author">TRANSMITTED BY {{ article.author | upcase }}</span>
+          {%- endif -%}
+
+          {%- if section.settings.show_reading_time -%}
+            <span class="ishaya-article__byline-sep" aria-hidden="true">//</span>
+            <span class="ishaya-article__read-time">{{ read_minutes }} MIN ESTIMATED READ</span>
+          {%- endif -%}
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Featured Image -->
+  {%- if article.image -%}
+    <div class="page-container ishaya-article__media-container">
+      <div class="ishaya-article__media glass-panel">
+        {{ article.image | image_url: width: 1800 | image_tag:
+          loading: 'eager',
+          sizes: '(min-width: 1200px) 1160px, (min-width: 750px) 90vw, 100vw',
+          widths: '600, 900, 1200, 1500, 1800',
+          class: 'ishaya-article__hero-img'
+        }}
+        {%- if article.image.alt != blank -%}
+          <figcaption class="ishaya-article__caption">
+            FIG. 01 // {{ article.image.alt }}
+          </figcaption>
+        {%- endif -%}
+      </div>
+    </div>
+  {%- endif -%}
+
+  <!-- Article Body -->
+  <div class="page-container">
+    <div class="ishaya-article__body-layout">
+      <div class="ishaya-article__content-column">
+        <div class="ishaya-article__rte rte">
+          {{ article.content }}
+        </div>
+
+        <!-- Article Tags & Social Sharing Footer -->
+        <div class="ishaya-article__footer glass-panel">
+          {%- if section.settings.show_tags and article.tags.size > 0 -%}
+            <div class="ishaya-article__tags">
+              <span class="ishaya-article__footer-label">INDEXED TOPICS:</span>
+              <div class="ishaya-article__tags-list">
+                {%- for tag in article.tags -%}
+                  <a href="{{ blog.url }}/tagged/{{ tag | handle }}" class="ishaya-article__tag-pill">
+                    {{ tag | upcase }}
+                  </a>
+                {%- endfor -%}
+              </div>
+            </div>
+          {%- endif -%}
+
+          {%- if section.settings.show_share -%}
+            <div class="ishaya-article__share">
+              <span class="ishaya-article__footer-label">SHARE DISPATCH:</span>
+              <div class="ishaya-article__share-btns">
+                <a
+                  href="https://twitter.com/intent/tweet?text={{ article.title | url_encode }}&url={{ shop.url | append: article.url | url_encode }}"
+                  target="_blank"
+                  rel="noopener"
+                  class="ishaya-article__share-btn"
+                  aria-label="Share on X"
+                >
+                  {% render 'icons', name: 'twitter', width: 14, height: 14 %}
+                  <span>X / TWITTER</span>
+                </a>
+                <button
+                  type="button"
+                  class="ishaya-article__share-btn ishaya-article__share-copy"
+                  data-copy-url="{{ shop.url | append: article.url }}"
+                  aria-label="Copy transmission link"
+                >
+                  {% render 'icons', name: 'check', width: 14, height: 14 %}
+                  <span class="ishaya-article__share-copy-text">COPY TRANSMISSION LINK</span>
+                </button>
+              </div>
+            </div>
+          {%- endif -%}
+        </div>
+
+        <!-- Next / Previous Article Navigation -->
+        {%- if section.settings.show_next_prev and blog.previous_article or blog.next_article -%}
+          <nav class="ishaya-article__pagination" aria-label="Adjacent dispatches">
+            <div class="ishaya-article__pagination-grid">
+              {%- if blog.previous_article -%}
+                <a href="{{ blog.previous_article.url }}" class="ishaya-article__nav-card ishaya-article__nav-card--prev glass-panel">
+                  <span class="ishaya-article__nav-direction">
+                    {% render 'icons', name: 'arrow-left', width: 12, height: 12 %}
+                    <span>PREVIOUS DISPATCH</span>
+                  </span>
+                  <strong class="ishaya-article__nav-title">{{ blog.previous_article.title }}</strong>
+                </a>
+              {%- else -%}
+                <div class="ishaya-article__nav-placeholder"></div>
+              {%- endif -%}
+
+              {%- if blog.next_article -%}
+                <a href="{{ blog.next_article.url }}" class="ishaya-article__nav-card ishaya-article__nav-card--next glass-panel">
+                  <span class="ishaya-article__nav-direction">
+                    <span>NEXT DISPATCH</span>
+                    {% render 'icons', name: 'arrow-right', width: 12, height: 12 %}
+                  </span>
+                  <strong class="ishaya-article__nav-title">{{ blog.next_article.title }}</strong>
+                </a>
+              {%- endif -%}
+            </div>
+          </nav>
+        {%- endif -%}
+
+        <!-- Comments Section -->
+        {%- if blog.comments_enabled? -%}
+          <section id="comments" class="ishaya-article__comments" aria-label="Article discussions">
+            <div class="ishaya-article__comments-header">
+              <span class="ishaya-article__comments-badge glass-panel">
+                DISPATCH PROTOCOL // PUBLIC RECORD
+              </span>
+              <h2 class="ishaya-article__comments-title">
+                {{ article.comments_count }} TRANSMISSION RESPONSES
+              </h2>
+            </div>
+
+            {%- if article.comments_count > 0 -%}
+              <div class="ishaya-article__comments-list">
+                {%- paginate article.comments by 15 -%}
+                  {%- for comment in article.comments -%}
+                    <article class="ishaya-article__comment-item glass-panel">
+                      <div class="ishaya-article__comment-meta">
+                        <span class="ishaya-article__comment-author">{{ comment.author }}</span>
+                        <span class="ishaya-article__comment-sep" aria-hidden="true">//</span>
+                        <time datetime="{{ comment.created_at | date: '%Y-%m-%d' }}" class="ishaya-article__comment-date">
+                          {{ comment.created_at | date: '%B %d, %Y' }}
+                        </time>
+                      </div>
+                      <div class="ishaya-article__comment-body">
+                        {{ comment.content }}
+                      </div>
+                    </article>
+                  {%- endfor -%}
+
+                  {%- if paginate.pages > 1 -%}
+                    <div class="ishaya-article__comments-pagination">
+                      {{ paginate | default_pagination }}
+                    </div>
+                  {%- endif -%}
+                {%- endpaginate -%}
+              </div>
+            {%- endif -%}
+
+            <!-- New Comment Form -->
+            <div class="ishaya-article__form-wrapper glass-panel">
+              <h3 class="ishaya-article__form-heading">SUBMIT RECORDED RESPONSE</h3>
+              <p class="ishaya-article__form-sub">Responses undergo automated verification prior to publication.</p>
+
+              {%- form 'new_comment', article, id: 'ArticleCommentForm', class: 'ishaya-article__comment-form' -%}
+                {%- if form.posted_successfully? -%}
+                  <div class="ishaya-article__form-success glass-panel" role="alert">
+                    <span class="ishaya-article__form-success-icon">✓</span>
+                    <div>
+                      <strong class="ishaya-article__form-success-title">TRANSMISSION LOGGED</strong>
+                      <p class="ishaya-article__form-success-desc">
+                        {%- if blog.moderated? -%}
+                          Your response has been registered and is queued for atelier verification.
+                        {%- else -%}
+                          Your response has been added to the public dispatch record.
+                        {%- endif -%}
+                      </p>
+                    </div>
+                  </div>
+                {%- endif -%}
+
+                {%- if form.errors -%}
+                  <div class="ishaya-article__form-error glass-panel" role="alert">
+                    <span class="ishaya-article__form-error-title">TRANSMISSION ERROR DETECTED:</span>
+                    <ul class="ishaya-article__form-error-list">
+                      {%- for field in form.errors -%}
+                        <li>
+                          {%- if field == 'form' -%}
+                            {{ form.errors.messages[field] }}
+                          {%- else -%}
+                            {{ form.errors.translated_fields[field] }} {{ form.errors.messages[field] }}
+                          {%- endif -%}
+                        </li>
+                      {%- endfor -%}
+                    </ul>
+                  </div>
+                {%- endif -%}
+
+                <div class="ishaya-article__form-grid">
+                  <div class="ishaya-article__form-field">
+                    <label for="CommentForm-author" class="ishaya-article__form-label">CALLSIGN / NAME *</label>
+                    <input
+                      type="text"
+                      name="comment[author]"
+                      id="CommentForm-author"
+                      class="ishaya-article__form-input"
+                      value="{{ form.author }}"
+                      placeholder="e.g. MARCUS V."
+                      required
+                      autocomplete="name"
+                    >
+                  </div>
+
+                  <div class="ishaya-article__form-field">
+                    <label for="CommentForm-email" class="ishaya-article__form-label">ELECTRONIC MAIL *</label>
+                    <input
+                      type="email"
+                      name="comment[email]"
+                      id="CommentForm-email"
+                      class="ishaya-article__form-input"
+                      value="{{ form.email }}"
+                      placeholder="user@domain.com"
+                      required
+                      autocomplete="email"
+                    >
+                  </div>
+                </div>
+
+                <div class="ishaya-article__form-field">
+                  <label for="CommentForm-body" class="ishaya-article__form-label">OBSERVATION BODY *</label>
+                  <textarea
+                    rows="5"
+                    name="comment[body]"
+                    id="CommentForm-body"
+                    class="ishaya-article__form-textarea"
+                    placeholder="Enter your observations on this dispatch..."
+                    required
+                  >{{ form.body }}</textarea>
+                </div>
+
+                <div class="ishaya-article__form-actions">
+                  <button type="submit" class="btn btn--primary ishaya-article__submit-btn">
+                    <span>TRANSMIT RESPONSE</span>
+                    {% render 'icons', name: 'arrow-right', width: 14, height: 14 %}
+                  </button>
+                </div>
+              {%- endform -%}
+            </div>
+          </section>
+        {%- endif -%}
+      </div>
+    </div>
   </div>
+</article>
 
-  {% form 'new_comment', article %}
-    <h2>{{ 'blog.comment_form_title' | t }}</h2>
+<script>
+  (function() {
+    // Copy link trigger
+    document.addEventListener('DOMContentLoaded', function() {
+      var copyBtn = document.querySelector('.ishaya-article__share-copy');
+      if (!copyBtn) return;
 
-    {{ form.errors | default_errors }}
+      copyBtn.addEventListener('click', function() {
+        var url = copyBtn.getAttribute('data-copy-url') || window.location.href;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(url).then(function() {
+            var label = copyBtn.querySelector('.ishaya-article__share-copy-text');
+            if (label) {
+              var original = label.textContent;
+              label.textContent = 'LINK COPIED TO CLIPBOARD';
+              setTimeout(function() {
+                label.textContent = original;
+              }, 2500);
+            }
+          });
+        }
+      });
+    });
+  })();
+</script>
 
-    <div>
-      <label for="author">{{ 'blog.comment_form_name' | t }}</label>
-      <input type="text" name="comment[author]" id="author" value="{{ form.author }}" required>
-    </div>
+<style>
+  .ishaya-article {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    padding-bottom: clamp(4rem, 8vw, 8rem);
+  }
 
-    <div>
-      <label for="email">{{ 'blog.comment_form_email' | t }}</label>
-      <input type="email" name="comment[email]" id="email" value="{{ form.email }}" required>
-    </div>
+  /* Header */
+  .ishaya-article__header {
+    padding-top: clamp(3rem, 5vw, 4.5rem);
+    padding-bottom: clamp(2rem, 4vw, 3rem);
+    border-bottom: 1px solid var(--color-border);
+    background: radial-gradient(circle at 50% 0%, #151518 0%, var(--color-background) 85%);
+  }
 
-    <div>
-      <label for="body">{{ 'blog.comment_form_body' | t }}</label>
-      <textarea name="comment[body]" id="body" required>{{ form.body }}</textarea>
-    </div>
+  .ishaya-article__header-inner {
+    max-width: 860px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
 
-    <input type="submit" value="{{ 'blog.comment_form_submit' | t }}">
-  {% endform %}
-{% endif %}
+  .ishaya-article__back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--color-muted);
+    text-decoration: none;
+    transition: color var(--duration-fast) ease, transform var(--duration-fast) ease;
+    width: fit-content;
+  }
+
+  .ishaya-article__back-link:hover {
+    color: var(--color-foreground);
+    transform: translateX(-3px);
+  }
+
+  .ishaya-article__meta-top {
+    margin-top: 0.5rem;
+  }
+
+  .ishaya-article__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.85rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    color: #3b82f6;
+    border-radius: var(--radius-sm);
+  }
+
+  .ishaya-article__badge-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #3b82f6;
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
+  }
+
+  .ishaya-article__title {
+    font-size: clamp(2.25rem, 4.5vw, 3.75rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    text-transform: uppercase;
+    margin: 0;
+  }
+
+  .ishaya-article__byline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.65rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--color-muted);
+    padding-top: 0.5rem;
+  }
+
+  .ishaya-article__byline-sep {
+    opacity: 0.4;
+  }
+
+  /* Featured Image */
+  .ishaya-article__media-container {
+    margin-top: clamp(2rem, 4vw, 3.5rem);
+    margin-bottom: clamp(2.5rem, 5vw, 4rem);
+  }
+
+  .ishaya-article__media {
+    position: relative;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    max-height: 680px;
+    border: 1px solid var(--color-border);
+  }
+
+  .ishaya-article__hero-img {
+    width: 100%;
+    height: 100%;
+    max-height: 680px;
+    object-fit: cover;
+    display: block;
+  }
+
+  .ishaya-article__caption {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--color-muted);
+    background: rgba(10, 10, 12, 0.75);
+    border-top: 1px solid var(--color-border);
+  }
+
+  /* Content Column */
+  .ishaya-article__body-layout {
+    display: flex;
+    justify-content: center;
+  }
+
+  .ishaya-article__content-column {
+    width: 100%;
+    max-width: 780px;
+  }
+
+  /* Rich Text Typography */
+  .ishaya-article__rte {
+    font-size: clamp(1rem, 1.2vw, 1.0625rem);
+    line-height: 1.85;
+    color: rgba(255, 255, 255, 0.88);
+  }
+
+  .ishaya-article__rte > *:first-child {
+    margin-top: 0;
+  }
+
+  .ishaya-article__rte h2 {
+    font-size: clamp(1.4rem, 2.5vw, 2rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    color: var(--color-foreground);
+    margin-top: 3.5rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .ishaya-article__rte h3 {
+    font-size: clamp(1.15rem, 2vw, 1.5rem);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+    color: var(--color-foreground);
+    margin-top: 2.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .ishaya-article__rte p {
+    margin-bottom: 1.75rem;
+  }
+
+  .ishaya-article__rte blockquote {
+    margin: 2.5rem 0;
+    padding: 1.5rem 2rem;
+    background: rgba(255, 255, 255, 0.025);
+    border-left: 2px solid #3b82f6;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    font-size: 1.15rem;
+    line-height: 1.6;
+    color: var(--color-foreground);
+    font-style: italic;
+  }
+
+  .ishaya-article__rte img {
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    margin: 2rem 0;
+    max-width: 100%;
+    height: auto;
+  }
+
+  .ishaya-article__rte ul,
+  .ishaya-article__rte ol {
+    margin: 0 0 1.75rem 1.75rem;
+    padding: 0;
+  }
+
+  .ishaya-article__rte li {
+    margin-bottom: 0.65rem;
+  }
+
+  /* Footer Sharing & Tags */
+  .ishaya-article__footer {
+    margin-top: 3.5rem;
+    padding: 1.75rem;
+    border-radius: var(--radius-md);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .ishaya-article__footer-label {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    display: block;
+    margin-bottom: 0.75rem;
+  }
+
+  .ishaya-article__tags-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .ishaya-article__tag-pill {
+    padding: 0.4rem 0.85rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--color-foreground);
+    text-decoration: none;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    transition: all var(--duration-fast) ease;
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .ishaya-article__tag-pill:hover {
+    border-color: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.08);
+    color: #3b82f6;
+  }
+
+  .ishaya-article__share-btns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .ishaya-article__share-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--color-foreground);
+    text-decoration: none;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.02);
+    cursor: pointer;
+    transition: all var(--duration-fast) ease;
+    min-height: 44px;
+  }
+
+  .ishaya-article__share-btn:hover {
+    border-color: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  /* Next / Prev Navigation */
+  .ishaya-article__pagination {
+    margin-top: 2.5rem;
+  }
+
+  .ishaya-article__pagination-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  @media (min-width: 640px) {
+    .ishaya-article__pagination-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .ishaya-article__nav-card {
+    padding: 1.5rem;
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    transition: transform var(--duration-fast) ease, border-color var(--duration-fast) ease;
+  }
+
+  .ishaya-article__nav-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  .ishaya-article__nav-direction {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: #3b82f6;
+  }
+
+  .ishaya-article__nav-card--next .ishaya-article__nav-direction {
+    justify-content: flex-end;
+  }
+
+  .ishaya-article__nav-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-foreground);
+    line-height: 1.3;
+    text-transform: uppercase;
+  }
+
+  .ishaya-article__nav-card--next .ishaya-article__nav-title {
+    text-align: right;
+  }
+
+  /* Comments */
+  .ishaya-article__comments {
+    margin-top: clamp(3.5rem, 6vw, 5rem);
+  }
+
+  .ishaya-article__comments-header {
+    margin-bottom: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .ishaya-article__comments-badge {
+    display: inline-flex;
+    padding: 0.3rem 0.75rem;
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--color-muted);
+    border-radius: var(--radius-sm);
+    width: fit-content;
+  }
+
+  .ishaya-article__comments-title {
+    font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    margin: 0;
+  }
+
+  .ishaya-article__comments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .ishaya-article__comment-item {
+    padding: 1.5rem;
+    border-radius: var(--radius-md);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .ishaya-article__comment-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+  }
+
+  .ishaya-article__comment-author {
+    color: var(--color-foreground);
+  }
+
+  .ishaya-article__comment-sep {
+    opacity: 0.4;
+  }
+
+  .ishaya-article__comment-date {
+    color: var(--color-muted);
+  }
+
+  .ishaya-article__comment-body {
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.85);
+  }
+
+  /* Comment Form */
+  .ishaya-article__form-wrapper {
+    padding: clamp(1.75rem, 3vw, 2.5rem);
+    border-radius: var(--radius-md);
+    margin-top: 2rem;
+  }
+
+  .ishaya-article__form-heading {
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+    margin: 0;
+  }
+
+  .ishaya-article__form-sub {
+    font-size: 0.8125rem;
+    color: var(--color-muted);
+    margin-top: 0.25rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .ishaya-article__comment-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .ishaya-article__form-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  @media (min-width: 640px) {
+    .ishaya-article__form-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .ishaya-article__form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .ishaya-article__form-label {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .ishaya-article__form-input,
+  .ishaya-article__form-textarea {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    font-size: 0.875rem;
+    font-family: inherit;
+    color: var(--color-foreground);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    outline: none;
+    transition: border-color var(--duration-fast) ease, box-shadow var(--duration-fast) ease;
+    min-height: 44px;
+  }
+
+  .ishaya-article__form-input:focus,
+  .ishaya-article__form-textarea:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+  }
+
+  .ishaya-article__form-actions {
+    margin-top: 0.5rem;
+  }
+
+  .ishaya-article__submit-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  /* Form Feedback */
+  .ishaya-article__form-success {
+    padding: 1.25rem;
+    border-radius: var(--radius-sm);
+    display: flex;
+    gap: 1rem;
+    border-left: 3px solid #10b981;
+    margin-bottom: 1.5rem;
+  }
+
+  .ishaya-article__form-success-icon {
+    font-size: 1.25rem;
+    color: #10b981;
+  }
+
+  .ishaya-article__form-success-title {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: #10b981;
+  }
+
+  .ishaya-article__form-success-desc {
+    font-size: 0.8125rem;
+    color: var(--color-muted);
+    margin: 0.25rem 0 0;
+  }
+
+  .ishaya-article__form-error {
+    padding: 1.25rem;
+    border-radius: var(--radius-sm);
+    border-left: 3px solid #ef4444;
+    margin-bottom: 1.5rem;
+  }
+
+  .ishaya-article__form-error-title {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: #ef4444;
+  }
+
+  .ishaya-article__form-error-list {
+    margin: 0.5rem 0 0 1.25rem;
+    padding: 0;
+    font-size: 0.8125rem;
+    color: var(--color-muted);
+  }
+</style>
 
 {% schema %}
 {
-  "name": "t:general.article",
-  "settings": []
+  "name": "Article Content",
+  "tag": "section",
+  "class": "section-article",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "show_date",
+      "label": "Show Published Date",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_author",
+      "label": "Show Author",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_reading_time",
+      "label": "Show Reading Time",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_tags",
+      "label": "Show Tags",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_share",
+      "label": "Show Share Actions",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_next_prev",
+      "label": "Show Next / Previous Navigation",
+      "default": true
+    }
+  ]
 }
 {% endschema %}

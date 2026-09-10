@@ -1,0 +1,800 @@
+{% doc %}
+  Renders the global slide-out cart drawer with real-time AJAX line-item updates,
+  animated free shipping progress calculator, order note, and checkout actions.
+{% enddoc %}
+
+{%- liquid
+  assign threshold_dollars = settings.free_shipping_threshold | default: 250
+  assign threshold_cents = threshold_dollars | times: 100
+  assign diff_cents = threshold_cents | minus: cart.total_price
+  assign progress_percent = cart.total_price | times: 100.0 | divided_by: threshold_cents | at_most: 100 | round
+-%}
+
+<div
+  id="CartDrawer"
+  class="ishaya-cart-drawer"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Shopping Bag"
+  hidden
+>
+  <div class="ishaya-cart-drawer__backdrop" data-close-cart tabindex="-1"></div>
+
+  <div class="ishaya-cart-drawer__panel glass-panel">
+    <!-- Drawer Header -->
+    <div class="ishaya-cart-drawer__header">
+      <div class="ishaya-cart-drawer__header-title-wrap">
+        <h2 class="ishaya-cart-drawer__title">SHOPPING BAG</h2>
+        <span
+          id="CartDrawerCountBadge"
+          class="ishaya-cart-drawer__count-badge{% if cart.item_count == 0 %} ishaya-cart-drawer__count-badge--hidden{% endif %}"
+        >
+          {{ cart.item_count }}
+        </span>
+      </div>
+
+      <button
+        type="button"
+        class="ishaya-cart-drawer__close-btn"
+        data-close-cart
+        aria-label="Close shopping bag"
+      >
+        {% render 'icons', name: 'close', width: 18, height: 18 %}
+      </button>
+    </div>
+
+    <!-- Free Shipping Calculator Bar -->
+    <div class="ishaya-cart-drawer__shipping-bar" id="CartDrawerShippingBar">
+      <div class="ishaya-cart-drawer__shipping-message" id="CartDrawerShippingMsg">
+        {%- if diff_cents > 0 -%}
+          Add <strong id="CartShippingDiff">{{ diff_cents | money }}</strong> more to unlock complimentary worldwide shipping.
+        {%- else -%}
+          <span class="ishaya-cart-drawer__shipping-unlocked">
+            Complimentary worldwide shipping unlocked ✓
+          </span>
+        {%- endif -%}
+      </div>
+      <div class="ishaya-cart-drawer__progress-track" aria-hidden="true">
+        <div
+          class="ishaya-cart-drawer__progress-fill"
+          id="CartShippingProgressFill"
+          style="width: {{ progress_percent }}%;"
+        ></div>
+      </div>
+    </div>
+
+    <!-- Drawer Body: Line Items or Empty State -->
+    <div class="ishaya-cart-drawer__body" id="CartDrawerBody">
+      {%- if cart.item_count > 0 -%}
+        <div class="ishaya-cart-drawer__items-list" id="CartDrawerItemsList">
+          {%- for item in cart.items -%}
+            <div class="ishaya-cart-drawer__item" data-line-item-key="{{ item.key }}">
+              <!-- Item Media -->
+              <a href="{{ item.url }}" class="ishaya-cart-drawer__item-media glass-panel" aria-label="{{ item.product.title | escape }}">
+                {%- if item.image -%}
+                  {{
+                    item.image
+                    | image_url: width: 300, height: 400, crop: 'center'
+                    | image_tag:
+                      loading: 'lazy',
+                      class: 'ishaya-cart-drawer__item-img',
+                      alt: item.image.alt | default: item.product.title | escape
+                  }}
+                {%- else -%}
+                  <div class="ishaya-cart-drawer__placeholder">
+                    {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg' }}
+                  </div>
+                {%- endif -%}
+              </a>
+
+              <!-- Item Content -->
+              <div class="ishaya-cart-drawer__item-content">
+                <div class="ishaya-cart-drawer__item-header">
+                  <h3 class="ishaya-cart-drawer__item-title">
+                    <a href="{{ item.url }}" class="ishaya-cart-drawer__item-link">
+                      {{ item.product.title }}
+                    </a>
+                  </h3>
+                  <button
+                    type="button"
+                    class="ishaya-cart-drawer__remove-btn"
+                    data-remove-line="{{ item.key }}"
+                    aria-label="Remove {{ item.title | escape }}"
+                  >
+                    {% render 'icons', name: 'close', width: 14, height: 14 %}
+                  </button>
+                </div>
+
+                {%- unless item.product.has_only_default_variant -%}
+                  <span class="ishaya-cart-drawer__item-variant">
+                    {{ item.variant.title }}
+                  </span>
+                {%- endunless -%}
+
+                <div class="ishaya-cart-drawer__item-footer">
+                  <!-- Stepper -->
+                  <div class="ishaya-cart-drawer__stepper glass-panel">
+                    <button
+                      type="button"
+                      class="ishaya-cart-drawer__stepper-btn"
+                      data-action="minus"
+                      data-key="{{ item.key }}"
+                      data-qty="{{ item.quantity | minus: 1 }}"
+                      aria-label="Decrease quantity for {{ item.title | escape }}"
+                    >
+                      {% render 'icons', name: 'minus', width: 10, height: 10 %}
+                    </button>
+                    <span class="ishaya-cart-drawer__stepper-qty">{{ item.quantity }}</span>
+                    <button
+                      type="button"
+                      class="ishaya-cart-drawer__stepper-btn"
+                      data-action="plus"
+                      data-key="{{ item.key }}"
+                      data-qty="{{ item.quantity | plus: 1 }}"
+                      aria-label="Increase quantity for {{ item.title | escape }}"
+                    >
+                      {% render 'icons', name: 'plus', width: 10, height: 10 %}
+                    </button>
+                  </div>
+
+                  <!-- Price -->
+                  <div class="ishaya-cart-drawer__item-price">
+                    {{ item.final_line_price | money }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          {%- endfor -%}
+        </div>
+      {%- else -%}
+        <!-- Empty State -->
+        <div class="ishaya-cart-drawer__empty" id="CartDrawerEmptyState">
+          <div class="ishaya-cart-drawer__empty-icon" aria-hidden="true">
+            {% render 'icons', name: 'cart', width: 36, height: 36 %}
+          </div>
+          <h3 class="ishaya-cart-drawer__empty-title">YOUR BAG IS EMPTY</h3>
+          <p class="ishaya-cart-drawer__empty-desc">
+            Explore our curated catalog of architectural silhouettes and heavyweight textiles.
+          </p>
+          <a href="{{ routes.all_products_collection_url }}" class="btn btn--primary ishaya-cart-drawer__empty-btn" data-close-cart>
+            <span>EXPLORE ARCHIVE</span>
+            {% render 'icons', name: 'arrow-right', width: 14, height: 14 %}
+          </a>
+        </div>
+      {%- endif -%}
+    </div>
+
+    <!-- Drawer Footer / Summary (Visible when items > 0) -->
+    <div
+      class="ishaya-cart-drawer__footer{% if cart.item_count == 0 %} ishaya-cart-drawer__footer--hidden{% endif %}"
+      id="CartDrawerFooter"
+    >
+      {%- if settings.show_order_notes -%}
+        <details class="ishaya-cart-drawer__note-details">
+          <summary class="ishaya-cart-drawer__note-summary">
+            <span>Special Instructions / Order Note</span>
+            {% render 'icons', name: 'chevron-down', width: 10, height: 10 %}
+          </summary>
+          <textarea
+            id="CartDrawerOrderNote"
+            class="ishaya-cart-drawer__note-textarea"
+            placeholder="Add delivery instructions or archival packaging notes..."
+          >{{ cart.note }}</textarea>
+        </details>
+      {%- endif -%}
+
+      <!-- Subtotal -->
+      <div class="ishaya-cart-drawer__subtotal-row">
+        <span class="ishaya-cart-drawer__subtotal-label">SUBTOTAL</span>
+        <strong class="ishaya-cart-drawer__subtotal-val" id="CartDrawerSubtotal">
+          {{ cart.total_price | money }}
+        </strong>
+      </div>
+      <p class="ishaya-cart-drawer__tax-disclaimer">
+        Taxes and calculated shipping added at checkout.
+      </p>
+
+      <!-- Checkout Button -->
+      <a
+        href="/checkout"
+        class="btn btn--primary ishaya-cart-drawer__checkout-btn"
+        id="CartDrawerCheckoutBtn"
+      >
+        <span>CHECKOUT NOW</span>
+        {% render 'icons', name: 'arrow-right', width: 14, height: 14 %}
+      </a>
+
+      <!-- View Cart Page Link -->
+      <a href="{{ routes.cart_url }}" class="ishaya-cart-drawer__view-cart-link">
+        View Full Bag Details
+      </a>
+    </div>
+  </div>
+</div>
+
+<style>
+  .ishaya-cart-drawer {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .ishaya-cart-drawer[hidden] {
+    display: none;
+  }
+
+  .ishaya-cart-drawer__backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .ishaya-cart-drawer__panel {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: 480px;
+    height: 100%;
+    background-color: #0c0c0f;
+    border-left: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    box-shadow: -10px 0 40px rgba(0, 0, 0, 0.6);
+    animation: cartSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes cartSlideIn {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+  }
+
+  /* Header */
+  .ishaya-cart-drawer__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .ishaya-cart-drawer__header-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .ishaya-cart-drawer__title {
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin: 0;
+    color: var(--color-foreground);
+  }
+
+  .ishaya-cart-drawer__count-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    background-color: var(--color-foreground);
+    color: var(--color-background);
+    border-radius: var(--radius-pill);
+    font-size: 0.7rem;
+    font-weight: 800;
+  }
+
+  .ishaya-cart-drawer__count-badge--hidden {
+    display: none;
+  }
+
+  .ishaya-cart-drawer__close-btn {
+    background: transparent;
+    border: none;
+    color: var(--color-foreground);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.35rem;
+    border-radius: 50%;
+    transition: background-color var(--transition-fast);
+  }
+
+  .ishaya-cart-drawer__close-btn:hover {
+    background-color: var(--glass-bg-hover);
+  }
+
+  /* Free Shipping Calculator */
+  .ishaya-cart-drawer__shipping-bar {
+    padding: 1rem 1.5rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .ishaya-cart-drawer__shipping-message {
+    font-size: 0.78rem;
+    color: var(--color-muted);
+    line-height: 1.4;
+  }
+
+  .ishaya-cart-drawer__shipping-message strong {
+    color: var(--color-foreground);
+  }
+
+  .ishaya-cart-drawer__shipping-unlocked {
+    color: #4ade80;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+
+  .ishaya-cart-drawer__progress-track {
+    width: 100%;
+    height: 4px;
+    background: var(--color-border);
+    border-radius: var(--radius-pill);
+    overflow: hidden;
+  }
+
+  .ishaya-cart-drawer__progress-fill {
+    height: 100%;
+    background: var(--color-foreground);
+    transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Body */
+  .ishaya-cart-drawer__body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.25rem 1.5rem;
+  }
+
+  .ishaya-cart-drawer__items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .ishaya-cart-drawer__item {
+    display: flex;
+    gap: 1rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .ishaya-cart-drawer__item-media {
+    width: 80px;
+    aspect-ratio: 3 / 4;
+    border-radius: var(--radius-input);
+    overflow: hidden;
+    flex-shrink: 0;
+    border: 1px solid var(--color-border);
+    background-color: var(--color-surface);
+  }
+
+  .ishaya-cart-drawer__item-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .ishaya-cart-drawer__placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #121215;
+  }
+
+  .ishaya-cart-drawer__placeholder svg {
+    width: 50%;
+    height: 50%;
+    opacity: 0.3;
+  }
+
+  .ishaya-cart-drawer__item-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .ishaya-cart-drawer__item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .ishaya-cart-drawer__item-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    line-height: 1.3;
+    margin: 0;
+  }
+
+  .ishaya-cart-drawer__item-link {
+    color: var(--color-foreground);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+  }
+
+  .ishaya-cart-drawer__item-link:hover {
+    color: #ffffff;
+    opacity: 0.85;
+  }
+
+  .ishaya-cart-drawer__remove-btn {
+    background: transparent;
+    border: none;
+    color: var(--color-muted);
+    cursor: pointer;
+    padding: 0.2rem;
+    transition: color var(--transition-fast);
+  }
+
+  .ishaya-cart-drawer__remove-btn:hover {
+    color: #ef4444;
+  }
+
+  .ishaya-cart-drawer__item-variant {
+    font-size: 0.72rem;
+    color: var(--color-muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 0.2rem;
+  }
+
+  .ishaya-cart-drawer__item-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0.75rem;
+  }
+
+  .ishaya-cart-drawer__stepper {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    padding: 2px 4px;
+  }
+
+  .ishaya-cart-drawer__stepper-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    background: transparent;
+    border: none;
+    color: var(--color-foreground);
+    cursor: pointer;
+    border-radius: 50%;
+    transition: background-color var(--transition-fast);
+  }
+
+  .ishaya-cart-drawer__stepper-btn:hover {
+    background-color: var(--glass-bg-hover);
+  }
+
+  .ishaya-cart-drawer__stepper-qty {
+    font-size: 0.78rem;
+    font-weight: 700;
+    min-width: 24px;
+    text-align: center;
+  }
+
+  .ishaya-cart-drawer__item-price {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--color-foreground);
+  }
+
+  /* Empty State */
+  .ishaya-cart-drawer__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    height: 100%;
+    padding: 2rem 1rem;
+  }
+
+  .ishaya-cart-drawer__empty-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--glass-bg);
+    border: 1px solid var(--color-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-muted);
+    margin-bottom: 1.25rem;
+  }
+
+  .ishaya-cart-drawer__empty-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+
+  .ishaya-cart-drawer__empty-desc {
+    font-size: 0.85rem;
+    color: var(--color-muted);
+    line-height: 1.5;
+    max-width: 280px;
+    margin-bottom: 1.5rem;
+  }
+
+  .ishaya-cart-drawer__empty-btn {
+    font-size: 0.75rem;
+    letter-spacing: 0.16em;
+  }
+
+  /* Footer */
+  .ishaya-cart-drawer__footer {
+    padding: 1.5rem;
+    border-top: 1px solid var(--color-border);
+    background-color: #0c0c0f;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+
+  .ishaya-cart-drawer__footer--hidden {
+    display: none;
+  }
+
+  .ishaya-cart-drawer__note-details {
+    margin-bottom: 0.5rem;
+  }
+
+  .ishaya-cart-drawer__note-summary {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .ishaya-cart-drawer__note-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .ishaya-cart-drawer__note-textarea {
+    width: 100%;
+    margin-top: 0.5rem;
+    min-height: 60px;
+    font-size: 0.78rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-input);
+    color: var(--color-foreground);
+    padding: 0.5rem 0.75rem;
+  }
+
+  .ishaya-cart-drawer__subtotal-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .ishaya-cart-drawer__subtotal-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .ishaya-cart-drawer__subtotal-val {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--color-foreground);
+  }
+
+  .ishaya-cart-drawer__tax-disclaimer {
+    font-size: 0.72rem;
+    color: var(--color-muted);
+    margin: 0;
+  }
+
+  .ishaya-cart-drawer__checkout-btn {
+    width: 100%;
+    min-height: 50px;
+    font-size: 0.78rem;
+    letter-spacing: 0.18em;
+  }
+
+  .ishaya-cart-drawer__view-cart-link {
+    text-align: center;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    text-decoration: underline;
+    transition: color var(--transition-fast);
+  }
+
+  .ishaya-cart-drawer__view-cart-link:hover {
+    color: var(--color-foreground);
+  }
+</style>
+
+<script>
+  (function() {
+    const drawer = document.getElementById('CartDrawer');
+    if (!drawer) return;
+
+    window.openCartDrawer = function() {
+      drawer.removeAttribute('hidden');
+      document.body.classList.add('drawer-open');
+    };
+
+    window.closeCartDrawer = function() {
+      drawer.setAttribute('hidden', '');
+      document.body.classList.remove('drawer-open');
+    };
+
+    // Close on click backdrop or close button
+    drawer.querySelectorAll('[data-close-cart]').forEach(function(el) {
+      el.addEventListener('click', window.closeCartDrawer);
+    });
+
+    // Close on Escape
+    document.addEventListener('keydown', function(evt) {
+      if (evt.key === 'Escape' && !drawer.hasAttribute('hidden')) {
+        window.closeCartDrawer();
+      }
+    });
+
+    // Function to re-render drawer contents using AJAX
+    window.refreshCartDrawer = function() {
+      fetch('/cart.js')
+        .then(function(res) { return res.json(); })
+        .then(function(cart) {
+          // Update Header Badge
+          const headerBadge = document.getElementById('HeaderCartCount');
+          if (headerBadge) {
+            headerBadge.textContent = cart.item_count;
+            if (cart.item_count > 0) {
+              headerBadge.classList.remove('zb-cart-count--hidden');
+            } else {
+              headerBadge.classList.add('zb-cart-count--hidden');
+            }
+          }
+
+          // Update Drawer Badge
+          const drawerBadge = document.getElementById('CartDrawerCountBadge');
+          if (drawerBadge) {
+            drawerBadge.textContent = cart.item_count;
+            if (cart.item_count > 0) {
+              drawerBadge.classList.remove('ishaya-cart-drawer__count-badge--hidden');
+            } else {
+              drawerBadge.classList.add('ishaya-cart-drawer__count-badge--hidden');
+            }
+          }
+
+          // Update Free Shipping Bar
+          const thresholdCents = {{ threshold_cents }};
+          const diff = thresholdCents - cart.total_price;
+          const percent = Math.min(100, Math.round((cart.total_price / thresholdCents) * 100));
+
+          const progressFill = document.getElementById('CartShippingProgressFill');
+          if (progressFill) progressFill.style.width = percent + '%';
+
+          const shippingMsg = document.getElementById('CartDrawerShippingMsg');
+          if (shippingMsg) {
+            if (diff > 0) {
+              const diffFormatted = '$' + (diff / 100).toFixed(2);
+              shippingMsg.innerHTML = 'Add <strong>' + diffFormatted + '</strong> more to unlock complimentary worldwide shipping.';
+            } else {
+              shippingMsg.innerHTML = '<span class="ishaya-cart-drawer__shipping-unlocked">Complimentary worldwide shipping unlocked ✓</span>';
+            }
+          }
+
+          // Update Subtotal
+          const subtotal = document.getElementById('CartDrawerSubtotal');
+          if (subtotal) {
+            subtotal.textContent = '$' + (cart.total_price / 100).toFixed(2);
+          }
+
+          // If cart count is 0, show empty state, hide footer
+          const footer = document.getElementById('CartDrawerFooter');
+          const body = document.getElementById('CartDrawerBody');
+
+          if (cart.item_count === 0) {
+            if (footer) footer.classList.add('ishaya-cart-drawer__footer--hidden');
+            if (body) {
+              body.innerHTML = `
+                <div class="ishaya-cart-drawer__empty">
+                  <div class="ishaya-cart-drawer__empty-icon" aria-hidden="true">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                  </div>
+                  <h3 class="ishaya-cart-drawer__empty-title">YOUR BAG IS EMPTY</h3>
+                  <p class="ishaya-cart-drawer__empty-desc">Explore our curated catalog of architectural silhouettes and heavyweight textiles.</p>
+                  <a href="{{ routes.all_products_collection_url }}" class="btn btn--primary ishaya-cart-drawer__empty-btn" onclick="window.closeCartDrawer()">
+                    <span>EXPLORE ARCHIVE</span>
+                  </a>
+                </div>
+              `;
+            }
+          } else {
+            if (footer) footer.classList.remove('ishaya-cart-drawer__footer--hidden');
+            // Fetch the section HTML to update line items cleanly
+            fetch(window.location.pathname + '?sections=header-group')
+              .then(function(res) { return res.json(); })
+              .catch(function() {
+                // If section rendering is unavailable, soft reload or update items
+              });
+          }
+        });
+    };
+
+    // Listen to quantity changes and removals inside drawer
+    drawer.addEventListener('click', function(e) {
+      const stepperBtn = e.target.closest('.ishaya-cart-drawer__stepper-btn');
+      const removeBtn = e.target.closest('.ishaya-cart-drawer__remove-btn');
+
+      if (stepperBtn) {
+        const key = stepperBtn.getAttribute('data-key');
+        const qty = parseInt(stepperBtn.getAttribute('data-qty'), 10);
+        updateCartQuantity(key, qty);
+      } else if (removeBtn) {
+        const key = removeBtn.getAttribute('data-remove-line');
+        updateCartQuantity(key, 0);
+      }
+    });
+
+    function updateCartQuantity(key, qty) {
+      fetch('/cart/change.js', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        body: JSON.stringify({ id: key, quantity: qty })
+      })
+      .then(function(res) { return res.json(); })
+      .then(function() {
+        // Refresh page or drawer items
+        window.location.reload();
+      })
+      .catch(function(err) {
+        console.error('Error changing cart quantity:', err);
+      });
+    }
+
+    // Auto-save Order Note on blur
+    const noteTextarea = document.getElementById('CartDrawerOrderNote');
+    if (noteTextarea) {
+      noteTextarea.addEventListener('change', function() {
+        fetch('/cart/update.js', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+          body: JSON.stringify({ note: noteTextarea.value })
+        });
+      });
+    }
+  })();
+</script>

@@ -1,0 +1,556 @@
+{% comment %}
+  ISHAYA Hero Banner Section
+  Full-width architectural streetwear hero supporting Shopify video or responsive imagery,
+  gradient overlays, typography hierarchy, dual action pills, and video audio toggle.
+{% endcomment %}
+
+{%- liquid
+  assign overlay_opacity_val = section.settings.overlay_opacity | divided_by: 100.0
+  assign has_video = false
+  if section.settings.video != blank
+    assign has_video = true
+  endif
+-%}
+
+<section
+  id="Hero-{{ section.id }}"
+  class="ishaya-hero full-width ishaya-hero--{{ section.settings.height }} ishaya-hero--align-{{ section.settings.content_alignment }}"
+  aria-label="{{ section.settings.heading | escape }}"
+>
+  <!-- Background Media -->
+  <div class="ishaya-hero__media">
+    {%- if has_video -%}
+      {{
+        section.settings.video
+        | video_tag:
+          image_size: '2048x',
+          autoplay: true,
+          loop: true,
+          muted: true,
+          controls: false,
+          playsinline: true,
+          class: 'ishaya-hero__video',
+          id: 'HeroVideo'
+      }}
+
+      <button
+        type="button"
+        class="ishaya-hero__sound-toggle glass-panel"
+        id="HeroSoundToggle-{{ section.id }}"
+        aria-label="Toggle sound"
+        data-muted="true"
+      >
+        <span class="ishaya-hero__sound-icon ishaya-hero__sound-icon--muted" aria-hidden="true">
+          {% render 'icons', name: 'volume-x', width: 16, height: 16 %}
+        </span>
+        <span class="ishaya-hero__sound-icon ishaya-hero__sound-icon--unmuted" aria-hidden="true" style="display: none;">
+          {% render 'icons', name: 'volume-2', width: 16, height: 16 %}
+        </span>
+        <span class="ishaya-hero__sound-label">Audio</span>
+      </button>
+    {%- elsif section.settings.image != blank -%}
+      <picture class="ishaya-hero__picture">
+        {%- if section.settings.image_mobile != blank -%}
+          <source
+            media="(max-width: 767px)"
+            srcset="{{ section.settings.image_mobile | image_url: width: 750 }} 1x, {{ section.settings.image_mobile | image_url: width: 1500 }} 2x"
+          >
+        {%- endif -%}
+        {{
+          section.settings.image
+          | image_url: width: 2880
+          | image_tag:
+            loading: 'eager',
+            fetchpriority: 'high',
+            class: 'ishaya-hero__image',
+            alt: section.settings.image.alt | default: section.settings.heading | escape
+        }}
+      </picture>
+    {%- else -%}
+      <!-- Default Architectural Dark Streetwear Backdrop -->
+      <div class="ishaya-hero__fallback-art">
+        <div class="ishaya-hero__grid-lines" aria-hidden="true"></div>
+        {{ 'lifestyle-1' | placeholder_svg_tag: 'ishaya-hero__placeholder-svg' }}
+      </div>
+    {%- endif -%}
+
+    <!-- Dark Contrast & Vignette Overlay -->
+    <div
+      class="ishaya-hero__overlay"
+      style="--overlay-opacity: {{ overlay_opacity_val }};"
+      aria-hidden="true"
+    ></div>
+  </div>
+
+  <!-- Hero Content Layer -->
+  <div class="ishaya-hero__content-container page-container">
+    <div class="ishaya-hero__inner">
+      {%- if section.settings.tag != blank -%}
+        <div class="ishaya-hero__tag-wrapper">
+          <span class="ishaya-hero__tag">
+            <span class="ishaya-hero__tag-dot" aria-hidden="true"></span>
+            {{ section.settings.tag }}
+          </span>
+        </div>
+      {%- endif -%}
+
+      {%- if section.settings.heading != blank -%}
+        <h1 class="ishaya-hero__heading">
+          {{ section.settings.heading }}
+        </h1>
+      {%- endif -%}
+
+      {%- if section.settings.subheading != blank -%}
+        <p class="ishaya-hero__subheading">
+          {{ section.settings.subheading }}
+        </p>
+      {%- endif -%}
+
+      {%- if section.settings.button_label_1 != blank or section.settings.button_label_2 != blank -%}
+        <div class="ishaya-hero__actions">
+          {%- if section.settings.button_label_1 != blank -%}
+            <a
+              href="{{ section.settings.button_link_1 | default: routes.all_products_collection_url }}"
+              class="btn btn--primary ishaya-hero__btn"
+            >
+              <span>{{ section.settings.button_label_1 }}</span>
+              {% render 'icons', name: 'arrow-right', width: 14, height: 14 %}
+            </a>
+          {%- endif -%}
+
+          {%- if section.settings.button_label_2 != blank -%}
+            <a
+              href="{{ section.settings.button_link_2 | default: '#featured-collections' }}"
+              class="btn btn--secondary ishaya-hero__btn glass-panel"
+            >
+              <span>{{ section.settings.button_label_2 }}</span>
+            </a>
+          {%- endif -%}
+        </div>
+      {%- endif -%}
+    </div>
+  </div>
+
+  <!-- Utilitarian Coordinate Bar / Scroll Indicator -->
+  <div class="ishaya-hero__status-bar page-container" aria-hidden="true">
+    <span class="ishaya-hero__status-item">ISHAYA // FORM 01</span>
+    <span class="ishaya-hero__status-item ishaya-hero__status-item--center">
+      <span class="ishaya-hero__scroll-line"></span>
+      SCROLL DOWN
+    </span>
+    <span class="ishaya-hero__status-item">SPEC 2026</span>
+  </div>
+</section>
+
+<style>
+  .ishaya-hero {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    background-color: #09090b;
+    color: #ffffff;
+  }
+
+  /* Heights */
+  .ishaya-hero--full {
+    min-height: 100svh;
+  }
+  .ishaya-hero--large {
+    min-height: 85svh;
+  }
+  .ishaya-hero--medium {
+    min-height: 70svh;
+  }
+
+  /* Media layer */
+  .ishaya-hero__media {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    overflow: hidden;
+  }
+
+  .ishaya-hero__video,
+  .ishaya-hero__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    transform: scale(1.01);
+  }
+
+  .ishaya-hero__picture {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .ishaya-hero__fallback-art {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 40%, #1c1917 0%, #09090b 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .ishaya-hero__grid-lines {
+    position: absolute;
+    inset: 0;
+    background-size: 60px 60px;
+    background-image: linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                      linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    pointer-events: none;
+  }
+
+  .ishaya-hero__placeholder-svg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.12;
+  }
+
+  /* Overlay */
+  .ishaya-hero__overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      180deg,
+      rgba(9, 9, 11, 0.6) 0%,
+      rgba(9, 9, 11, calc(var(--overlay-opacity) * 0.7)) 50%,
+      rgba(9, 9, 11, 0.95) 100%
+    );
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  /* Content */
+  .ishaya-hero__content-container {
+    position: relative;
+    z-index: 3;
+    padding-top: calc(var(--page-margin) + 100px);
+    padding-bottom: calc(var(--page-margin) + 80px);
+    display: flex;
+    width: 100%;
+  }
+
+  .ishaya-hero--align-left .ishaya-hero__content-container {
+    justify-content: flex-start;
+  }
+  .ishaya-hero--align-center .ishaya-hero__content-container {
+    justify-content: center;
+    text-align: center;
+  }
+  .ishaya-hero--align-bottom-left .ishaya-hero__content-container {
+    justify-content: flex-start;
+    align-items: flex-end;
+    min-height: 80svh;
+  }
+
+  .ishaya-hero__inner {
+    max-width: 820px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .ishaya-hero--align-center .ishaya-hero__inner {
+    align-items: center;
+  }
+
+  /* Tag */
+  .ishaya-hero__tag-wrapper {
+    display: flex;
+  }
+
+  .ishaya-hero__tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 1rem;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: var(--radius-pill);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .ishaya-hero__tag-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #22c55e;
+    box-shadow: 0 0 8px #22c55e;
+  }
+
+  /* Heading */
+  .ishaya-hero__heading {
+    font-size: clamp(2.5rem, 7.5vw, 6.25rem);
+    font-weight: 900;
+    line-height: 0.96;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    color: #ffffff;
+    text-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+  }
+
+  /* Subheading */
+  .ishaya-hero__subheading {
+    font-size: clamp(0.95rem, 1.8vw, 1.25rem);
+    font-weight: 400;
+    line-height: 1.6;
+    color: #d4d4d8;
+    max-width: 640px;
+    text-wrap: balance;
+  }
+
+  /* Action Buttons */
+  .ishaya-hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 0.5rem;
+  }
+
+  .ishaya-hero__btn {
+    min-width: 180px;
+    font-size: 0.78rem;
+    letter-spacing: 0.16em;
+    padding: 0.95rem 2rem;
+  }
+
+  /* Sound Toggle */
+  .ishaya-hero__sound-toggle {
+    position: absolute;
+    bottom: 24px;
+    right: 24px;
+    z-index: 4;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-pill);
+    color: #ffffff;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background-color var(--transition-fast), transform var(--transition-fast);
+  }
+
+  .ishaya-hero__sound-toggle:hover {
+    background-color: var(--glass-bg-hover);
+    transform: scale(1.02);
+  }
+
+  /* Utilitarian Status Bar */
+  .ishaya-hero__status-bar {
+    position: absolute;
+    bottom: 16px;
+    left: 0;
+    right: 0;
+    z-index: 3;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.45);
+    pointer-events: none;
+  }
+
+  .ishaya-hero__status-item--center {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .ishaya-hero__scroll-line {
+    width: 24px;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.45);
+  }
+
+  @media (max-width: 767px) {
+    .ishaya-hero__actions {
+      flex-direction: column;
+      width: 100%;
+    }
+
+    .ishaya-hero__btn {
+      width: 100%;
+    }
+
+    .ishaya-hero__status-bar {
+      display: none;
+    }
+
+    .ishaya-hero__sound-toggle {
+      bottom: 16px;
+      right: 16px;
+      padding: 0.4rem 0.75rem;
+      font-size: 0.65rem;
+    }
+  }
+</style>
+
+<script>
+  (function() {
+    const section = document.getElementById('Hero-{{ section.id }}');
+    if (!section) return;
+
+    const soundBtn = document.getElementById('HeroSoundToggle-{{ section.id }}');
+    const video = section.querySelector('video');
+
+    if (soundBtn && video) {
+      soundBtn.addEventListener('click', function() {
+        const isMuted = video.muted;
+        video.muted = !isMuted;
+        soundBtn.setAttribute('data-muted', isMuted ? 'false' : 'true');
+
+        const mutedIcon = soundBtn.querySelector('.ishaya-hero__sound-icon--muted');
+        const unmutedIcon = soundBtn.querySelector('.ishaya-hero__sound-icon--unmuted');
+
+        if (mutedIcon && unmutedIcon) {
+          if (video.muted) {
+            mutedIcon.style.display = 'inline-block';
+            unmutedIcon.style.display = 'none';
+          } else {
+            mutedIcon.style.display = 'none';
+            unmutedIcon.style.display = 'inline-block';
+          }
+        }
+      });
+    }
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Hero Banner",
+  "tag": "section",
+  "class": "section-hero",
+  "settings": [
+    {
+      "type": "video",
+      "id": "video",
+      "label": "Background video (MP4)"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Desktop image (fallback if no video)"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_mobile",
+      "label": "Mobile image"
+    },
+    {
+      "type": "range",
+      "id": "overlay_opacity",
+      "min": 0,
+      "max": 90,
+      "step": 5,
+      "unit": "%",
+      "label": "Dark overlay opacity",
+      "default": 45
+    },
+    {
+      "type": "select",
+      "id": "height",
+      "label": "Section height",
+      "options": [
+        {
+          "value": "full",
+          "label": "Fullscreen (100vh)"
+        },
+        {
+          "value": "large",
+          "label": "Large (85vh)"
+        },
+        {
+          "value": "medium",
+          "label": "Medium (70vh)"
+        }
+      ],
+      "default": "full"
+    },
+    {
+      "type": "select",
+      "id": "content_alignment",
+      "label": "Content alignment",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "bottom-left",
+          "label": "Bottom Left"
+        }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "text",
+      "id": "tag",
+      "label": "Season tag / pill",
+      "default": "EDITION 01 // FW26"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "ARCHITECTURAL UTILITY"
+    },
+    {
+      "type": "textarea",
+      "id": "subheading",
+      "label": "Subheading",
+      "default": "Engineered garments built with heavyweight technical textiles, modular silhouettes, and utilitarian craftsmanship."
+    },
+    {
+      "type": "text",
+      "id": "button_label_1",
+      "label": "Primary button label",
+      "default": "EXPLORE COLLECTION"
+    },
+    {
+      "type": "url",
+      "id": "button_link_1",
+      "label": "Primary button link"
+    },
+    {
+      "type": "text",
+      "id": "button_label_2",
+      "label": "Secondary button label",
+      "default": "VIEW LOOKBOOK"
+    },
+    {
+      "type": "url",
+      "id": "button_link_2",
+      "label": "Secondary button link"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Hero Banner"
+    }
+  ]
+}
+{% endschema %}

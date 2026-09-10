@@ -1,0 +1,321 @@
+{% comment %}
+  ISHAYA Standalone Newsletter Section
+  Architectural glass card container for newsletter subscription with native
+  Shopify customer form, accessibility attributes, and clear states.
+{% endcomment %}
+
+<section
+  id="Newsletter-{{ section.id }}"
+  class="ishaya-newsletter full-width"
+  aria-label="{{ section.settings.title | escape }}"
+>
+  <div class="page-container">
+    <div class="ishaya-newsletter__card glass-panel">
+      <!-- Ambient background grid and glow -->
+      <div class="ishaya-newsletter__ambient-grid" aria-hidden="true"></div>
+      <div class="ishaya-newsletter__glow" aria-hidden="true"></div>
+
+      <div class="ishaya-newsletter__content">
+        {%- if section.settings.tag != blank -%}
+          <div class="ishaya-newsletter__tag-wrapper">
+            <span class="ishaya-newsletter__tag">
+              <span class="ishaya-newsletter__tag-dot" aria-hidden="true"></span>
+              {{ section.settings.tag }}
+            </span>
+          </div>
+        {%- endif -%}
+
+        {%- if section.settings.title != blank -%}
+          <h2 class="ishaya-newsletter__title">
+            {{ section.settings.title }}
+          </h2>
+        {%- endif -%}
+
+        {%- if section.settings.subtext != blank -%}
+          <p class="ishaya-newsletter__subtext">
+            {{ section.settings.subtext }}
+          </p>
+        {%- endif -%}
+
+        <!-- Shopify Form -->
+        <div class="ishaya-newsletter__form-container">
+          {% form 'customer', id: 'HomepageNewsletterForm', class: 'ishaya-newsletter__form' %}
+            <input type="hidden" name="contact[tags]" value="newsletter">
+
+            {%- if form.posted_successfully? -%}
+              <div class="ishaya-newsletter__alert ishaya-newsletter__alert--success" role="status">
+                <span class="ishaya-newsletter__alert-icon" aria-hidden="true">✓</span>
+                <p>You have been added to the Ishaya inner circle. Check your inbox for your private access code.</p>
+              </div>
+            {%- else -%}
+              {%- if form.errors -%}
+                <div class="ishaya-newsletter__alert ishaya-newsletter__alert--error" role="alert">
+                  <p>{{ form.errors.translated_fields.email | capitalize }} {{ form.errors.messages.email }}</p>
+                </div>
+              {%- endif -%}
+
+              <div class="ishaya-newsletter__input-group">
+                <div class="ishaya-newsletter__input-wrapper">
+                  <label for="HomepageNewsletterEmail" class="sr-only">
+                    Email address
+                  </label>
+                  <input
+                    id="HomepageNewsletterEmail"
+                    type="email"
+                    name="contact[email]"
+                    class="ishaya-newsletter__input"
+                    value="{{ form.email }}"
+                    aria-required="true"
+                    autocorrect="off"
+                    autocapitalize="off"
+                    autocomplete="email"
+                    placeholder="ENTER YOUR EMAIL ADDRESS"
+                    required
+                  >
+                </div>
+
+                <button
+                  type="submit"
+                  class="btn btn--primary ishaya-newsletter__submit-btn"
+                  aria-label="{{ section.settings.button_label | default: 'Join' }}"
+                >
+                  <span>{{ section.settings.button_label | default: 'JOIN' }}</span>
+                  {% render 'icons', name: 'arrow-right', width: 14, height: 14 %}
+                </button>
+              </div>
+            {%- endif -%}
+          {% endform %}
+        </div>
+
+        {%- if section.settings.privacy_note != blank -%}
+          <p class="ishaya-newsletter__privacy">
+            {{ section.settings.privacy_note }}
+          </p>
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .ishaya-newsletter {
+    padding-top: clamp(4rem, 8vw, 7rem);
+    padding-bottom: clamp(4rem, 8vw, 7rem);
+    background-color: var(--color-background);
+  }
+
+  .ishaya-newsletter__card {
+    position: relative;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: clamp(2.5rem, 6vw, 5rem) clamp(1.5rem, 4vw, 4rem);
+    border-radius: var(--radius-input);
+    border: 1px solid var(--glass-border);
+    overflow: hidden;
+    text-align: center;
+  }
+
+  .ishaya-newsletter__ambient-grid {
+    position: absolute;
+    inset: 0;
+    background-size: 40px 40px;
+    background-image: linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                      linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    pointer-events: none;
+  }
+
+  .ishaya-newsletter__glow {
+    position: absolute;
+    top: -50%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.04) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .ishaya-newsletter__content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  .ishaya-newsletter__tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.95rem;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+  }
+
+  .ishaya-newsletter__tag-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--color-foreground);
+  }
+
+  .ishaya-newsletter__title {
+    font-size: clamp(2rem, 4.5vw, 3.25rem);
+    font-weight: 900;
+    letter-spacing: -0.01em;
+    line-height: 1.05;
+    text-transform: uppercase;
+    color: var(--color-foreground);
+    margin: 0;
+  }
+
+  .ishaya-newsletter__subtext {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--color-muted);
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  /* Form */
+  .ishaya-newsletter__form-container {
+    width: 100%;
+    margin-top: 0.75rem;
+  }
+
+  .ishaya-newsletter__form {
+    width: 100%;
+  }
+
+  .ishaya-newsletter__input-group {
+    display: flex;
+    gap: 0.75rem;
+    width: 100%;
+  }
+
+  .ishaya-newsletter__input-wrapper {
+    flex: 1;
+    position: relative;
+  }
+
+  .ishaya-newsletter__input {
+    width: 100%;
+    min-height: 52px;
+    padding: 0.75rem 1.25rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    color: var(--color-foreground);
+    font-size: 0.82rem;
+    letter-spacing: 0.1em;
+    transition: border-color var(--transition-fast), background-color var(--transition-fast);
+  }
+
+  .ishaya-newsletter__input:focus-visible {
+    border-color: var(--color-foreground);
+    background: rgba(255, 255, 255, 0.06);
+    box-shadow: 0 0 0 1px var(--color-foreground);
+  }
+
+  .ishaya-newsletter__submit-btn {
+    min-height: 52px;
+    padding: 0.75rem 1.75rem;
+    border-radius: var(--radius-pill);
+    white-space: nowrap;
+    font-size: 0.75rem;
+    letter-spacing: 0.16em;
+  }
+
+  /* Alerts */
+  .ishaya-newsletter__alert {
+    padding: 1rem 1.5rem;
+    border-radius: var(--radius-input);
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+
+  .ishaya-newsletter__alert--success {
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    color: #4ade80;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .ishaya-newsletter__alert--error {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #f87171;
+  }
+
+  .ishaya-newsletter__privacy {
+    font-size: 0.75rem;
+    color: var(--color-muted);
+    margin: 0;
+    letter-spacing: 0.05em;
+  }
+
+  @media (max-width: 640px) {
+    .ishaya-newsletter__input-group {
+      flex-direction: column;
+    }
+
+    .ishaya-newsletter__submit-btn {
+      width: 100%;
+    }
+  }
+</style>
+
+{% schema %}
+{
+  "name": "Newsletter",
+  "tag": "section",
+  "class": "section-newsletter",
+  "settings": [
+    {
+      "type": "text",
+      "id": "tag",
+      "label": "Badge text",
+      "default": "PRIVATE DISPATCH // INNER CIRCLE"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Heading",
+      "default": "ENTER THE INNER CIRCLE"
+    },
+    {
+      "type": "textarea",
+      "id": "subtext",
+      "label": "Subtext",
+      "default": "Subscribers receive priority allocation for limited drops, private lookbook releases, and archival access before public release."
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Submit button label",
+      "default": "JOIN INNER CIRCLE"
+    },
+    {
+      "type": "text",
+      "id": "privacy_note",
+      "label": "Privacy reassurance text",
+      "default": "Encrypted delivery. Zero spam. Unsubscribe with one click."
+    }
+  ],
+  "presets": [
+    {
+      "name": "Newsletter"
+    }
+  ]
+}
+{% endschema %}

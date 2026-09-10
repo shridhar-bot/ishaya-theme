@@ -1,0 +1,142 @@
+{% comment %}
+  ISHAYA Related Products Section
+  Renders product recommendations using Shopify Recommendations API with
+  collection-based fallback and streetwear product card snippet.
+{% endcomment %}
+
+{%- liquid
+  assign rec_products = recommendations.products
+  if rec_products == blank or rec_products.size == 0
+    if product.collections.first and product.collections.first.products_count > 1
+      assign rec_products = product.collections.first.products
+    else
+      assign rec_products = collections.all.products
+    endif
+  endif
+-%}
+
+<section
+  id="RelatedProducts-{{ section.id }}"
+  class="ishaya-related-products full-width"
+  data-url="{{ routes.product_recommendations_url }}?section_id={{ section.id }}&product_id={{ product.id }}&limit=4"
+  aria-label="{{ section.settings.heading | escape }}"
+>
+  <div class="page-container">
+    <div class="ishaya-related-products__header">
+      <div class="ishaya-related-products__headings">
+        <span class="ishaya-related-products__tag">
+          {{ section.settings.tag | default: 'COMPLEMENTARY PIECES' }}
+        </span>
+        <h2 class="ishaya-related-products__title">
+          {{ section.settings.heading | default: 'COMPLETE THE SILHOUETTE' }}
+        </h2>
+      </div>
+    </div>
+
+    <div class="ishaya-product-grid ishaya-product-grid--cols-4 ishaya-product-grid--mobile-2">
+      {%- assign rendered_count = 0 -%}
+      {%- for rec_product in rec_products -%}
+        {%- unless rec_product.id == product.id -%}
+          {%- if rendered_count < 4 -%}
+            <div class="ishaya-product-grid__item">
+              {% render 'product-card',
+                product: rec_product,
+                show_secondary_image: true,
+                show_quick_add: true
+              %}
+            </div>
+            {%- assign rendered_count = rendered_count | plus: 1 -%}
+          {%- endif -%}
+        {%- endunless -%}
+      {%- endfor -%}
+
+      {%- if rendered_count == 0 -%}
+        {%- for i in (1..4) -%}
+          <div class="ishaya-product-grid__item">
+            <div class="ishaya-product-card">
+              <div class="ishaya-product-card__media-wrapper ishaya-product-card__media-wrapper--portrait">
+                <div class="ishaya-product-card__placeholder">
+                  {{ 'product-2' | placeholder_svg_tag: 'placeholder-svg' }}
+                </div>
+              </div>
+              <div class="ishaya-product-card__info">
+                <span class="ishaya-product-card__vendor">ISHAYA // ARCHIVE</span>
+                <h3 class="ishaya-product-card__title">Essential Streetwear Piece</h3>
+                <div class="ishaya-product-card__price-row">
+                  <span class="ishaya-product-card__price">$160.00</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        {%- endfor -%}
+      {%- endif -%}
+    </div>
+  </div>
+</section>
+
+<style>
+  .ishaya-related-products {
+    padding-top: clamp(3rem, 6vw, 5.5rem);
+    padding-bottom: clamp(3rem, 6vw, 5.5rem);
+    border-top: 1px solid var(--color-border);
+    background-color: var(--color-background);
+  }
+
+  .ishaya-related-products__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: clamp(1.75rem, 3.5vw, 3rem);
+  }
+
+  .ishaya-related-products__headings {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .ishaya-related-products__tag {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .ishaya-related-products__title {
+    font-size: clamp(1.5rem, 3.5vw, 2.25rem);
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+    line-height: 1.1;
+    color: var(--color-foreground);
+    margin: 0;
+  }
+</style>
+
+{% schema %}
+{
+  "name": "Related Products",
+  "tag": "section",
+  "class": "section-related-products",
+  "settings": [
+    {
+      "type": "text",
+      "id": "tag",
+      "label": "Category tag",
+      "default": "COMPLEMENTARY PIECES"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "COMPLETE THE SILHOUETTE"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Related Products"
+    }
+  ]
+}
+{% endschema %}

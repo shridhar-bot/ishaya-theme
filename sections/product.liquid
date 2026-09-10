@@ -1,49 +1,1089 @@
 {% comment %}
-  This section is used in the product template to render product page with
-  media, content, and add-to-cart form.
-
-  https://shopify.dev/docs/storefronts/themes/architecture/templates/product
+  ISHAYA Product Detail Page (PDP)
+  Architectural streetwear product template featuring an editorial media gallery,
+  variant synchronization, stock indicators, quantity stepper, dynamic checkout,
+  and utilitarian garment specifications accordions.
 {% endcomment %}
 
-<div class="product-images">
-  {% for image in product.images %}
-    {% render 'image', class: 'product-image', image: image %}
-  {% endfor %}
-</div>
+{%- liquid
+  assign current_variant = product.selected_or_first_available_variant
+  assign featured_media = current_variant.featured_media | default: product.featured_media
+  assign on_sale = false
+  if current_variant.compare_at_price > current_variant.price
+    assign on_sale = true
+  endif
 
-<div class="product-info">
-  <h1>{{ product.title }}</h1>
-  <p>{{ product.price | money }}</p>
-  <p>{{ product.description }}</p>
-</div>
+  assign is_sold_out = true
+  if current_variant.available
+    assign is_sold_out = false
+  endif
+-%}
 
-<div class="product-form">
-  {% form 'product', product %}
-    {% assign current_variant = product.selected_or_first_available_variant %}
+<section
+  id="ProductSection-{{ section.id }}"
+  class="ishaya-pdp full-width"
+  data-section-id="{{ section.id }}"
+  data-product-id="{{ product.id }}"
+  aria-label="{{ product.title | escape }}"
+>
+  <div class="page-container">
+    <!-- Breadcrumbs -->
+    <nav class="ishaya-pdp__breadcrumbs" aria-label="Breadcrumb">
+      <a href="{{ routes.root_url }}" class="ishaya-pdp__breadcrumb-link">Home</a>
+      <span class="ishaya-pdp__breadcrumb-sep" aria-hidden="true">/</span>
+      {%- if product.collections.first -%}
+        <a href="{{ product.collections.first.url }}" class="ishaya-pdp__breadcrumb-link">
+          {{ product.collections.first.title }}
+        </a>
+        <span class="ishaya-pdp__breadcrumb-sep" aria-hidden="true">/</span>
+      {%- else -%}
+        <a href="{{ routes.all_products_collection_url }}" class="ishaya-pdp__breadcrumb-link">
+          Archive Catalog
+        </a>
+        <span class="ishaya-pdp__breadcrumb-sep" aria-hidden="true">/</span>
+      {%- endif -%}
+      <span class="ishaya-pdp__breadcrumb-current" aria-current="page">{{ product.title }}</span>
+    </nav>
 
-    <select name="id">
-      {% for variant in product.variants %}
-        <option
-          value="{{ variant.id }}"
-          {% if variant == current_variant %}
-            selected="selected"
-          {% endif %}
-        >
-          {{ variant.title }} - {{ variant.price | money }}
-        </option>
-      {% endfor %}
-    </select>
+    <!-- Main Two-Column Layout -->
+    <div class="ishaya-pdp__layout">
+      <!-- Left Column: Media Gallery -->
+      <div class="ishaya-pdp__gallery">
+        <!-- Main Media Viewport -->
+        <div class="ishaya-pdp__main-media-wrap glass-panel" id="ProductMediaViewport-{{ section.id }}">
+          {%- if featured_media != blank -%}
+            {{
+              featured_media
+              | image_url: width: 1400
+              | image_tag:
+                loading: 'eager',
+                fetchpriority: 'high',
+                class: 'ishaya-pdp__main-img',
+                id: 'ProductFeaturedImage',
+                alt: featured_media.alt | default: product.title | escape
+            }}
+          {%- else -%}
+            <div class="ishaya-pdp__placeholder">
+              {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg' }}
+            </div>
+          {%- endif -%}
 
-    <input type="text" name="quantity" min="1" value="1">
+          <!-- Badges -->
+          <div class="ishaya-pdp__badges" id="ProductBadges" aria-hidden="true">
+            {%- if is_sold_out -%}
+              <span class="ishaya-pdp__badge ishaya-pdp__badge--sold-out">Sold Out</span>
+            {%- elsif on_sale -%}
+              {%- assign savings = current_variant.compare_at_price | minus: current_variant.price | times: 100.0 | divided_by: current_variant.compare_at_price | round -%}
+              <span class="ishaya-pdp__badge ishaya-pdp__badge--sale">-{{ savings }}%</span>
+            {%- endif -%}
 
-    <input type="submit" value="Add to cart">
-    {{ form | payment_button }}
-  {% endform %}
-</div>
+            {%- if product.tags contains 'limited' or product.tags contains 'edition' -%}
+              <span class="ishaya-pdp__badge ishaya-pdp__badge--limited">Limited Release</span>
+            {%- elsif product.tags contains 'new' -%}
+              <span class="ishaya-pdp__badge ishaya-pdp__badge--new">New Arrival</span>
+            {%- endif -%}
+          </div>
+        </div>
+
+        <!-- Thumbnails Strip -->
+        {%- if product.media.size > 1 -%}
+          <div class="ishaya-pdp__thumbnails" role="region" aria-label="Product thumbnails">
+            {%- for media in product.media -%}
+              <button
+                type="button"
+                class="ishaya-pdp__thumb-btn glass-panel{% if media == featured_media %} ishaya-pdp__thumb-btn--active{% endif %}"
+                data-media-id="{{ media.id }}"
+                data-img-src="{{ media | image_url: width: 1400 }}"
+                data-img-alt="{{ media.alt | default: product.title | escape }}"
+                aria-label="Thumbnail {{ forloop.index }} of {{ product.media.size }}"
+              >
+                {{
+                  media
+                  | image_url: width: 200, height: 240, crop: 'center'
+                  | image_tag:
+                    loading: 'lazy',
+                    class: 'ishaya-pdp__thumb-img',
+                    alt: media.alt | default: product.title | escape
+                }}
+              </button>
+            {%- endfor -%}
+          </div>
+        {%- endif -%}
+      </div>
+
+      <!-- Right Column: Product Details Rail -->
+      <div class="ishaya-pdp__details">
+        <div class="ishaya-pdp__rail">
+          <!-- Series Tag / Vendor -->
+          <div class="ishaya-pdp__tag-row">
+            <span class="ishaya-pdp__vendor">
+              {{ product.vendor | default: 'ISHAYA' }} // REF. {{ current_variant.sku | default: product.id }}
+            </span>
+          </div>
+
+          <!-- Product Title -->
+          <h1 class="ishaya-pdp__title">{{ product.title }}</h1>
+
+          <!-- Price & Sale Row -->
+          <div class="ishaya-pdp__price-block">
+            <span class="ishaya-pdp__price" id="ProductPrice">
+              {{ current_variant.price | money }}
+            </span>
+            <s class="ishaya-pdp__compare-price{% unless on_sale %} ishaya-pdp__compare-price--hidden{% endunless %}" id="ProductComparePrice">
+              {%- if on_sale -%}{{ current_variant.compare_at_price | money }}{%- endif -%}
+            </s>
+            <span class="ishaya-pdp__tax-note">Tax included. Shipping calculated at checkout.</span>
+          </div>
+
+          <!-- Inventory Status Badge -->
+          <div class="ishaya-pdp__stock-status" id="ProductStockStatus">
+            {%- if is_sold_out -%}
+              <span class="ishaya-pdp__stock-dot ishaya-pdp__stock-dot--out"></span>
+              <span class="ishaya-pdp__stock-text">ARCHIVE STATUS: SOLD OUT</span>
+            {%- elsif current_variant.inventory_management and current_variant.inventory_quantity > 0 and current_variant.inventory_quantity <= 5 -%}
+              <span class="ishaya-pdp__stock-dot ishaya-pdp__stock-dot--low"></span>
+              <span class="ishaya-pdp__stock-text">LOW INVENTORY: ONLY {{ current_variant.inventory_quantity }} UNITS REMAIN</span>
+            {%- else -%}
+              <span class="ishaya-pdp__stock-dot ishaya-pdp__stock-dot--in"></span>
+              <span class="ishaya-pdp__stock-text">IN STOCK — READY FOR DISPATCH</span>
+            {%- endif -%}
+          </div>
+
+          <!-- Product Form -->
+          {% form 'product', product, id: 'ProductForm', class: 'ishaya-pdp__form' %}
+            <!-- Hidden Native Variant Selector -->
+            <select name="id" id="ProductSelect-{{ section.id }}" class="sr-only">
+              {%- for variant in product.variants -%}
+                <option
+                  value="{{ variant.id }}"
+                  {% if variant == current_variant %}selected="selected"{% endif %}
+                  {% unless variant.available %}disabled="disabled"{% endunless %}
+                  data-price="{{ variant.price | money }}"
+                  data-compare-price="{{ variant.compare_at_price | money }}"
+                  data-available="{{ variant.available }}"
+                  data-featured-media-id="{{ variant.featured_media.id }}"
+                  data-featured-media-src="{{ variant.featured_media | image_url: width: 1400 }}"
+                  data-inventory-qty="{{ variant.inventory_quantity }}"
+                >
+                  {{ variant.title }}
+                </option>
+              {%- endfor -%}
+            </select>
+
+            <!-- Visual Variant Pickers -->
+            {%- unless product.has_only_default_variant -%}
+              <div class="ishaya-pdp__options">
+                {%- for option in product.options_with_values -%}
+                  <fieldset class="ishaya-pdp__option-group" data-option-index="{{ forloop.index0 }}">
+                    <legend class="ishaya-pdp__option-legend">
+                      <span class="ishaya-pdp__option-name">{{ option.name }}:</span>
+                      <strong class="ishaya-pdp__option-selected" id="OptionSelected-{{ forloop.index0 }}">
+                        {{ option.selected_value }}
+                      </strong>
+                    </legend>
+
+                    <div class="ishaya-pdp__pills">
+                      {%- for value in option.values -%}
+                        {%- liquid
+                          assign is_selected = false
+                          if option.selected_value == value
+                            assign is_selected = true
+                          endif
+                        -%}
+                        <button
+                          type="button"
+                          class="ishaya-pdp__pill-btn glass-panel{% if is_selected %} ishaya-pdp__pill-btn--active{% endif %}"
+                          data-option-index="{{ forloop.parentloop.index0 }}"
+                          data-value="{{ value | escape }}"
+                          aria-pressed="{% if is_selected %}true{% else %}false{% endif %}"
+                        >
+                          {{ value }}
+                        </button>
+                      {%- endfor -%}
+                    </div>
+                  </fieldset>
+                {%- endfor -%}
+              </div>
+            {%- endunless -%}
+
+            <!-- Quantity Stepper & Add to Cart -->
+            <div class="ishaya-pdp__actions-row">
+              <div class="ishaya-pdp__qty-stepper glass-panel" aria-label="Quantity selector">
+                <button
+                  type="button"
+                  class="ishaya-pdp__qty-btn"
+                  id="QtyMinusBtn"
+                  aria-label="Decrease quantity"
+                >
+                  {% render 'icons', name: 'minus', width: 12, height: 12 %}
+                </button>
+                <label for="QuantityInput-{{ section.id }}" class="sr-only">Quantity</label>
+                <input
+                  type="number"
+                  name="quantity"
+                  id="QuantityInput-{{ section.id }}"
+                  class="ishaya-pdp__qty-input"
+                  min="1"
+                  value="1"
+                  aria-label="Quantity"
+                >
+                <button
+                  type="button"
+                  class="ishaya-pdp__qty-btn"
+                  id="QtyPlusBtn"
+                  aria-label="Increase quantity"
+                >
+                  {% render 'icons', name: 'plus', width: 12, height: 12 %}
+                </button>
+              </div>
+
+              <button
+                type="submit"
+                name="add"
+                id="AddToCartBtn"
+                class="btn btn--primary ishaya-pdp__add-btn"
+                {% if is_sold_out %}disabled="disabled"{% endif %}
+              >
+                {% render 'icons', name: 'cart', width: 15, height: 15 %}
+                <span id="AddToCartText">
+                  {%- if is_sold_out -%}
+                    SOLD OUT
+                  {%- else -%}
+                    ADD TO BAG
+                  {%- endif -%}
+                </span>
+              </button>
+            </div>
+
+            <!-- Dynamic Checkout Buttons -->
+            <div class="ishaya-pdp__dynamic-checkout">
+              {{ form | payment_button }}
+            </div>
+          {% endform %}
+
+          <!-- Shipping / Guarantee Strip -->
+          <div class="ishaya-pdp__guarantee glass-panel">
+            <div class="ishaya-pdp__guarantee-item">
+              {% render 'icons', name: 'truck', width: 16, height: 16, class: 'ishaya-pdp__guarantee-icon' %}
+              <span>Complimentary worldwide shipping on orders over $250.</span>
+            </div>
+            <div class="ishaya-pdp__guarantee-item">
+              {% render 'icons', name: 'shield', width: 16, height: 16, class: 'ishaya-pdp__guarantee-icon' %}
+              <span>Guaranteed authentic. Numbered edition packaging.</span>
+            </div>
+          </div>
+
+          <!-- Utilitarian Garment Spec Accordions -->
+          <div class="ishaya-pdp__accordions">
+            <!-- Accordion 1: Description -->
+            <details class="ishaya-accordion" open>
+              <summary class="ishaya-accordion__summary">
+                <span class="ishaya-accordion__title">DETAILS & SILHOUETTE</span>
+                <span class="ishaya-accordion__chevron" aria-hidden="true">
+                  {% render 'icons', name: 'chevron-down', width: 12, height: 12 %}
+                </span>
+              </summary>
+              <div class="ishaya-accordion__content">
+                <div class="ishaya-accordion__body">
+                  {{ product.description }}
+                </div>
+              </div>
+            </details>
+
+            <!-- Accordion 2: Textile Specs -->
+            <details class="ishaya-accordion">
+              <summary class="ishaya-accordion__summary">
+                <span class="ishaya-accordion__title">TEXTILE & SPECIFICATIONS</span>
+                <span class="ishaya-accordion__chevron" aria-hidden="true">
+                  {% render 'icons', name: 'chevron-down', width: 12, height: 12 %}
+                </span>
+              </summary>
+              <div class="ishaya-accordion__content">
+                <ul class="ishaya-accordion__list">
+                  <li><strong>Fabric Weight:</strong> 500GSM Custom-milled French Terry</li>
+                  <li><strong>Composition:</strong> 100% Organic Heavyweight Combed Cotton</li>
+                  <li><strong>Hardware:</strong> Industrial matte black double-pull zippers</li>
+                  <li><strong>Finishing:</strong> Garment pre-shrunk with enzyme wash</li>
+                  <li><strong>Origin:</strong> Crafted in limited numbered runs</li>
+                </ul>
+              </div>
+            </details>
+
+            <!-- Accordion 3: Sizing & Fit -->
+            <details class="ishaya-accordion">
+              <summary class="ishaya-accordion__summary">
+                <span class="ishaya-accordion__title">SIZING & FIT PROFILE</span>
+                <span class="ishaya-accordion__chevron" aria-hidden="true">
+                  {% render 'icons', name: 'chevron-down', width: 12, height: 12 %}
+                </span>
+              </summary>
+              <div class="ishaya-accordion__content">
+                <div class="ishaya-accordion__body">
+                  <p>Architectural relaxed fit with dropped shoulders and articulated sleeves. Fits true to size for an intentionally oversized silhouette. For a tailored profile, size down one step.</p>
+                  <p>Model is 6'2" / 188cm and wears a size L.</p>
+                </div>
+              </div>
+            </details>
+
+            <!-- Accordion 4: Shipping & Care -->
+            <details class="ishaya-accordion">
+              <summary class="ishaya-accordion__summary">
+                <span class="ishaya-accordion__title">CARE & ARCHIVAL MAINTENANCE</span>
+                <span class="ishaya-accordion__chevron" aria-hidden="true">
+                  {% render 'icons', name: 'chevron-down', width: 12, height: 12 %}
+                </span>
+              </summary>
+              <div class="ishaya-accordion__content">
+                <ul class="ishaya-accordion__list">
+                  <li>Machine wash cold inside-out on gentle cycle</li>
+                  <li>Hang dry naturally away from direct sunlight</li>
+                  <li>Do not tumble dry to preserve fabric density</li>
+                  <li>Cool iron on reverse if necessary</li>
+                </ul>
+              </div>
+            </details>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .ishaya-pdp {
+    padding-top: clamp(1.5rem, 3vw, 2.5rem);
+    padding-bottom: clamp(4rem, 8vw, 7rem);
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+
+  /* Breadcrumbs */
+  .ishaya-pdp__breadcrumbs {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
+  }
+
+  .ishaya-pdp__breadcrumb-link {
+    color: var(--color-muted);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+  }
+
+  .ishaya-pdp__breadcrumb-link:hover {
+    color: var(--color-foreground);
+  }
+
+  .ishaya-pdp__breadcrumb-sep {
+    opacity: 0.4;
+  }
+
+  .ishaya-pdp__breadcrumb-current {
+    color: var(--color-foreground);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Main Layout */
+  .ishaya-pdp__layout {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: clamp(2rem, 5vw, 4.5rem);
+    align-items: flex-start;
+  }
+
+  /* Gallery Column */
+  .ishaya-pdp__gallery {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    position: sticky;
+    top: 90px;
+  }
+
+  .ishaya-pdp__main-media-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    overflow: hidden;
+    border-radius: var(--radius-input);
+    border: 1px solid var(--color-border);
+    background-color: var(--color-surface);
+  }
+
+  .ishaya-pdp__main-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    transition: transform 0.4s ease;
+  }
+
+  .ishaya-pdp__placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #121215;
+  }
+
+  .ishaya-pdp__placeholder svg {
+    width: 45%;
+    height: 45%;
+    opacity: 0.25;
+  }
+
+  .ishaya-pdp__badges {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    right: 14px;
+    display: flex;
+    justify-content: space-between;
+    pointer-events: none;
+    z-index: 3;
+    gap: 8px;
+  }
+
+  .ishaya-pdp__badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    border-radius: var(--radius-pill);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .ishaya-pdp__badge--sold-out {
+    background: rgba(0, 0, 0, 0.85);
+    color: #a1a1aa;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+  }
+
+  .ishaya-pdp__badge--sale {
+    background: rgba(220, 38, 38, 0.85);
+    color: #ffffff;
+  }
+
+  .ishaya-pdp__badge--limited {
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .ishaya-pdp__badge--new {
+    background: rgba(255, 255, 255, 0.95);
+    color: #09090b;
+  }
+
+  /* Thumbnails */
+  .ishaya-pdp__thumbnails {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.75rem;
+  }
+
+  .ishaya-pdp__thumb-btn {
+    position: relative;
+    aspect-ratio: 3 / 4;
+    padding: 0;
+    border-radius: var(--radius-input);
+    border: 1px solid var(--color-border);
+    overflow: hidden;
+    cursor: pointer;
+    background: transparent;
+    transition: border-color var(--transition-fast), transform var(--transition-fast);
+  }
+
+  .ishaya-pdp__thumb-btn:hover {
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: translateY(-2px);
+  }
+
+  .ishaya-pdp__thumb-btn--active {
+    border-color: var(--color-foreground);
+    box-shadow: 0 0 0 1px var(--color-foreground);
+  }
+
+  .ishaya-pdp__thumb-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Details Column */
+  .ishaya-pdp__details {
+    width: 100%;
+  }
+
+  .ishaya-pdp__rail {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .ishaya-pdp__vendor {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .ishaya-pdp__title {
+    font-size: clamp(2rem, 3.5vw, 3rem);
+    font-weight: 900;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+    margin: 0;
+  }
+
+  /* Pricing */
+  .ishaya-pdp__price-block {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.75rem;
+  }
+
+  .ishaya-pdp__price {
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: var(--color-foreground);
+  }
+
+  .ishaya-pdp__compare-price {
+    font-size: 1.15rem;
+    color: var(--color-muted);
+    text-decoration: line-through;
+  }
+
+  .ishaya-pdp__compare-price--hidden {
+    display: none;
+  }
+
+  .ishaya-pdp__tax-note {
+    width: 100%;
+    font-size: 0.75rem;
+    color: var(--color-muted);
+    letter-spacing: 0.05em;
+  }
+
+  /* Stock Status */
+  .ishaya-pdp__stock-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.9rem;
+    background: var(--glass-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    width: fit-content;
+  }
+
+  .ishaya-pdp__stock-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+
+  .ishaya-pdp__stock-dot--in {
+    background-color: #22c55e;
+    box-shadow: 0 0 8px #22c55e;
+  }
+
+  .ishaya-pdp__stock-dot--low {
+    background-color: #f59e0b;
+    box-shadow: 0 0 8px #f59e0b;
+  }
+
+  .ishaya-pdp__stock-dot--out {
+    background-color: #71717a;
+  }
+
+  /* Form & Variant Pickers */
+  .ishaya-pdp__form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    width: 100%;
+  }
+
+  .ishaya-pdp__options {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .ishaya-pdp__option-group {
+    border: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .ishaya-pdp__option-legend {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    display: flex;
+    gap: 0.5rem;
+    padding: 0;
+  }
+
+  .ishaya-pdp__option-name {
+    color: var(--color-muted);
+  }
+
+  .ishaya-pdp__option-selected {
+    color: var(--color-foreground);
+  }
+
+  .ishaya-pdp__pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .ishaya-pdp__pill-btn {
+    min-height: 44px;
+    min-width: 48px;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--color-border);
+    background: transparent;
+    color: var(--color-foreground);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+  }
+
+  .ishaya-pdp__pill-btn:hover {
+    border-color: var(--color-foreground);
+    background-color: var(--glass-bg-hover);
+  }
+
+  .ishaya-pdp__pill-btn--active {
+    background-color: var(--color-foreground) !important;
+    color: var(--color-background) !important;
+    border-color: var(--color-foreground) !important;
+  }
+
+  /* Actions Row */
+  .ishaya-pdp__actions-row {
+    display: flex;
+    gap: 0.75rem;
+    width: 100%;
+  }
+
+  .ishaya-pdp__qty-stepper {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    padding: 0 0.5rem;
+    height: 52px;
+    flex-shrink: 0;
+  }
+
+  .ishaya-pdp__qty-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    background: transparent;
+    border: none;
+    color: var(--color-foreground);
+    cursor: pointer;
+    border-radius: 50%;
+    transition: background-color var(--transition-fast);
+  }
+
+  .ishaya-pdp__qty-btn:hover {
+    background-color: var(--glass-bg-hover);
+  }
+
+  .ishaya-pdp__qty-input {
+    width: 42px;
+    text-align: center;
+    border: none !important;
+    background: transparent !important;
+    color: var(--color-foreground) !important;
+    font-size: 0.95rem;
+    font-weight: 700;
+    box-shadow: none !important;
+    padding: 0 !important;
+    -moz-appearance: textfield;
+  }
+
+  .ishaya-pdp__qty-input::-webkit-outer-spin-button,
+  .ishaya-pdp__qty-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .ishaya-pdp__add-btn {
+    flex: 1;
+    height: 52px;
+    font-size: 0.8rem;
+    letter-spacing: 0.18em;
+    border-radius: var(--radius-pill);
+  }
+
+  .ishaya-pdp__add-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    border-color: var(--color-border);
+  }
+
+  .ishaya-pdp__dynamic-checkout {
+    width: 100%;
+  }
+
+  /* Guarantee Strip */
+  .ishaya-pdp__guarantee {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1.25rem;
+    border-radius: var(--radius-input);
+    border: 1px solid var(--color-border);
+    font-size: 0.78rem;
+    color: var(--color-muted);
+  }
+
+  .ishaya-pdp__guarantee-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .ishaya-pdp__guarantee-icon {
+    color: var(--color-foreground);
+    flex-shrink: 0;
+  }
+
+  /* Accordions */
+  .ishaya-pdp__accordions {
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid var(--color-border);
+    margin-top: 0.5rem;
+  }
+
+  .ishaya-accordion {
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .ishaya-accordion__summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.15rem 0;
+    cursor: pointer;
+    list-style: none;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    user-select: none;
+  }
+
+  .ishaya-accordion__summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .ishaya-accordion__chevron {
+    transition: transform var(--transition-smooth);
+    color: var(--color-muted);
+  }
+
+  .ishaya-accordion[open] .ishaya-accordion__chevron {
+    transform: rotate(180deg);
+    color: var(--color-foreground);
+  }
+
+  .ishaya-accordion__content {
+    padding-bottom: 1.25rem;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: #a1a1aa;
+  }
+
+  .ishaya-accordion__body p:not(:last-child) {
+    margin-bottom: 0.75rem;
+  }
+
+  .ishaya-accordion__list {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .ishaya-accordion__list li strong {
+    color: var(--color-foreground);
+  }
+
+  @media (max-width: 1024px) {
+    .ishaya-pdp__layout {
+      grid-template-columns: 1fr;
+      gap: 2.5rem;
+    }
+
+    .ishaya-pdp__gallery {
+      position: static;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .ishaya-pdp__actions-row {
+      flex-direction: column;
+    }
+
+    .ishaya-pdp__qty-stepper {
+      width: 100%;
+      justify-content: space-between;
+    }
+
+    .ishaya-pdp__add-btn {
+      width: 100%;
+    }
+  }
+</style>
+
+<script>
+  (function() {
+    const section = document.getElementById('ProductSection-{{ section.id }}');
+    if (!section) return;
+
+    const select = document.getElementById('ProductSelect-{{ section.id }}');
+    const mainImg = document.getElementById('ProductFeaturedImage');
+    const priceEl = document.getElementById('ProductPrice');
+    const comparePriceEl = document.getElementById('ProductComparePrice');
+    const addBtn = document.getElementById('AddToCartBtn');
+    const addText = document.getElementById('AddToCartText');
+    const stockStatus = document.getElementById('ProductStockStatus');
+
+    // Quantity Stepper
+    const qtyInput = document.getElementById('QuantityInput-{{ section.id }}');
+    const qtyMinus = document.getElementById('QtyMinusBtn');
+    const qtyPlus = document.getElementById('QtyPlusBtn');
+
+    if (qtyMinus && qtyInput) {
+      qtyMinus.addEventListener('click', function() {
+        const val = parseInt(qtyInput.value, 10) || 1;
+        if (val > 1) qtyInput.value = val - 1;
+      });
+    }
+
+    if (qtyPlus && qtyInput) {
+      qtyPlus.addEventListener('click', function() {
+        const val = parseInt(qtyInput.value, 10) || 1;
+        qtyInput.value = val + 1;
+      });
+    }
+
+    // Thumbnails click
+    const thumbBtns = section.querySelectorAll('.ishaya-pdp__thumb-btn');
+    thumbBtns.forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        thumbBtns.forEach(function(b) { b.classList.remove('ishaya-pdp__thumb-btn--active'); });
+        btn.classList.add('ishaya-pdp__thumb-btn--active');
+
+        const imgSrc = btn.getAttribute('data-img-src');
+        const imgAlt = btn.getAttribute('data-img-alt');
+        if (mainImg && imgSrc) {
+          mainImg.setAttribute('src', imgSrc);
+          if (imgAlt) mainImg.setAttribute('alt', imgAlt);
+        }
+      });
+    });
+
+    // Variant Pills
+    const pillBtns = section.querySelectorAll('.ishaya-pdp__pill-btn');
+    pillBtns.forEach(function(pill) {
+      pill.addEventListener('click', function() {
+        const optIndex = pill.getAttribute('data-option-index');
+        const value = pill.getAttribute('data-value');
+
+        // Update active class in group
+        const groupPills = section.querySelectorAll('.ishaya-pdp__pill-btn[data-option-index="' + optIndex + '"]');
+        groupPills.forEach(function(p) {
+          p.classList.remove('ishaya-pdp__pill-btn--active');
+          p.setAttribute('aria-pressed', 'false');
+        });
+        pill.classList.add('ishaya-pdp__pill-btn--active');
+        pill.setAttribute('aria-pressed', 'true');
+
+        // Update legend selected label
+        const selectedLabel = document.getElementById('OptionSelected-' + optIndex);
+        if (selectedLabel) selectedLabel.textContent = value;
+
+        // Collect all currently selected option values
+        const selectedValues = [];
+        section.querySelectorAll('.ishaya-pdp__option-group').forEach(function(grp, idx) {
+          const activePill = grp.querySelector('.ishaya-pdp__pill-btn--active');
+          if (activePill) {
+            selectedValues.push(activePill.getAttribute('data-value'));
+          }
+        });
+
+        // Match with select options
+        if (select) {
+          let matchedOption = null;
+          for (let i = 0; i < select.options.length; i++) {
+            const opt = select.options[i];
+            const optTitle = opt.textContent.trim();
+            // Check if all selected values are present in variant title
+            const matchesAll = selectedValues.every(function(val) {
+              return optTitle.includes(val);
+            });
+            if (matchesAll) {
+              matchedOption = opt;
+              break;
+            }
+          }
+
+          if (matchedOption) {
+            select.value = matchedOption.value;
+
+            // Update URL
+            const url = new URL(window.location.href);
+            url.searchParams.set('variant', matchedOption.value);
+            window.history.replaceState(null, '', url.toString());
+
+            // Update Price
+            const price = matchedOption.getAttribute('data-price');
+            const comparePrice = matchedOption.getAttribute('data-compare-price');
+            const available = matchedOption.getAttribute('data-available') === 'true';
+
+            if (priceEl && price) priceEl.textContent = price;
+            if (comparePriceEl) {
+              if (comparePrice && comparePrice !== price && comparePrice !== '') {
+                comparePriceEl.textContent = comparePrice;
+                comparePriceEl.classList.remove('ishaya-pdp__compare-price--hidden');
+              } else {
+                comparePriceEl.classList.add('ishaya-pdp__compare-price--hidden');
+              }
+            }
+
+            // Update Add to Cart Button
+            if (addBtn && addText) {
+              if (available) {
+                addBtn.removeAttribute('disabled');
+                addText.textContent = 'ADD TO BAG';
+              } else {
+                addBtn.setAttribute('disabled', 'disabled');
+                addText.textContent = 'SOLD OUT';
+              }
+            }
+
+            // Update Media if variant has image
+            const variantImgSrc = matchedOption.getAttribute('data-featured-media-src');
+            const variantMediaId = matchedOption.getAttribute('data-featured-media-id');
+            if (variantImgSrc && mainImg) {
+              mainImg.setAttribute('src', variantImgSrc);
+              // Activate thumbnail if matching
+              if (variantMediaId) {
+                thumbBtns.forEach(function(tb) {
+                  if (tb.getAttribute('data-media-id') === variantMediaId) {
+                    tb.classList.add('ishaya-pdp__thumb-btn--active');
+                  } else {
+                    tb.classList.remove('ishaya-pdp__thumb-btn--active');
+                  }
+                });
+              }
+            }
+          }
+        }
+      });
+    });
+
+    // AJAX Add to Bag
+    const form = document.getElementById('ProductForm');
+    if (form) {
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        if (addBtn) addBtn.setAttribute('disabled', 'disabled');
+        if (addText) addText.textContent = 'ADDING...';
+
+        const formData = new FormData(form);
+        fetch('/cart/add.js', {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(item) {
+          if (addText) addText.textContent = 'ADDED TO BAG ✓';
+
+          if (typeof window.refreshCartDrawer === 'function') {
+            window.refreshCartDrawer();
+          }
+          if (typeof window.openCartDrawer === 'function') {
+            window.openCartDrawer();
+          }
+
+          // Update header cart count
+          fetch('/cart.js')
+            .then(function(res) { return res.json(); })
+            .then(function(cart) {
+              const countEl = document.getElementById('HeaderCartCount');
+              if (countEl) {
+                countEl.textContent = cart.item_count;
+                countEl.classList.remove('zb-cart-count--hidden');
+              }
+            });
+
+          setTimeout(function() {
+            if (addBtn) addBtn.removeAttribute('disabled');
+            if (addText) addText.textContent = 'ADD TO BAG';
+          }, 2000);
+        })
+        .catch(function(err) {
+          console.error('Error adding to cart:', err);
+          if (addBtn) addBtn.removeAttribute('disabled');
+          if (addText) addText.textContent = 'ERROR — RETRY';
+        });
+      });
+    }
+  })();
+</script>
 
 {% schema %}
 {
-  "name": "t:general.product",
+  "name": "Product Details",
+  "tag": "section",
+  "class": "section-product",
   "settings": [],
   "disabled_on": {
     "groups": ["header", "footer"]

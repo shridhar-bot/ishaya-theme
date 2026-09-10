@@ -1,37 +1,761 @@
 {% comment %}
-  This section is used in the cart template to render /cart page with an
-  overview of the items in customer's cart.
-
-  https://shopify.dev/docs/storefronts/themes/architecture/templates/cart
+  ISHAYA Dedicated Cart Page
+  Architectural two-column shopping bag review featuring line-item details,
+  quantity steppers, free shipping progress calculator, order notes, and secure checkout actions.
 {% endcomment %}
 
-<h1>{{ 'cart.title' | t }}</h1>
+{%- liquid
+  assign threshold_dollars = settings.free_shipping_threshold | default: 250
+  assign threshold_cents = threshold_dollars | times: 100
+  assign diff_cents = threshold_cents | minus: cart.total_price
+  assign progress_percent = cart.total_price | times: 100.0 | divided_by: threshold_cents | at_most: 100 | round
+-%}
 
-<form action="{{ routes.cart_url }}" method="post">
-  <table>
-    {% for item in cart.items %}
-      <tr>
-        <td>
-          {% render 'image', image: item.image, url: item.url %}
-        </td>
-        <td>
-          <p>{{ item.product.title }}</p>
-          {{ 'cart.remove' | t | link_to: item.url_to_remove }}
-        </td>
-        <td>
-          <input type="text" name="updates[]" value="{{ item.quantity }}">
-          <input type="submit" value="{{ 'cart.update' | t }}">
-        </td>
-      </tr>
-    {% endfor %}
-  </table>
+<section
+  id="CartSection-{{ section.id }}"
+  class="ishaya-cart-page full-width"
+  aria-label="{{ 'cart.title' | t | default: 'Shopping Bag' }}"
+>
+  <div class="page-container">
+    <!-- Breadcrumbs / Top Bar -->
+    <div class="ishaya-cart-page__top-bar">
+      <div class="ishaya-cart-page__title-wrap">
+        <h1 class="ishaya-cart-page__title">SHOPPING BAG</h1>
+        <span class="ishaya-cart-page__count-badge">{{ cart.item_count }} ITEMS</span>
+      </div>
+      <a href="{{ routes.all_products_collection_url }}" class="ishaya-cart-page__continue-link">
+        <span>← Continue Exploring</span>
+      </a>
+    </div>
 
-  <input type="submit" name="checkout" value="{{ 'cart.checkout' | t }}">
-</form>
+    {%- if cart.item_count > 0 -%}
+      <form action="{{ routes.cart_url }}" method="post" id="CartPageForm" class="ishaya-cart-page__layout">
+        <!-- Left Column: Items List -->
+        <div class="ishaya-cart-page__items-col">
+          <div class="ishaya-cart-page__items-table">
+            {%- for item in cart.items -%}
+              <div class="ishaya-cart-page__item glass-panel">
+                <!-- Thumbnail -->
+                <a href="{{ item.url }}" class="ishaya-cart-page__item-media" aria-label="{{ item.product.title | escape }}">
+                  {%- if item.image -%}
+                    {{
+                      item.image
+                      | image_url: width: 360, height: 480, crop: 'center'
+                      | image_tag:
+                        loading: 'lazy',
+                        class: 'ishaya-cart-page__item-img',
+                        alt: item.image.alt | default: item.product.title | escape
+                    }}
+                  {%- else -%}
+                    <div class="ishaya-cart-page__placeholder">
+                      {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg' }}
+                    </div>
+                  {%- endif -%}
+                </a>
+
+                <!-- Details -->
+                <div class="ishaya-cart-page__item-info">
+                  <div class="ishaya-cart-page__item-header">
+                    <div>
+                      <span class="ishaya-cart-page__item-vendor">
+                        {{ item.product.vendor | default: 'ISHAYA' }}
+                      </span>
+                      <h2 class="ishaya-cart-page__item-title">
+                        <a href="{{ item.url }}" class="ishaya-cart-page__item-title-link">
+                          {{ item.product.title }}
+                        </a>
+                      </h2>
+                    </div>
+
+                    <a
+                      href="{{ item.url_to_remove }}"
+                      class="ishaya-cart-page__item-remove-btn"
+                      aria-label="Remove {{ item.title | escape }}"
+                    >
+                      {% render 'icons', name: 'close', width: 14, height: 14 %}
+                    </a>
+                  </div>
+
+                  {%- unless item.product.has_only_default_variant -%}
+                    <span class="ishaya-cart-page__item-variant">
+                      {{ item.variant.title }}
+                    </span>
+                  {%- endunless -%}
+
+                  <div class="ishaya-cart-page__item-footer">
+                    <!-- Quantity Stepper -->
+                    <div class="ishaya-cart-page__stepper glass-panel">
+                      <button
+                        type="button"
+                        class="ishaya-cart-page__stepper-btn"
+                        data-action="minus"
+                        data-key="{{ item.key }}"
+                        data-qty="{{ item.quantity | minus: 1 }}"
+                        aria-label="Decrease quantity for {{ item.title | escape }}"
+                      >
+                        {% render 'icons', name: 'minus', width: 12, height: 12 %}
+                      </button>
+                      <label for="Updates_{{ item.key }}" class="sr-only">Quantity</label>
+                      <input
+                        type="number"
+                        name="updates[]"
+                        id="Updates_{{ item.key }}"
+                        class="ishaya-cart-page__stepper-input"
+                        value="{{ item.quantity }}"
+                        min="0"
+                        aria-label="Quantity"
+                      >
+                      <button
+                        type="button"
+                        class="ishaya-cart-page__stepper-btn"
+                        data-action="plus"
+                        data-key="{{ item.key }}"
+                        data-qty="{{ item.quantity | plus: 1 }}"
+                        aria-label="Increase quantity for {{ item.title | escape }}"
+                      >
+                        {% render 'icons', name: 'plus', width: 12, height: 12 %}
+                      </button>
+                    </div>
+
+                    <!-- Price -->
+                    <div class="ishaya-cart-page__item-pricing">
+                      <span class="ishaya-cart-page__item-total-price">
+                        {{ item.final_line_price | money }}
+                      </span>
+                      {%- if item.original_line_price > item.final_line_price -%}
+                        <s class="ishaya-cart-page__item-original-price">
+                          {{ item.original_line_price | money }}
+                        </s>
+                      {%- endif -%}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {%- endfor -%}
+          </div>
+        </div>
+
+        <!-- Right Column: Summary Rail -->
+        <div class="ishaya-cart-page__summary-col">
+          <div class="ishaya-cart-page__summary-rail glass-panel">
+            <h2 class="ishaya-cart-page__summary-heading">ORDER SUMMARY</h2>
+
+            <!-- Free Shipping Progress -->
+            <div class="ishaya-cart-page__shipping-box">
+              <div class="ishaya-cart-page__shipping-msg">
+                {%- if diff_cents > 0 -%}
+                  Add <strong>{{ diff_cents | money }}</strong> more to unlock complimentary worldwide shipping.
+                {%- else -%}
+                  <span class="ishaya-cart-page__shipping-unlocked">
+                    Complimentary worldwide shipping unlocked ✓
+                  </span>
+                {%- endif -%}
+              </div>
+              <div class="ishaya-cart-page__progress-track" aria-hidden="true">
+                <div class="ishaya-cart-page__progress-fill" style="width: {{ progress_percent }}%;"></div>
+              </div>
+            </div>
+
+            <!-- Order Note -->
+            {%- if settings.show_order_notes -%}
+              <details class="ishaya-cart-page__note-details">
+                <summary class="ishaya-cart-page__note-summary">
+                  <span>Special Instructions / Order Note</span>
+                  {% render 'icons', name: 'chevron-down', width: 12, height: 12 %}
+                </summary>
+                <textarea
+                  name="note"
+                  id="CartPageOrderNote"
+                  class="ishaya-cart-page__note-textarea"
+                  placeholder="Special delivery notes or packaging requests..."
+                >{{ cart.note }}</textarea>
+              </details>
+            {%- endif -%}
+
+            <!-- Subtotal & Disclaimers -->
+            <div class="ishaya-cart-page__subtotal-section">
+              <div class="ishaya-cart-page__subtotal-row">
+                <span class="ishaya-cart-page__subtotal-label">Subtotal</span>
+                <strong class="ishaya-cart-page__subtotal-amount">{{ cart.total_price | money }}</strong>
+              </div>
+              <p class="ishaya-cart-page__tax-note">
+                Taxes and calculated shipping are determined during the next checkout step.
+              </p>
+            </div>
+
+            <!-- Checkout Actions -->
+            <div class="ishaya-cart-page__actions">
+              <button
+                type="submit"
+                name="checkout"
+                class="btn btn--primary ishaya-cart-page__checkout-btn"
+              >
+                <span>PROCEED TO CHECKOUT</span>
+                {% render 'icons', name: 'arrow-right', width: 14, height: 14 %}
+              </button>
+
+              {%- if additional_checkout_buttons -%}
+                <div class="ishaya-cart-page__additional-buttons">
+                  {{ content_for_additional_checkout_buttons }}
+                </div>
+              {%- endif -%}
+            </div>
+
+            <!-- Trust Guarantees -->
+            <div class="ishaya-cart-page__guarantees">
+              <div class="ishaya-cart-page__guarantee-item">
+                {% render 'icons', name: 'shield', width: 16, height: 16, class: 'ishaya-cart-page__guarantee-icon' %}
+                <span>100% Encrypted & Secure Checkout</span>
+              </div>
+              <div class="ishaya-cart-page__guarantee-item">
+                {% render 'icons', name: 'truck', width: 16, height: 16, class: 'ishaya-cart-page__guarantee-icon' %}
+                <span>Numbered edition packaging with authentic garment seal</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+
+    {%- else -%}
+      <!-- Empty Bag State -->
+      <div class="ishaya-cart-page__empty glass-panel">
+        <div class="ishaya-cart-page__empty-icon" aria-hidden="true">
+          {% render 'icons', name: 'cart', width: 44, height: 44 %}
+        </div>
+        <h2 class="ishaya-cart-page__empty-title">YOUR SHOPPING BAG IS EMPTY</h2>
+        <p class="ishaya-cart-page__empty-desc">
+          There are currently no garments reserved in your bag. Explore our collection of heavyweight technical textiles and modular streetwear silhouettes.
+        </p>
+        <a href="{{ routes.all_products_collection_url }}" class="btn btn--primary ishaya-cart-page__empty-btn">
+          <span>EXPLORE THE ARCHIVE</span>
+          {% render 'icons', name: 'arrow-right', width: 14, height: 14 %}
+        </a>
+      </div>
+    {%- endif -%}
+  </div>
+</section>
+
+<style>
+  .ishaya-cart-page {
+    padding-top: clamp(2.5rem, 5vw, 4.5rem);
+    padding-bottom: clamp(4rem, 8vw, 7rem);
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+
+  /* Top Bar */
+  .ishaya-cart-page__top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: clamp(2rem, 4vw, 3.5rem);
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .ishaya-cart-page__title-wrap {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+  }
+
+  .ishaya-cart-page__title {
+    font-size: clamp(2rem, 4.5vw, 3.5rem);
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+    margin: 0;
+  }
+
+  .ishaya-cart-page__count-badge {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .ishaya-cart-page__continue-link {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+  }
+
+  .ishaya-cart-page__continue-link:hover {
+    color: var(--color-foreground);
+  }
+
+  /* Layout */
+  .ishaya-cart-page__layout {
+    display: grid;
+    grid-template-columns: 1.35fr 1fr;
+    gap: clamp(2rem, 5vw, 4rem);
+    align-items: flex-start;
+  }
+
+  /* Items Table */
+  .ishaya-cart-page__items-table {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .ishaya-cart-page__item {
+    display: flex;
+    gap: 1.25rem;
+    padding: 1.25rem;
+    border-radius: var(--radius-input);
+    border: 1px solid var(--color-border);
+  }
+
+  .ishaya-cart-page__item-media {
+    width: 110px;
+    aspect-ratio: 3 / 4;
+    border-radius: var(--radius-input);
+    overflow: hidden;
+    flex-shrink: 0;
+    border: 1px solid var(--color-border);
+    background-color: var(--color-surface);
+  }
+
+  .ishaya-cart-page__item-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .ishaya-cart-page__placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #121215;
+  }
+
+  .ishaya-cart-page__placeholder svg {
+    width: 45%;
+    height: 45%;
+    opacity: 0.25;
+  }
+
+  .ishaya-cart-page__item-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .ishaya-cart-page__item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .ishaya-cart-page__item-vendor {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .ishaya-cart-page__item-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    margin-top: 0.25rem;
+    line-height: 1.25;
+  }
+
+  .ishaya-cart-page__item-title-link {
+    color: var(--color-foreground);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+  }
+
+  .ishaya-cart-page__item-title-link:hover {
+    color: #ffffff;
+    opacity: 0.85;
+  }
+
+  .ishaya-cart-page__item-remove-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    border: none;
+    color: var(--color-muted);
+    cursor: pointer;
+    border-radius: 50%;
+    transition: all var(--transition-fast);
+  }
+
+  .ishaya-cart-page__item-remove-btn:hover {
+    color: #ef4444;
+    background-color: var(--glass-bg-hover);
+  }
+
+  .ishaya-cart-page__item-variant {
+    font-size: 0.75rem;
+    color: var(--color-muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 0.25rem;
+  }
+
+  .ishaya-cart-page__item-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+  }
+
+  .ishaya-cart-page__stepper {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    padding: 0 4px;
+    height: 40px;
+  }
+
+  .ishaya-cart-page__stepper-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    border: none;
+    color: var(--color-foreground);
+    cursor: pointer;
+    border-radius: 50%;
+    transition: background-color var(--transition-fast);
+  }
+
+  .ishaya-cart-page__stepper-btn:hover {
+    background-color: var(--glass-bg-hover);
+  }
+
+  .ishaya-cart-page__stepper-input {
+    width: 36px;
+    text-align: center;
+    border: none !important;
+    background: transparent !important;
+    color: var(--color-foreground) !important;
+    font-size: 0.85rem;
+    font-weight: 700;
+    box-shadow: none !important;
+    padding: 0 !important;
+    -moz-appearance: textfield;
+  }
+
+  .ishaya-cart-page__stepper-input::-webkit-outer-spin-button,
+  .ishaya-cart-page__stepper-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .ishaya-cart-page__item-pricing {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+
+  .ishaya-cart-page__item-total-price {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--color-foreground);
+  }
+
+  .ishaya-cart-page__item-original-price {
+    font-size: 0.85rem;
+    color: var(--color-muted);
+    text-decoration: line-through;
+  }
+
+  /* Summary Rail */
+  .ishaya-cart-page__summary-rail {
+    position: sticky;
+    top: 90px;
+    padding: clamp(1.5rem, 3vw, 2.25rem);
+    border-radius: var(--radius-input);
+    border: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .ishaya-cart-page__summary-heading {
+    font-size: 0.95rem;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    margin: 0;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  /* Shipping Progress */
+  .ishaya-cart-page__shipping-box {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: var(--radius-input);
+    border: 1px solid var(--color-border);
+  }
+
+  .ishaya-cart-page__shipping-msg {
+    font-size: 0.78rem;
+    color: var(--color-muted);
+    line-height: 1.4;
+  }
+
+  .ishaya-cart-page__shipping-msg strong {
+    color: var(--color-foreground);
+  }
+
+  .ishaya-cart-page__shipping-unlocked {
+    color: #4ade80;
+    font-weight: 700;
+  }
+
+  .ishaya-cart-page__progress-track {
+    width: 100%;
+    height: 4px;
+    background: var(--color-border);
+    border-radius: var(--radius-pill);
+    overflow: hidden;
+  }
+
+  .ishaya-cart-page__progress-fill {
+    height: 100%;
+    background: var(--color-foreground);
+    transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Note */
+  .ishaya-cart-page__note-summary {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .ishaya-cart-page__note-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .ishaya-cart-page__note-textarea {
+    width: 100%;
+    margin-top: 0.5rem;
+    min-height: 70px;
+    font-size: 0.8rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-input);
+    color: var(--color-foreground);
+    padding: 0.5rem 0.75rem;
+  }
+
+  /* Subtotal */
+  .ishaya-cart-page__subtotal-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .ishaya-cart-page__subtotal-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .ishaya-cart-page__subtotal-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .ishaya-cart-page__subtotal-amount {
+    font-size: 1.35rem;
+    font-weight: 900;
+    color: var(--color-foreground);
+  }
+
+  .ishaya-cart-page__tax-note {
+    font-size: 0.72rem;
+    color: var(--color-muted);
+    line-height: 1.4;
+    margin: 0;
+  }
+
+  .ishaya-cart-page__checkout-btn {
+    width: 100%;
+    min-height: 52px;
+    font-size: 0.82rem;
+    letter-spacing: 0.18em;
+    border-radius: var(--radius-pill);
+  }
+
+  .ishaya-cart-page__additional-buttons {
+    margin-top: 0.75rem;
+  }
+
+  /* Guarantees */
+  .ishaya-cart-page__guarantees {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .ishaya-cart-page__guarantee-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.75rem;
+    color: var(--color-muted);
+  }
+
+  .ishaya-cart-page__guarantee-icon {
+    color: var(--color-foreground);
+    flex-shrink: 0;
+  }
+
+  /* Empty State */
+  .ishaya-cart-page__empty {
+    max-width: 620px;
+    margin: 3rem auto;
+    padding: clamp(3rem, 6vw, 5rem) 2rem;
+    text-align: center;
+    border-radius: var(--radius-input);
+    border: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .ishaya-cart-page__empty-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: var(--glass-bg);
+    border: 1px solid var(--color-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-muted);
+    margin-bottom: 1.5rem;
+  }
+
+  .ishaya-cart-page__empty-title {
+    font-size: clamp(1.5rem, 3.5vw, 2.25rem);
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+  }
+
+  .ishaya-cart-page__empty-desc {
+    font-size: 0.9rem;
+    color: var(--color-muted);
+    line-height: 1.6;
+    max-width: 440px;
+    margin-bottom: 2rem;
+  }
+
+  .ishaya-cart-page__empty-btn {
+    font-size: 0.78rem;
+    letter-spacing: 0.16em;
+    padding: 0.9rem 2.25rem;
+  }
+
+  @media (max-width: 1024px) {
+    .ishaya-cart-page__layout {
+      grid-template-columns: 1fr;
+      gap: 2.5rem;
+    }
+
+    .ishaya-cart-page__summary-rail {
+      position: static;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .ishaya-cart-page__item {
+      flex-direction: column;
+    }
+
+    .ishaya-cart-page__item-media {
+      width: 100%;
+      max-width: 140px;
+    }
+  }
+</style>
+
+<script>
+  (function() {
+    const form = document.getElementById('CartPageForm');
+    if (!form) return;
+
+    form.addEventListener('click', function(e) {
+      const stepperBtn = e.target.closest('.ishaya-cart-page__stepper-btn');
+      if (stepperBtn) {
+        const key = stepperBtn.getAttribute('data-key');
+        const qty = parseInt(stepperBtn.getAttribute('data-qty'), 10);
+        updateLineItem(key, qty);
+      }
+    });
+
+    function updateLineItem(key, qty) {
+      fetch('/cart/change.js', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({ id: key, quantity: qty })
+      })
+      .then(function(res) { return res.json(); })
+      .then(function() {
+        window.location.reload();
+      })
+      .catch(function(err) {
+        console.error('Error changing cart quantity:', err);
+      });
+    }
+  })();
+</script>
 
 {% schema %}
 {
-  "name": "t:general.cart",
+  "name": "Cart Page",
+  "tag": "section",
+  "class": "section-cart",
   "settings": []
 }
 {% endschema %}

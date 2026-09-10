@@ -1,0 +1,408 @@
+{% comment %}
+  ISHAYA Client Support & Contact Form Section
+  Architectural two-column layout combining client care coordinates
+  with native Shopify contact form submission.
+{% endcomment %}
+
+<section
+  id="ContactSection-{{ section.id }}"
+  class="ishaya-contact full-width"
+  aria-label="{{ page.title | default: 'Contact Support' | escape }}"
+>
+  <div class="page-container">
+    <div class="ishaya-contact__layout">
+      <!-- Left Column: Support Coordinates -->
+      <div class="ishaya-contact__info-col">
+        <span class="ishaya-contact__badge glass-panel">
+          {{ section.settings.badge | default: 'CONCIERGE // CLIENT LIAISON' }}
+        </span>
+
+        <h1 class="ishaya-contact__title">
+          {{ section.settings.title | default: 'DIRECT ATELIER CHANNELS' }}
+        </h1>
+
+        <p class="ishaya-contact__desc">
+          {{ section.settings.desc | default: 'For inquiries regarding numbered edition allocations, sizing specifications, private showroom appointments, or archival returns.' }}
+        </p>
+
+        <!-- Channels Grid -->
+        <div class="ishaya-contact__channels">
+          <div class="ishaya-contact__channel-item glass-panel">
+            <span class="ishaya-contact__channel-label">ELECTRONIC DISPATCH</span>
+            <a href="mailto:concierge@ishaya.com" class="ishaya-contact__channel-val">
+              concierge@ishaya.com
+            </a>
+            <span class="ishaya-contact__channel-sub">All inquiries answered within 24 operational hours.</span>
+          </div>
+
+          <div class="ishaya-contact__channel-item glass-panel">
+            <span class="ishaya-contact__channel-label">STUDIO HOURS</span>
+            <strong class="ishaya-contact__channel-val">
+              MON – FRI // 09:00 – 18:00
+            </strong>
+            <span class="ishaya-contact__channel-sub">Dispatch and client liaisons operate on GMT & JST.</span>
+          </div>
+
+          <div class="ishaya-contact__channel-item glass-panel">
+            <span class="ishaya-contact__channel-label">ARCHIVAL EXCHANGES</span>
+            <span class="ishaya-contact__channel-val">14-DAY COMPLIMENTARY WINDOW</span>
+            <span class="ishaya-contact__channel-sub">Garments must retain numbered seals and original packaging.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Contact Form -->
+      <div class="ishaya-contact__form-col">
+        <div class="ishaya-contact__form-card glass-panel">
+          <h2 class="ishaya-contact__form-heading">TRANSMIT INQUIRY</h2>
+
+          {% form 'contact', id: 'ContactPageForm', class: 'ishaya-contact__form' %}
+            {%- if form.posted_successfully? -%}
+              <div class="ishaya-contact__alert ishaya-contact__alert--success" role="status">
+                <span class="ishaya-contact__alert-icon" aria-hidden="true">✓</span>
+                <p>Your inquiry has been successfully transmitted. A client liaison will respond within 24 hours.</p>
+              </div>
+            {%- else -%}
+              {%- if form.errors -%}
+                <div class="ishaya-contact__alert ishaya-contact__alert--error" role="alert">
+                  <p>{{ form.errors.translated_fields.email | capitalize }} {{ form.errors.messages.email }}</p>
+                </div>
+              {%- endif -%}
+
+              <!-- Inputs -->
+              <div class="ishaya-contact__field-row">
+                <div class="ishaya-contact__field">
+                  <label for="ContactFormName" class="ishaya-contact__label">NAME *</label>
+                  <input
+                    type="text"
+                    name="contact[name]"
+                    id="ContactFormName"
+                    class="ishaya-contact__input"
+                    value="{% if form.name %}{{ form.name }}{% elsif customer %}{{ customer.name }}{% endif %}"
+                    required
+                    placeholder="ENTER YOUR FULL NAME"
+                  >
+                </div>
+
+                <div class="ishaya-contact__field">
+                  <label for="ContactFormEmail" class="ishaya-contact__label">EMAIL ADDRESS *</label>
+                  <input
+                    type="email"
+                    name="contact[email]"
+                    id="ContactFormEmail"
+                    class="ishaya-contact__input"
+                    value="{% if form.email %}{{ form.email }}{% elsif customer %}{{ customer.email }}{% endif %}"
+                    required
+                    spellcheck="false"
+                    autocomplete="email"
+                    autocapitalize="off"
+                    placeholder="NAME@DOMAIN.COM"
+                  >
+                </div>
+              </div>
+
+              <div class="ishaya-contact__field-row">
+                <div class="ishaya-contact__field">
+                  <label for="ContactFormOrder" class="ishaya-contact__label">ORDER REFERENCE / SKU (OPTIONAL)</label>
+                  <input
+                    type="text"
+                    name="contact[order_number]"
+                    id="ContactFormOrder"
+                    class="ishaya-contact__input"
+                    placeholder="E.G. #ISH-8291"
+                  >
+                </div>
+
+                <div class="ishaya-contact__field">
+                  <label for="ContactFormInquiryType" class="ishaya-contact__label">INQUIRY CLASSIFICATION</label>
+                  <select
+                    name="contact[inquiry_type]"
+                    id="ContactFormInquiryType"
+                    class="ishaya-contact__select"
+                  >
+                    <option value="General Inquiry">General Atelier Inquiry</option>
+                    <option value="Order & Allocation">Order Status & Allocation</option>
+                    <option value="Sizing & Fit Consultation">Sizing & Fit Profile Consultation</option>
+                    <option value="Archival Returns">Archival Return / Exchange</option>
+                    <option value="Press & Editorial">Press & Editorial Requests</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="ishaya-contact__field">
+                <label for="ContactFormMessage" class="ishaya-contact__label">MESSAGE TRANSMISSION *</label>
+                <textarea
+                  name="contact[body]"
+                  id="ContactFormMessage"
+                  rows="6"
+                  class="ishaya-contact__textarea"
+                  required
+                  placeholder="DETAIL YOUR INQUIRY OR SPECIFICATION QUESTIONS HERE..."
+                >{{ form.body }}</textarea>
+              </div>
+
+              <button
+                type="submit"
+                class="btn btn--primary ishaya-contact__submit-btn"
+              >
+                <span>TRANSMIT MESSAGE</span>
+                {% render 'icons', name: 'arrow-right', width: 14, height: 14 %}
+              </button>
+            {%- endif -%}
+          {% endform %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .ishaya-contact {
+    padding-top: clamp(3rem, 6vw, 5.5rem);
+    padding-bottom: clamp(4rem, 8vw, 8rem);
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+
+  .ishaya-contact__layout {
+    display: grid;
+    grid-template-columns: 1.15fr 1.35fr;
+    gap: clamp(2.5rem, 5vw, 5rem);
+    align-items: flex-start;
+  }
+
+  /* Info Column */
+  .ishaya-contact__info-col {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    position: sticky;
+    top: 90px;
+  }
+
+  .ishaya-contact__badge {
+    display: inline-flex;
+    padding: 0.35rem 0.85rem;
+    border-radius: var(--radius-pill);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    width: fit-content;
+  }
+
+  .ishaya-contact__title {
+    font-size: clamp(2rem, 4vw, 3.25rem);
+    font-weight: 900;
+    letter-spacing: -0.01em;
+    line-height: 1.05;
+    text-transform: uppercase;
+    margin: 0;
+  }
+
+  .ishaya-contact__desc {
+    font-size: 0.95rem;
+    color: #a1a1aa;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  .ishaya-contact__channels {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 0.75rem;
+  }
+
+  .ishaya-contact__channel-item {
+    padding: 1.25rem 1.5rem;
+    border-radius: var(--radius-input);
+    border: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .ishaya-contact__channel-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .ishaya-contact__channel-val {
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    color: var(--color-foreground);
+    text-decoration: none;
+  }
+
+  .ishaya-contact__channel-val:hover {
+    color: #ffffff;
+  }
+
+  .ishaya-contact__channel-sub {
+    font-size: 0.78rem;
+    color: #71717a;
+  }
+
+  /* Form Column */
+  .ishaya-contact__form-card {
+    padding: clamp(2rem, 4vw, 3.25rem);
+    border-radius: var(--radius-input);
+    border: 1px solid var(--color-border);
+  }
+
+  .ishaya-contact__form-heading {
+    font-size: 1.15rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 2rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .ishaya-contact__form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .ishaya-contact__field-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+  }
+
+  .ishaya-contact__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .ishaya-contact__label {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .ishaya-contact__input,
+  .ishaya-contact__select,
+  .ishaya-contact__textarea {
+    width: 100%;
+    min-height: 48px;
+    padding: 0.75rem 1.15rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-input);
+    color: var(--color-foreground);
+    font-size: 0.82rem;
+    letter-spacing: 0.08em;
+    transition: all var(--transition-fast);
+  }
+
+  .ishaya-contact__select option {
+    background-color: #121215;
+    color: #ffffff;
+  }
+
+  .ishaya-contact__input:focus-visible,
+  .ishaya-contact__select:focus-visible,
+  .ishaya-contact__textarea:focus-visible {
+    border-color: var(--color-foreground);
+    background: rgba(255, 255, 255, 0.06);
+    box-shadow: 0 0 0 1px var(--color-foreground);
+  }
+
+  .ishaya-contact__textarea {
+    min-height: 140px;
+    resize: vertical;
+  }
+
+  .ishaya-contact__submit-btn {
+    width: 100%;
+    min-height: 52px;
+    font-size: 0.8rem;
+    letter-spacing: 0.18em;
+    border-radius: var(--radius-pill);
+    margin-top: 0.5rem;
+  }
+
+  /* Alerts */
+  .ishaya-contact__alert {
+    padding: 1.25rem 1.5rem;
+    border-radius: var(--radius-input);
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+
+  .ishaya-contact__alert--success {
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    color: #4ade80;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .ishaya-contact__alert--error {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #f87171;
+  }
+
+  @media (max-width: 1024px) {
+    .ishaya-contact__layout {
+      grid-template-columns: 1fr;
+      gap: 3rem;
+    }
+
+    .ishaya-contact__info-col {
+      position: static;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .ishaya-contact__field-row {
+      grid-template-columns: 1fr;
+    }
+
+    .ishaya-contact__form-card {
+      padding: 1.5rem;
+    }
+  }
+</style>
+
+{% schema %}
+{
+  "name": "Contact Support Form",
+  "tag": "section",
+  "class": "section-contact",
+  "settings": [
+    {
+      "type": "text",
+      "id": "badge",
+      "label": "Top Badge",
+      "default": "CONCIERGE // CLIENT LIAISON"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Heading",
+      "default": "DIRECT ATELIER CHANNELS"
+    },
+    {
+      "type": "textarea",
+      "id": "desc",
+      "label": "Description",
+      "default": "For inquiries regarding numbered edition allocations, sizing specifications, private showroom appointments, or archival returns."
+    }
+  ]
+}
+{% endschema %}
