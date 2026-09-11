@@ -12,17 +12,14 @@
     "hero": {
       "type": "hero",
       "settings": {
-        "video": "shopify://files/videos/1104464_1080p_4k_1280x720.mp4",
-        "overlay_opacity": 45,
         "height": "full",
         "content_alignment": "left",
+        "overlay_opacity": 45,
         "tag": "EDITION 01 // FW26",
         "heading": "ARCHITECTURAL UTILITY",
         "subheading": "Engineered garments built with heavyweight technical textiles, modular silhouettes, and utilitarian craftsmanship.",
         "button_label_1": "EXPLORE COLLECTION",
-        "button_link_1": "",
-        "button_label_2": "VIEW LOOKBOOK",
-        "button_link_2": ""
+        "button_label_2": "VIEW LOOKBOOK"
       }
     },
     "promo_marquee": {
@@ -30,39 +27,22 @@
       "blocks": {
         "announcement_1": {
           "type": "announcement",
-          "settings": {
-            "text": "GLOBAL DISPATCH ON ORDERS OVER $250",
-            "link": ""
-          }
+          "settings": { "text": "GLOBAL DISPATCH ON ORDERS OVER $250" }
         },
         "announcement_2": {
           "type": "announcement",
-          "settings": {
-            "text": "EDITION 01 // ARCHIVE CATALOG OPEN",
-            "link": ""
-          }
+          "settings": { "text": "EDITION 01 // ARCHIVE CATALOG OPEN" }
         },
         "announcement_3": {
           "type": "announcement",
-          "settings": {
-            "text": "NUMBERED DROPS — ZERO RESTOCKS",
-            "link": ""
-          }
+          "settings": { "text": "NUMBERED DROPS — ZERO RESTOCKS" }
         },
         "announcement_4": {
           "type": "announcement",
-          "settings": {
-            "text": "ENGINEERED TEXTILES & INDUSTRIAL UTILITY",
-            "link": ""
-          }
+          "settings": { "text": "ENGINEERED TEXTILES & INDUSTRIAL UTILITY" }
         }
       },
-      "block_order": [
-        "announcement_1",
-        "announcement_2",
-        "announcement_3",
-        "announcement_4"
-      ],
+      "block_order": ["announcement_1", "announcement_2", "announcement_3", "announcement_4"],
       "settings": {
         "speed": 30,
         "background_style": "dark",
@@ -72,7 +52,6 @@
     "featured_products": {
       "type": "featured-products",
       "settings": {
-        "collection": "",
         "tag": "CURATED ARCHIVE",
         "title": "LATEST DROPS",
         "description": "Constructed with heavyweight textiles and utilitarian form.",
@@ -91,57 +70,26 @@
       "blocks": {
         "tile_1": {
           "type": "collection_tile",
-          "settings": {
-            "collection": "",
-            "title": "OUTERWEAR",
-            "subtitle": "WATERPROOF SHELLS",
-            "width": "wide"
-          }
+          "settings": { "title": "OUTERWEAR", "subtitle": "WATERPROOF SHELLS", "width": "wide" }
         },
         "tile_2": {
           "type": "collection_tile",
-          "settings": {
-            "collection": "",
-            "title": "CARGO & TROUSERS",
-            "subtitle": "UTILITARIAN POCKETING",
-            "width": "wide"
-          }
+          "settings": { "title": "CARGO & TROUSERS", "subtitle": "UTILITARIAN POCKETING", "width": "wide" }
         },
         "tile_3": {
           "type": "collection_tile",
-          "settings": {
-            "collection": "",
-            "title": "HEAVY FLEECE",
-            "subtitle": "500GSM COTTON",
-            "width": "standard"
-          }
+          "settings": { "title": "HEAVY FLEECE", "subtitle": "500GSM COTTON", "width": "standard" }
         },
         "tile_4": {
           "type": "collection_tile",
-          "settings": {
-            "collection": "",
-            "title": "TACTICAL ACCESSORIES",
-            "subtitle": "MODULAR POUCHES",
-            "width": "standard"
-          }
+          "settings": { "title": "TACTICAL ACCESSORIES", "subtitle": "MODULAR POUCHES", "width": "standard" }
         },
         "tile_5": {
           "type": "collection_tile",
-          "settings": {
-            "collection": "",
-            "title": "FOOTWEAR & OBJECTS",
-            "subtitle": "EDITION RELEASES",
-            "width": "standard"
-          }
+          "settings": { "title": "FOOTWEAR & OBJECTS", "subtitle": "EDITION RELEASES", "width": "standard" }
         }
       },
-      "block_order": [
-        "tile_1",
-        "tile_2",
-        "tile_3",
-        "tile_4",
-        "tile_5"
-      ],
+      "block_order": ["tile_1", "tile_2", "tile_3", "tile_4", "tile_5"],
       "settings": {
         "tag": "SYSTEM CLASSIFICATION",
         "title": "CATEGORIES & FORMS",
@@ -156,7 +104,6 @@
         "heading": "WE DO NOT FOLLOW CONVENTIONAL SEASONS. WE ENGINEER SILHOUETTES DESIGNED FOR URBAN RESISTANCE AND ARCHITECTURAL CLARITY.",
         "subtext": "Heavyweight custom-milled textiles, industrial hardware, and articulated cuts developed in strictly limited, non-repeating numbered editions.",
         "button_label": "DISCOVER THE PROCESS",
-        "button_link": "",
         "spec_1_title": "500GSM TERRY",
         "spec_1_desc": "Custom-milled organic French terry",
         "spec_2_title": "MODULAR HARDWARE",
@@ -168,7 +115,6 @@
     "secondary_products": {
       "type": "featured-products",
       "settings": {
-        "collection": "",
         "tag": "SECOND RELEASE",
         "title": "THE UTILITY LINE",
         "description": "Articulated cuts and industrial hardware for everyday load-bearing wear.",

@@ -20,8 +20,19 @@
     class="ishaya-collection full-width"
     aria-label="{{ collection.title | escape }}"
   >
+    <!-- Breadcrumbs -->
+    <nav class="page-container ishaya-collection__breadcrumbs" aria-label="Breadcrumb">
+      <a href="{{ routes.root_url }}" class="ishaya-collection__crumb">Home</a>
+      <span class="ishaya-collection__crumb-sep" aria-hidden="true">/</span>
+      <a href="{{ routes.collections_url }}" class="ishaya-collection__crumb">Collections</a>
+      <span class="ishaya-collection__crumb-sep" aria-hidden="true">/</span>
+      <span class="ishaya-collection__crumb ishaya-collection__crumb--current" aria-current="page">
+        {{- collection.title -}}
+      </span>
+    </nav>
+
     <!-- Collection Hero Header -->
-    <header class="ishaya-collection__hero{% if collection.image and section.settings.show_collection_image %} ishaya-collection__hero--has-image{% endif %}">
+    <header class="ishaya-collection__hero{% if collection.image and section.settings.show_collection_image %} ishaya-collection__hero--has-image{% endif %} ishaya-collection__hero--{{ section.settings.hero_style | default: 'compact' }}">
       {%- if collection.image and section.settings.show_collection_image -%}
         <div class="ishaya-collection__hero-media" aria-hidden="true">
           {{
@@ -57,6 +68,33 @@
       </div>
     </header>
 
+    <!-- Category Quick-Pills: horizontal scrolling capsule navigation across collections -->
+    {%- if section.settings.category_menu != blank -%}
+      <nav class="page-container ishaya-collection__categories" aria-label="Browse collections">
+        <ul class="ishaya-collection__category-list">
+          <li>
+            <a
+              href="{{ routes.all_products_collection_url }}"
+              class="ishaya-collection__category-pill{% if collection.handle == blank %} ishaya-collection__category-pill--active{% endif %}"
+            >
+              All
+            </a>
+          </li>
+          {%- for link in section.settings.category_menu.links -%}
+            <li>
+              <a
+                href="{{ link.url }}"
+                class="ishaya-collection__category-pill{% if link.active or link.object.handle == collection.handle %} ishaya-collection__category-pill--active{% endif %}"
+                {% if link.object.handle == collection.handle %}aria-current="page"{% endif %}
+              >
+                {{ link.title }}
+              </a>
+            </li>
+          {%- endfor -%}
+        </ul>
+      </nav>
+    {%- endif -%}
+
     <!-- Controls Bar: Filtering & Sorting -->
     <div class="ishaya-collection__controls-bar full-width">
       <div class="page-container ishaya-collection__controls-inner">
@@ -81,10 +119,55 @@
               {%- endif -%}
             </button>
           {%- endif -%}
+
+          <span class="ishaya-collection__results-count" data-results-count>
+            Showing {{ collection.products.size }} of {{ collection.products_count }}
+          </span>
         </div>
 
         <!-- Right: Sort & Grid View Switcher -->
         <div class="ishaya-collection__tools-right">
+          {%- if section.settings.enable_layout_switcher -%}
+            <div class="ishaya-collection__layout-switch" role="group" aria-label="Grid density">
+              <button
+                type="button"
+                class="ishaya-collection__layout-btn"
+                data-layout="list"
+                aria-label="List view"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false">
+                  <line x1="3" y1="6" x2="21" y2="6"></line>
+                  <line x1="3" y1="12" x2="21" y2="12"></line>
+                  <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+              </button>
+              <button
+                type="button"
+                class="ishaya-collection__layout-btn"
+                data-layout="2"
+                aria-label="Two column editorial view"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false">
+                  <rect x="3" y="3" width="7.5" height="18"></rect>
+                  <rect x="13.5" y="3" width="7.5" height="18"></rect>
+                </svg>
+              </button>
+              <button
+                type="button"
+                class="ishaya-collection__layout-btn is-active"
+                data-layout="4"
+                aria-label="Four column dense view"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false">
+                  <rect x="3" y="3" width="7.5" height="7.5"></rect>
+                  <rect x="13.5" y="3" width="7.5" height="7.5"></rect>
+                  <rect x="3" y="13.5" width="7.5" height="7.5"></rect>
+                  <rect x="13.5" y="13.5" width="7.5" height="7.5"></rect>
+                </svg>
+              </button>
+            </div>
+          {%- endif -%}
+
           {%- if section.settings.enable_sorting -%}
             <div class="ishaya-collection__sort-wrap">
               <label for="SortBySelect" class="sr-only">Sort collection by</label>
@@ -144,11 +227,12 @@
     {%- endif -%}
 
     <!-- Main Content: Products Grid & Filter Drawer -->
-    <div class="page-container ishaya-collection__grid-container">
+    <div class="page-container ishaya-collection__grid-container" data-collection-results>
       {%- if collection.products.size > 0 -%}
         <div
           class="ishaya-product-grid ishaya-product-grid--cols-{{ cols_desktop }} ishaya-product-grid--mobile-2"
           id="CollectionProductGrid"
+          data-product-grid
         >
           {%- for product in collection.products -%}
             <div class="ishaya-product-grid__item">
@@ -164,9 +248,33 @@
 
         <!-- Pagination -->
         {%- if paginate.pages > 1 -%}
-          <div class="ishaya-collection__pagination" role="navigation" aria-label="Pagination">
-            {{ paginate | default_pagination: next: 'Next →', previous: '← Prev' }}
-          </div>
+          {%- if section.settings.pagination_style == 'load_more' -%}
+            <div class="ishaya-collection__load-more-wrap">
+              {%- if paginate.next -%}
+                <button
+                  type="button"
+                  class="btn btn--secondary ishaya-collection__load-more"
+                  data-load-more
+                  data-next-url="{{ paginate.next.url }}"
+                >
+                  <span data-load-more-label>
+                    LOAD MORE — SHOWING {{ collection.products.size }} OF {{ collection.products_count }}
+                  </span>
+                </button>
+              {%- endif -%}
+
+              {%- comment -%} Numbered links remain for crawlers and no-JS visitors. {%- endcomment -%}
+              <noscript>
+                <div class="ishaya-collection__pagination" role="navigation" aria-label="Pagination">
+                  {{ paginate | default_pagination: next: 'Next →', previous: '← Prev' }}
+                </div>
+              </noscript>
+            </div>
+          {%- else -%}
+            <div class="ishaya-collection__pagination" role="navigation" aria-label="Pagination">
+              {{ paginate | default_pagination: next: 'Next →', previous: '← Prev' }}
+            </div>
+          {%- endif -%}
         {%- endif -%}
 
       {%- else -%}
@@ -251,6 +359,46 @@
                         </ul>
 
                       {%- when 'price_range' -%}
+                        {%- liquid
+                          assign price_max = filter.range_max | divided_by: 100
+                          assign price_min_value = 0
+                          if filter.min_value.value
+                            assign price_min_value = filter.min_value.value | divided_by: 100
+                          endif
+                          assign price_max_value = price_max
+                          if filter.max_value.value
+                            assign price_max_value = filter.max_value.value | divided_by: 100
+                          endif
+                        -%}
+
+                        <div
+                          class="ishaya-filter-slider"
+                          data-price-slider
+                          data-range-max="{{ price_max }}"
+                        >
+                          <div class="ishaya-filter-slider__track" aria-hidden="true">
+                            <div class="ishaya-filter-slider__fill" data-slider-fill></div>
+                          </div>
+                          <input
+                            type="range"
+                            class="ishaya-filter-slider__input ishaya-filter-slider__input--min"
+                            data-slider-min
+                            min="0"
+                            max="{{ price_max }}"
+                            value="{{ price_min_value }}"
+                            aria-label="Minimum price"
+                          >
+                          <input
+                            type="range"
+                            class="ishaya-filter-slider__input ishaya-filter-slider__input--max"
+                            data-slider-max
+                            min="0"
+                            max="{{ price_max }}"
+                            value="{{ price_max_value }}"
+                            aria-label="Maximum price"
+                          >
+                        </div>
+
                         <div class="ishaya-filter-price-range">
                           <div class="ishaya-filter-price-input-wrap">
                             <span class="ishaya-filter-price-cur">{{ cart.currency.symbol }}</span>
@@ -391,7 +539,7 @@
     position: sticky;
     top: 70px;
     z-index: 20;
-    background: rgba(9, 9, 11, 0.85);
+    background: var(--glass-scrim);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border-bottom: 1px solid var(--color-border);
@@ -819,19 +967,291 @@
     flex: 2;
     min-height: 44px;
   }
+  /* ----------------------------------------------------------------------
+     Breadcrumbs
+     ---------------------------------------------------------------------- */
+  .ishaya-collection__breadcrumbs {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-top: 5.5rem;
+    padding-bottom: 1rem;
+    font-size: 0.55rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .ishaya-collection__crumb {
+    color: var(--color-muted);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+  }
+
+  .ishaya-collection__crumb:hover {
+    color: var(--color-foreground);
+  }
+
+  .ishaya-collection__crumb--current {
+    color: var(--color-foreground);
+  }
+
+  .ishaya-collection__crumb-sep {
+    color: var(--color-muted);
+    opacity: 0.5;
+  }
+
+  /* Compact header trims the vertical drama of the full-bleed variant. */
+  .ishaya-collection__hero--compact:not(.ishaya-collection__hero--has-image) {
+    min-height: 0;
+    padding: 0 0 1.5rem;
+  }
+
+  .ishaya-collection__hero--compact .ishaya-collection__title {
+    font-size: clamp(1.6rem, 4vw, 2.75rem);
+  }
+
+  /* ----------------------------------------------------------------------
+     Category quick-pills
+     ---------------------------------------------------------------------- */
+  .ishaya-collection__categories {
+    padding-bottom: 1rem;
+  }
+
+  .ishaya-collection__category-list {
+    display: flex;
+    gap: 0.4rem;
+    margin: 0;
+    padding: 0 0 0.25rem;
+    overflow-x: auto;
+    list-style: none;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .ishaya-collection__category-list::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ishaya-collection__category-pill {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    padding: 0 0.95rem;
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-pill);
+    background-color: var(--glass-bg);
+    color: var(--color-muted);
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background-color var(--transition-fast), color var(--transition-fast);
+  }
+
+  .ishaya-collection__category-pill:hover {
+    background-color: var(--glass-bg-hover);
+    color: var(--color-foreground);
+  }
+
+  .ishaya-collection__category-pill--active {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-on-accent);
+  }
+
+  /* ----------------------------------------------------------------------
+     Controls bar additions
+     ---------------------------------------------------------------------- */
+  .ishaya-collection__filter-toggle-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+  }
+
+  .ishaya-collection__results-count {
+    color: var(--color-muted);
+    font-size: 0.55rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .ishaya-collection__layout-switch {
+    display: inline-flex;
+    gap: 0.15rem;
+    padding: 0.2rem;
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-pill);
+  }
+
+  .ishaya-collection__layout-btn {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background-color: transparent;
+    color: var(--color-muted);
+    cursor: pointer;
+    transition: background-color var(--transition-fast), color var(--transition-fast);
+  }
+
+  .ishaya-collection__layout-btn:hover {
+    color: var(--color-foreground);
+  }
+
+  .ishaya-collection__layout-btn.is-active {
+    background-color: var(--color-accent);
+    color: var(--color-on-accent);
+  }
+
+  /* The list view collapses each card into a horizontal row. */
+  .ishaya-product-grid--list {
+    grid-template-columns: 1fr;
+    gap: 0.9rem;
+  }
+
+  .ishaya-product-grid--list .ishaya-product-card {
+    flex-direction: row;
+    align-items: center;
+    gap: 1.1rem;
+  }
+
+  .ishaya-product-grid--list .ishaya-product-card__media-wrapper {
+    flex-shrink: 0;
+    width: 108px;
+    aspect-ratio: 3 / 4;
+  }
+
+  .ishaya-product-grid--list .ishaya-product-card__info {
+    flex: 1 1 auto;
+  }
+
+  .ishaya-product-grid--list .ishaya-product-card__quick-add,
+  .ishaya-product-grid--list .ishaya-product-card__wishlist {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* ----------------------------------------------------------------------
+     Load more
+     ---------------------------------------------------------------------- */
+  .ishaya-collection__load-more-wrap {
+    display: flex;
+    justify-content: center;
+    margin-top: 3rem;
+  }
+
+  .ishaya-collection__load-more {
+    min-width: 260px;
+    min-height: 44px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ishaya-collection__load-more.is-loading {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  /* ----------------------------------------------------------------------
+     Price dual-range slider
+     ---------------------------------------------------------------------- */
+  .ishaya-filter-slider {
+    position: relative;
+    height: 28px;
+    margin-bottom: 0.75rem;
+  }
+
+  .ishaya-filter-slider__track {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    left: 0;
+    height: 3px;
+    border-radius: var(--radius-pill);
+    background-color: var(--glass-border);
+    transform: translateY(-50%);
+  }
+
+  .ishaya-filter-slider__fill {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    border-radius: var(--radius-pill);
+    background-color: var(--color-accent);
+  }
+
+  /* Both inputs are stacked; only their thumbs accept pointer events. */
+  .ishaya-filter-slider__input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 28px;
+    margin: 0;
+    background: none;
+    pointer-events: none;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  .ishaya-filter-slider__input::-webkit-slider-thumb {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--color-background);
+    border-radius: var(--radius-pill);
+    background-color: var(--color-accent);
+    cursor: grab;
+    pointer-events: auto;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  .ishaya-filter-slider__input::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--color-background);
+    border-radius: var(--radius-pill);
+    background-color: var(--color-accent);
+    cursor: grab;
+    pointer-events: auto;
+  }
+
+  .ishaya-filter-slider__input:focus-visible::-webkit-slider-thumb {
+    outline: 2px solid var(--color-foreground);
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 767px) {
+    .ishaya-collection__breadcrumbs {
+      padding-top: 4.5rem;
+    }
+
+    .ishaya-collection__results-count {
+      display: none;
+    }
+
+    .ishaya-collection__layout-switch {
+      display: none;
+    }
+
+    .ishaya-collection__load-more {
+      width: 100%;
+      min-width: 0;
+    }
+  }
+
 </style>
 
 <script>
   (function() {
-    // Sort change listener
-    const sortSelect = document.getElementById('SortBySelect');
-    if (sortSelect) {
-      sortSelect.addEventListener('change', function() {
-        const url = new URL(window.location.href);
-        url.searchParams.set('sort_by', sortSelect.value);
-        window.location.href = url.toString();
-      });
-    }
+    // Sorting is handled by the AJAX block below — no full page reload here.
 
     // Filter Drawer Toggle
     const filterBtn = document.getElementById('FilterDrawerOpenBtn');
@@ -862,6 +1282,277 @@
       });
     }
   })();
+  /* ----------------------------------------------------------------------
+     AJAX filtering, sorting, load more, layout switcher and price slider.
+
+     Filtering and sorting re-render this section through the Section Rendering
+     API and swap only the results region, so the filter drawer keeps its state
+     and the URL stays shareable via pushState.
+     ---------------------------------------------------------------------- */
+  (function () {
+    const section = document.getElementById('CollectionSection-{{ section.id }}');
+    if (!section) return;
+
+    const sectionId = {{ section.id | json }};
+    const resultsRegion = section.querySelector('[data-collection-results]');
+    const form = document.getElementById('CollectionFiltersForm');
+    const sortSelect = document.getElementById('SortBySelect');
+
+    /* ---------- Price dual-range slider ---------- */
+    function initPriceSlider() {
+      const slider = section.querySelector('[data-price-slider]');
+      if (!slider) return;
+
+      const minInput = slider.querySelector('[data-slider-min]');
+      const maxInput = slider.querySelector('[data-slider-max]');
+      const fill = slider.querySelector('[data-slider-fill]');
+      const rangeMax = parseFloat(slider.getAttribute('data-range-max')) || 0;
+      const minField = document.getElementById('FilterPriceMin');
+      const maxField = document.getElementById('FilterPriceMax');
+      if (!minInput || !maxInput || rangeMax <= 0) return;
+
+      function paint() {
+        const lo = parseFloat(minInput.value);
+        const hi = parseFloat(maxInput.value);
+        if (fill) {
+          fill.style.left = (lo / rangeMax) * 100 + '%';
+          fill.style.width = ((hi - lo) / rangeMax) * 100 + '%';
+        }
+      }
+
+      minInput.addEventListener('input', function () {
+        // Keep the handles from crossing over each other.
+        if (parseFloat(minInput.value) > parseFloat(maxInput.value)) {
+          minInput.value = maxInput.value;
+        }
+        if (minField) minField.value = minInput.value;
+        paint();
+      });
+
+      maxInput.addEventListener('input', function () {
+        if (parseFloat(maxInput.value) < parseFloat(minInput.value)) {
+          maxInput.value = minInput.value;
+        }
+        if (maxField) maxField.value = maxInput.value;
+        paint();
+      });
+
+      [minInput, maxInput].forEach(function (el) {
+        el.addEventListener('change', applyFilters);
+      });
+
+      // Typing in the number fields drives the handles too.
+      if (minField) {
+        minField.addEventListener('input', function () {
+          minInput.value = minField.value || 0;
+          paint();
+        });
+      }
+      if (maxField) {
+        maxField.addEventListener('input', function () {
+          maxInput.value = maxField.value || rangeMax;
+          paint();
+        });
+      }
+
+      paint();
+    }
+
+    /* ---------- Section Rendering API swap ---------- */
+    function renderFromUrl(url, options) {
+      const opts = options || {};
+      if (resultsRegion) resultsRegion.setAttribute('aria-busy', 'true');
+
+      const fetchUrl = url + (url.indexOf('?') === -1 ? '?' : '&') + 'section_id=' + encodeURIComponent(sectionId);
+
+      return fetch(fetchUrl)
+        .then(function (res) {
+          if (!res.ok) throw new Error('Could not load results');
+          return res.text();
+        })
+        .then(function (html) {
+          const parsed = new DOMParser().parseFromString(html, 'text/html');
+
+          // Swap only the regions that change, so drawer state survives.
+          ['[data-collection-results]', '[data-results-count]'].forEach(function (selector) {
+            const next = parsed.querySelector(selector);
+            const current = section.querySelector(selector);
+            if (next && current) current.innerHTML = next.innerHTML;
+          });
+
+          const nextFilters = parsed.querySelector('.ishaya-collection__active-filters');
+          const currentFilters = section.querySelector('.ishaya-collection__active-filters');
+          if (nextFilters && currentFilters) {
+            currentFilters.innerHTML = nextFilters.innerHTML;
+          } else if (currentFilters && !nextFilters) {
+            currentFilters.innerHTML = '';
+          }
+
+          if (!opts.keepScroll) {
+            const top = section.getBoundingClientRect().top + window.scrollY - 120;
+            window.scrollTo({ top: top, behavior: 'smooth' });
+          }
+
+          applyLayout(currentLayout());
+          document.dispatchEvent(new CustomEvent('ishaya:grid:updated'));
+        })
+        .catch(function () {
+          // A failed swap should still get the visitor to the right page.
+          window.location.href = url;
+        })
+        .finally(function () {
+          if (resultsRegion) resultsRegion.removeAttribute('aria-busy');
+        });
+    }
+
+    function buildUrl() {
+      const params = new URLSearchParams();
+
+      if (form) {
+        new FormData(form).forEach(function (value, key) {
+          if (value !== '') params.append(key, value);
+        });
+      }
+      if (sortSelect && sortSelect.value) params.set('sort_by', sortSelect.value);
+
+      const base = window.location.pathname;
+      const query = params.toString();
+      return query ? base + '?' + query : base;
+    }
+
+    function applyFilters() {
+      const url = buildUrl();
+      window.history.pushState({ url: url }, '', url);
+      renderFromUrl(url, { keepScroll: true });
+    }
+
+    if (form) {
+      form.addEventListener('change', applyFilters);
+      form.addEventListener('submit', function (evt) {
+        evt.preventDefault();
+        applyFilters();
+      });
+    }
+
+    if (sortSelect) {
+      sortSelect.addEventListener('change', applyFilters);
+    }
+
+    // Active-filter chips and "clear all" are links — intercept them too.
+    section.addEventListener('click', function (evt) {
+      const chip = evt.target.closest('.ishaya-collection__active-chip, .ishaya-collection__clear-all');
+      if (!chip || !chip.href) return;
+      evt.preventDefault();
+      const url = chip.href.replace(window.location.origin, '');
+      window.history.pushState({ url: url }, '', url);
+      renderFromUrl(url, { keepScroll: true });
+    });
+
+    window.addEventListener('popstate', function () {
+      renderFromUrl(window.location.pathname + window.location.search, { keepScroll: true });
+    });
+
+    /* ---------- Load more ---------- */
+    section.addEventListener('click', function (evt) {
+      const btn = evt.target.closest('[data-load-more]');
+      if (!btn) return;
+
+      const nextUrl = btn.getAttribute('data-next-url');
+      if (!nextUrl || btn.classList.contains('is-loading')) return;
+
+      btn.classList.add('is-loading');
+      const label = btn.querySelector('[data-load-more-label]');
+      const original = label ? label.textContent : '';
+      if (label) label.textContent = 'LOADING…';
+
+      fetch(nextUrl + (nextUrl.indexOf('?') === -1 ? '?' : '&') + 'section_id=' + encodeURIComponent(sectionId))
+        .then(function (res) {
+          if (!res.ok) throw new Error('Could not load more');
+          return res.text();
+        })
+        .then(function (html) {
+          const parsed = new DOMParser().parseFromString(html, 'text/html');
+          const newItems = parsed.querySelectorAll('[data-product-grid] .ishaya-product-grid__item');
+          const grid = section.querySelector('[data-product-grid]');
+
+          if (grid) {
+            newItems.forEach(function (item) {
+              grid.appendChild(item);
+            });
+          }
+
+          // Carry the next page forward, or retire the button on the last page.
+          const nextBtn = parsed.querySelector('[data-load-more]');
+          if (nextBtn) {
+            btn.setAttribute('data-next-url', nextBtn.getAttribute('data-next-url'));
+            const nextLabel = nextBtn.querySelector('[data-load-more-label]');
+            if (label && nextLabel) label.textContent = nextLabel.textContent.trim();
+          } else {
+            btn.remove();
+          }
+
+          const count = section.querySelector('[data-results-count]');
+          const grid2 = section.querySelector('[data-product-grid]');
+          if (count && grid2) {
+            const shown = grid2.querySelectorAll('.ishaya-product-grid__item').length;
+            count.textContent = count.textContent.replace(/Showing\s+\d+/i, 'Showing ' + shown);
+          }
+
+          applyLayout(currentLayout());
+          document.dispatchEvent(new CustomEvent('ishaya:grid:updated'));
+        })
+        .catch(function () {
+          if (label) label.textContent = original;
+        })
+        .finally(function () {
+          btn.classList.remove('is-loading');
+        });
+    });
+
+    /* ---------- Layout / grid density switcher ---------- */
+    const LAYOUT_KEY = 'ishaya:collection-layout';
+
+    function currentLayout() {
+      try {
+        return window.localStorage.getItem(LAYOUT_KEY) || '{{ cols_desktop }}';
+      } catch (e) {
+        return '{{ cols_desktop }}';
+      }
+    }
+
+    function applyLayout(layout) {
+      const grid = section.querySelector('[data-product-grid]');
+      if (!grid) return;
+
+      grid.classList.remove(
+        'ishaya-product-grid--cols-2',
+        'ishaya-product-grid--cols-3',
+        'ishaya-product-grid--cols-4',
+        'ishaya-product-grid--list'
+      );
+      grid.classList.add(layout === 'list' ? 'ishaya-product-grid--list' : 'ishaya-product-grid--cols-' + layout);
+
+      section.querySelectorAll('[data-layout]').forEach(function (btn) {
+        btn.classList.toggle('is-active', btn.getAttribute('data-layout') === layout);
+      });
+    }
+
+    section.addEventListener('click', function (evt) {
+      const btn = evt.target.closest('[data-layout]');
+      if (!btn) return;
+      const layout = btn.getAttribute('data-layout');
+      try {
+        window.localStorage.setItem(LAYOUT_KEY, layout);
+      } catch (e) {
+        /* ignore */
+      }
+      applyLayout(layout);
+    });
+
+    initPriceSlider();
+    applyLayout(currentLayout());
+  })();
+
 </script>
 
 {% schema %}
@@ -905,6 +1596,38 @@
       "id": "show_collection_image",
       "label": "Show collection banner image",
       "default": true
+    },
+    {
+      "type": "select",
+      "id": "hero_style",
+      "label": "Collection header style",
+      "default": "compact",
+      "options": [
+        { "value": "compact", "label": "Compact" },
+        { "value": "full", "label": "Full height" }
+      ]
+    },
+    {
+      "type": "link_list",
+      "id": "category_menu",
+      "label": "Category pill menu",
+      "info": "Horizontal capsule links shown above the filter bar. Point this at a menu of your collections."
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_layout_switcher",
+      "label": "Enable grid density switcher",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "pagination_style",
+      "label": "Pagination style",
+      "default": "load_more",
+      "options": [
+        { "value": "load_more", "label": "Load more button" },
+        { "value": "numbered", "label": "Numbered pages" }
+      ]
     }
   ]
 }
