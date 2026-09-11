@@ -31,7 +31,12 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
+  /*
+   * `clip` rather than `hidden`: overflow-x:hidden turns <body> into a scroll
+   * container, which silently breaks `position: sticky` on every descendant
+   * (the collection filter bar). `clip` contains overflow without that side effect.
+   */
+  overflow-x: clip;
 }
 
 html:has(dialog[scroll-lock][open], details[scroll-lock][open], body.drawer-open) {

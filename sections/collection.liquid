@@ -31,8 +31,12 @@
       </span>
     </nav>
 
-    <!-- Collection Hero Header -->
-    <header class="ishaya-collection__hero{% if collection.image and section.settings.show_collection_image %} ishaya-collection__hero--has-image{% endif %} ishaya-collection__hero--{{ section.settings.hero_style | default: 'compact' }}">
+    {%- comment -%}
+      Deliberately a plain div, not a header element: layout/theme.liquid already
+      renders the site-wide banner header, and a second header element on the page
+      muddies the landmark structure for assistive tech.
+    {%- endcomment -%}
+    <div class="ishaya-collection__hero{% if collection.image and section.settings.show_collection_image %} ishaya-collection__hero--has-image{% endif %} ishaya-collection__hero--{{ section.settings.hero_style | default: 'compact' }}">
       {%- if collection.image and section.settings.show_collection_image -%}
         <div class="ishaya-collection__hero-media" aria-hidden="true">
           {{
@@ -163,7 +167,7 @@
           {%- endif -%}
         </div>
       {%- endif -%}
-    </header>
+    </div>
 
     <!-- Category Quick-Pills: horizontal scrolling capsule navigation across collections -->
     {%- if section.settings.category_menu != blank -%}
@@ -193,14 +197,17 @@
     {%- endif -%}
 
     <!-- Controls Bar: Filtering & Sorting -->
-    <div class="ishaya-collection__controls-bar full-width">
-      <div class="page-container ishaya-collection__controls-inner">
-        <!-- Left: Filter Trigger Button -->
+    <div class="ishaya-collection__controls-bar">
+      <div class="ishaya-collection__controls-inner">
+        {%- comment -%}
+          Desktop exposes each facet as its own dropdown inside the pill; the
+          drawer button below is the mobile equivalent of the same controls.
+        {%- endcomment -%}
         <div class="ishaya-collection__filter-toggle-wrap">
           {%- if has_filters -%}
             <button
               type="button"
-              class="btn btn--secondary ishaya-collection__filter-btn glass-panel"
+              class="ishaya-collection__filter-btn ishaya-collection__filter-btn--mobile"
               id="FilterDrawerOpenBtn"
               aria-expanded="false"
               aria-controls="CollectionFilterDrawer"
@@ -215,6 +222,84 @@
                 <span class="ishaya-collection__filter-count-badge">{{ active_filter_count }}</span>
               {%- endif -%}
             </button>
+
+            <div class="ishaya-collection__facets">
+              {%- for filter in collection.filters -%}
+                <details class="ishaya-facet" data-facet>
+                  <summary class="ishaya-facet__summary">
+                    <span>{{ filter.label | upcase }}</span>
+                    {%- if filter.active_values.size > 0 -%}
+                      <span class="ishaya-facet__badge">{{ filter.active_values.size }}</span>
+                    {%- endif -%}
+                    <span class="ishaya-facet__chevron" aria-hidden="true">
+                      {% render 'icons', name: 'chevron-down', width: 10, height: 10 %}
+                    </span>
+                  </summary>
+
+                  <div class="ishaya-facet__panel">
+                    {%- case filter.type -%}
+                      {%- when 'list' or 'boolean' -%}
+                        <ul class="ishaya-facet__list">
+                          {%- for filter_value in filter.values -%}
+                            <li>
+                              <label class="ishaya-facet__option">
+                                <input
+                                  type="checkbox"
+                                  name="{{ filter_value.param_name }}"
+                                  value="{{ filter_value.value }}"
+                                  data-filter-input
+                                  {% if filter_value.active %}checked="checked"{% endif %}
+                                  {% if filter_value.count == 0 and filter_value.active == false %}
+                                    disabled="disabled"
+                                  {% endif %}
+                                >
+                                <span class="ishaya-facet__check" aria-hidden="true">
+                                  {% render 'icons', name: 'check', width: 9, height: 9 %}
+                                </span>
+                                <span class="ishaya-facet__label">{{ filter_value.label }}</span>
+                                <span class="ishaya-facet__count">{{ filter_value.count }}</span>
+                              </label>
+                            </li>
+                          {%- endfor -%}
+                        </ul>
+
+                      {%- when 'price_range' -%}
+                        <div class="ishaya-facet__price">
+                          <input
+                            name="{{ filter.min_value.param_name }}"
+                            type="number"
+                            inputmode="numeric"
+                            placeholder="Min"
+                            min="0"
+                            max="{{ filter.range_max | divided_by: 100 }}"
+                            {% if filter.min_value.value %}
+                              value="{{ filter.min_value.value | divided_by: 100 }}"
+                            {% endif %}
+                            class="ishaya-facet__price-input"
+                            data-filter-input
+                            aria-label="Minimum price"
+                          >
+                          <span class="ishaya-facet__price-sep">–</span>
+                          <input
+                            name="{{ filter.max_value.param_name }}"
+                            type="number"
+                            inputmode="numeric"
+                            placeholder="Max"
+                            min="0"
+                            max="{{ filter.range_max | divided_by: 100 }}"
+                            {% if filter.max_value.value %}
+                              value="{{ filter.max_value.value | divided_by: 100 }}"
+                            {% endif %}
+                            class="ishaya-facet__price-input"
+                            data-filter-input
+                            aria-label="Maximum price"
+                          >
+                        </div>
+                    {%- endcase -%}
+                  </div>
+                </details>
+              {%- endfor -%}
+            </div>
           {%- endif -%}
 
           <span class="ishaya-collection__results-count" data-results-count>
@@ -283,7 +368,7 @@
                     value="{{ option.value }}"
                     {% if option.value == current_sort %}selected="selected"{% endif %}
                   >
-                    SORT: {{ option.name | upcase }}
+                    {{ option.name | upcase }}
                   </option>
                 {%- endfor -%}
               </select>
@@ -481,6 +566,7 @@
                                   name="{{ filter_value.param_name }}"
                                   value="{{ filter_value.value }}"
                                   class="ishaya-filter-checkbox"
+                                  data-filter-input
                                   {% if filter_value.active %}checked="checked"{% endif %}
                                   {% if filter_value.count == 0 and filter_value.active == false %}disabled="disabled"{% endif %}
                                 >
@@ -549,6 +635,7 @@
                               max="{{ filter.range_max | divided_by: 100 }}"
                               {% if filter.min_value.value %}value="{{ filter.min_value.value | divided_by: 100 }}"{% endif %}
                               class="ishaya-filter-price-input"
+                              data-filter-input
                               aria-label="Minimum price"
                             >
                           </div>
@@ -564,6 +651,7 @@
                               max="{{ filter.range_max | divided_by: 100 }}"
                               {% if filter.max_value.value %}value="{{ filter.max_value.value | divided_by: 100 }}"{% endif %}
                               class="ishaya-filter-price-input"
+                              data-filter-input
                               aria-label="Maximum price"
                             >
                           </div>
@@ -672,33 +760,68 @@
     max-width: 620px;
   }
 
-  /* Controls Bar */
+  /* Controls Bar — a floating capsule that mirrors the header pill, not a full-width band */
   .ishaya-collection__controls-bar {
     position: sticky;
-    top: 70px;
+    top: 4.5rem;
     z-index: 20;
-    background: var(--glass-scrim);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border-bottom: 1px solid var(--color-border);
-    padding: 0.85rem 0;
+    padding: 0.5rem 1rem;
+    /* The strip itself is invisible; only the pill inside should catch clicks. */
+    pointer-events: none;
   }
 
   .ishaya-collection__controls-inner {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    gap: 1rem;
+    justify-content: center;
+    gap: 0.5rem;
+    width: fit-content;
+    max-width: 100%;
+    margin-inline: auto;
+    padding: 0.3rem;
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-pill);
+    background-color: var(--surface-floating);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    box-shadow: var(--shadow-floating-sm);
+    pointer-events: auto;
+    transition: box-shadow var(--transition-smooth), border-color var(--transition-smooth);
+  }
+
+  /* Thin separators between the pill's functional groups. */
+  .ishaya-collection__controls-inner > * + *::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -0.25rem;
+    width: 1px;
+    height: 16px;
+    background-color: var(--glass-border);
+    transform: translateY(-50%);
+  }
+
+  .ishaya-collection__filter-toggle-wrap,
+  .ishaya-collection__tools-right {
+    position: relative;
   }
 
   .ishaya-collection__filter-btn {
-    min-height: 40px;
-    padding: 0.4rem 1.25rem;
-    font-size: 0.72rem;
+    min-height: 32px;
+    padding: 0 0.9rem;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background-color: transparent;
+    font-size: 0.58rem;
+    font-weight: 700;
     letter-spacing: 0.16em;
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.45rem;
+  }
+
+  .ishaya-collection__filter-btn:hover {
+    background-color: var(--glass-bg-hover);
   }
 
   .ishaya-collection__filter-count-badge {
@@ -721,16 +844,35 @@
   }
 
   .ishaya-collection__sort-select {
-    min-height: 40px;
-    padding: 0.4rem 1.25rem;
+    min-height: 32px;
+    max-width: 13rem;
+    padding: 0 1.6rem 0 0.9rem;
     border-radius: var(--radius-pill);
-    border: 1px solid var(--color-border);
+    border: 0;
     color: var(--color-foreground);
-    font-size: 0.72rem;
+    font-size: 0.58rem;
     font-weight: 700;
     letter-spacing: 0.14em;
+    text-overflow: ellipsis;
     cursor: pointer;
     background-color: transparent;
+    appearance: none;
+    -webkit-appearance: none;
+    /* Chevron drawn inline so the control keeps the pill's flat treatment. */
+    background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+      linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position: calc(100% - 0.95rem) 50%, calc(100% - 0.65rem) 50%;
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+  }
+
+  .ishaya-collection__sort-select:hover {
+    background-color: var(--glass-bg-hover);
+  }
+
+  .ishaya-collection__sort-select option {
+    background-color: var(--color-surface);
+    color: var(--color-foreground);
   }
 
   .ishaya-collection__sort-select option {
@@ -1222,9 +1364,6 @@
   .ishaya-collection__layout-switch {
     display: inline-flex;
     gap: 0.15rem;
-    padding: 0.2rem;
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius-pill);
   }
 
   .ishaya-collection__layout-btn {
@@ -1350,12 +1489,21 @@
       padding-top: 4.5rem;
     }
 
+    .ishaya-collection__controls-bar {
+      top: 4rem;
+      padding-inline: 0.75rem;
+    }
+
     .ishaya-collection__results-count {
       display: none;
     }
 
     .ishaya-collection__layout-switch {
       display: none;
+    }
+
+    .ishaya-collection__sort-select {
+      max-width: 9.5rem;
     }
 
     .ishaya-collection__load-more {
@@ -1454,19 +1602,21 @@
   }
 
   /* ----------------------------------------------------------------------
-     Coverflow collection slider
+     Coverflow collection slider — a stacked deck of wide landscape cards.
+     Slides are absolutely stacked on one centre line; JS assigns each an offset
+     from the active index and the transforms below push neighbours behind it.
      ---------------------------------------------------------------------- */
   .ishaya-coverflow {
+    --cf-card-width: clamp(280px, 26vw, 460px);
+    --cf-card-ratio: 2.5;
     position: relative;
-    margin-top: clamp(1.25rem, 3vw, 2.25rem);
-    padding-bottom: 2.25rem;
+    margin-top: clamp(1rem, 2.5vw, 2rem);
   }
 
   .ishaya-coverflow__viewport {
-    overflow: hidden;
-    /* Depth for the rotateY on the flanking cards. */
-    perspective: 1400px;
+    perspective: 1600px;
     cursor: grab;
+    touch-action: pan-y;
   }
 
   .ishaya-coverflow__viewport.is-dragging {
@@ -1474,56 +1624,39 @@
   }
 
   .ishaya-coverflow__track {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: clamp(0.75rem, 2vw, 1.5rem);
+    position: relative;
+    height: calc(var(--cf-card-width) / var(--cf-card-ratio));
     margin: 0;
-    padding: 1.5rem 0;
+    padding: 0;
     list-style: none;
     transform-style: preserve-3d;
   }
 
   .ishaya-coverflow__slide {
-    flex: 0 0 auto;
-    width: clamp(220px, 30vw, 380px);
-    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
-      opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), filter 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-    /* Default = a distant slide; the active/adjacent rules below override. */
-    opacity: 0;
-    transform: scale(0.8);
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: var(--cf-card-width);
+    /* JS supplies --cf-x / --cf-scale / --cf-rotate per slide. */
+    transform: translateX(-50%) translateX(var(--cf-x, 0px)) scale(var(--cf-scale, 1))
+      rotateY(var(--cf-rotate, 0deg));
+    opacity: var(--cf-opacity, 0);
+    z-index: var(--cf-z, 0);
     pointer-events: none;
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+      opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  .ishaya-coverflow__slide.is-active {
-    z-index: 10;
-    opacity: 1;
-    transform: scale(1);
-    filter: none;
+  .ishaya-coverflow__slide.is-active,
+  .ishaya-coverflow__slide.is-near {
     pointer-events: auto;
-  }
-
-  .ishaya-coverflow__slide.is-prev,
-  .ishaya-coverflow__slide.is-next {
-    z-index: 5;
-    opacity: 0.35;
-    filter: blur(2px);
-    pointer-events: auto;
-  }
-
-  .ishaya-coverflow__slide.is-prev {
-    transform: scale(0.88) rotateY(15deg);
-  }
-
-  .ishaya-coverflow__slide.is-next {
-    transform: scale(0.88) rotateY(-15deg);
   }
 
   .ishaya-coverflow__card {
+    position: relative;
     display: block;
     overflow: hidden;
-    border: 1px solid var(--glass-border);
-    border-radius: 20px;
+    border-radius: 18px;
     background-color: var(--color-surface);
     color: var(--color-foreground);
     text-decoration: none;
@@ -1532,7 +1665,7 @@
 
   .ishaya-coverflow__media {
     position: relative;
-    aspect-ratio: 4 / 5;
+    aspect-ratio: 5 / 2;
     overflow: hidden;
   }
 
@@ -1545,7 +1678,7 @@
 
   @media (hover: hover) {
     .ishaya-coverflow__slide.is-active .ishaya-coverflow__card:hover .ishaya-coverflow__img {
-      transform: scale(1.05);
+      transform: scale(1.04);
     }
   }
 
@@ -1563,39 +1696,47 @@
     fill: var(--color-border);
   }
 
+  /* Collection name sits over the artwork, centred. */
   .ishaya-coverflow__caption {
+    position: absolute;
+    inset: 0;
     display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 0.75rem;
-    padding: 0.85rem 1rem;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    padding: 1rem;
+    text-align: center;
+    pointer-events: none;
   }
 
   .ishaya-coverflow__name {
-    font-size: 0.6rem;
+    color: #ffffff;
+    font-size: clamp(0.7rem, 1.2vw, 0.95rem);
     font-weight: 700;
-    letter-spacing: 0.2em;
+    letter-spacing: 0.22em;
     text-transform: uppercase;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
   }
 
   .ishaya-coverflow__count {
-    color: var(--color-muted);
+    color: rgba(255, 255, 255, 0.75);
     font-size: 0.5rem;
-    letter-spacing: 0.16em;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
     font-variant-numeric: tabular-nums;
-    white-space: nowrap;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
   }
 
   /* --- Navigation --- */
   .ishaya-coverflow__nav {
     position: absolute;
-    top: calc(50% - 1.1rem);
-    z-index: 20;
+    top: 50%;
+    z-index: 30;
     display: grid;
     place-items: center;
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-pill);
     background-color: var(--surface-floating);
@@ -1604,8 +1745,14 @@
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     box-shadow: var(--shadow-floating-sm);
+    opacity: 0;
     transform: translateY(-50%);
-    transition: background-color var(--transition-fast), transform var(--transition-fast);
+    transition: opacity var(--transition-smooth), background-color var(--transition-fast);
+  }
+
+  .ishaya-coverflow:hover .ishaya-coverflow__nav,
+  .ishaya-coverflow__nav:focus-visible {
+    opacity: 1;
   }
 
   .ishaya-coverflow__nav:hover {
@@ -1613,28 +1760,24 @@
     color: var(--color-on-accent);
   }
 
-  .ishaya-coverflow__nav:active {
-    transform: translateY(-50%) scale(0.92);
-  }
-
   .ishaya-coverflow__nav--prev {
-    left: clamp(0.5rem, 3vw, 3rem);
+    left: calc(50% - (var(--cf-card-width) / 2) - 3rem);
   }
 
   .ishaya-coverflow__nav--next {
-    right: clamp(0.5rem, 3vw, 3rem);
+    right: calc(50% - (var(--cf-card-width) / 2) - 3rem);
   }
 
   .ishaya-coverflow__dots {
     display: flex;
     justify-content: center;
-    gap: 0.4rem;
-    margin-top: 0.5rem;
+    gap: 0.35rem;
+    margin-top: 0.9rem;
   }
 
   .ishaya-coverflow__dot {
-    width: 6px;
-    height: 6px;
+    width: 5px;
+    height: 5px;
     padding: 0;
     border: 0;
     border-radius: var(--radius-pill);
@@ -1644,18 +1787,18 @@
   }
 
   .ishaya-coverflow__dot[aria-selected='true'] {
-    width: 20px;
+    width: 18px;
     background-color: var(--color-accent);
   }
 
   @media (max-width: 767px) {
-    .ishaya-coverflow__slide {
-      width: 72vw;
+    .ishaya-coverflow {
+      --cf-card-width: min(78vw, 400px);
     }
 
+    /* No room for flanking arrows beside the card at this width. */
     .ishaya-coverflow__nav {
-      width: 34px;
-      height: 34px;
+      display: none;
     }
   }
 
@@ -1665,10 +1808,202 @@
     .ishaya-coverflow__dot {
       transition: none;
     }
-    .ishaya-coverflow__slide.is-prev,
-    .ishaya-coverflow__slide.is-next {
-      filter: none;
-      transform: scale(0.88);
+  }
+
+  /* ----------------------------------------------------------------------
+     Inline facet dropdowns inside the controls pill (desktop)
+     ---------------------------------------------------------------------- */
+  .ishaya-collection__facets {
+    display: flex;
+    align-items: center;
+    gap: 0.15rem;
+  }
+
+  .ishaya-facet {
+    position: relative;
+  }
+
+  .ishaya-facet__summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-height: 32px;
+    padding: 0 0.9rem;
+    border-radius: var(--radius-pill);
+    color: var(--color-foreground);
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    white-space: nowrap;
+    cursor: pointer;
+    list-style: none;
+    transition: background-color var(--transition-fast);
+  }
+
+  .ishaya-facet__summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .ishaya-facet__summary:hover,
+  .ishaya-facet[open] .ishaya-facet__summary {
+    background-color: var(--glass-bg-hover);
+  }
+
+  .ishaya-facet__chevron {
+    display: flex;
+    color: var(--color-muted);
+    transition: transform var(--transition-fast);
+  }
+
+  .ishaya-facet[open] .ishaya-facet__chevron {
+    transform: rotate(180deg);
+  }
+
+  .ishaya-facet__badge {
+    display: inline-grid;
+    place-items: center;
+    min-width: 15px;
+    height: 15px;
+    padding: 0 3px;
+    border-radius: var(--radius-pill);
+    background-color: var(--color-accent);
+    color: var(--color-on-accent);
+    font-size: 0.5rem;
+    font-weight: 800;
+  }
+
+  .ishaya-facet__panel {
+    position: absolute;
+    top: calc(100% + 0.6rem);
+    left: 50%;
+    z-index: 40;
+    width: max-content;
+    min-width: 190px;
+    max-width: 280px;
+    max-height: 320px;
+    overflow-y: auto;
+    padding: 0.5rem;
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    background-color: var(--surface-floating);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    box-shadow: var(--glass-shadow);
+    transform: translateX(-50%);
+    animation: ishayaFacetIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes ishayaFacetIn {
+    from { opacity: 0; transform: translateX(-50%) translateY(-6px); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+  }
+
+  .ishaya-facet__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .ishaya-facet__option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.5rem;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.62rem;
+    letter-spacing: 0.06em;
+    transition: background-color var(--transition-fast);
+  }
+
+  .ishaya-facet__option:hover {
+    background-color: var(--glass-bg-hover);
+  }
+
+  .ishaya-facet__option input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .ishaya-facet__check {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 15px;
+    height: 15px;
+    border: 1px solid var(--glass-border);
+    border-radius: 5px;
+    color: transparent;
+    transition: background-color var(--transition-fast), color var(--transition-fast);
+  }
+
+  .ishaya-facet__option input:checked ~ .ishaya-facet__check {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-on-accent);
+  }
+
+  .ishaya-facet__option input:focus-visible ~ .ishaya-facet__check {
+    outline: 2px solid var(--color-foreground);
+    outline-offset: 2px;
+  }
+
+  .ishaya-facet__option input:disabled ~ .ishaya-facet__label,
+  .ishaya-facet__option input:disabled ~ .ishaya-facet__count {
+    opacity: 0.35;
+  }
+
+  .ishaya-facet__label {
+    flex: 1 1 auto;
+  }
+
+  .ishaya-facet__count {
+    color: var(--color-muted);
+    font-size: 0.55rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ishaya-facet__price {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.25rem;
+  }
+
+  .ishaya-facet__price-input {
+    width: 5.5rem;
+    min-height: 30px;
+    padding: 0 0.6rem;
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-pill);
+    background-color: transparent;
+    color: var(--color-foreground);
+    font-size: 0.62rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ishaya-facet__price-sep {
+    color: var(--color-muted);
+    font-size: 0.6rem;
+  }
+
+  /* The drawer button is the mobile-only counterpart to the facet dropdowns. */
+  .ishaya-collection__filter-btn--mobile {
+    display: none;
+    border: 0;
+    background-color: transparent;
+    color: var(--color-foreground);
+    cursor: pointer;
+  }
+
+  @media (max-width: 900px) {
+    .ishaya-collection__facets {
+      display: none;
+    }
+
+    .ishaya-collection__filter-btn--mobile {
+      display: inline-flex;
     }
   }
 
@@ -1707,6 +2042,7 @@
       });
     }
   })();
+
   /* ----------------------------------------------------------------------
      AJAX filtering, sorting, load more, layout switcher and price slider.
 
@@ -1833,16 +2169,38 @@
     function buildUrl() {
       const params = new URLSearchParams();
 
-      if (form) {
-        new FormData(form).forEach(function (value, key) {
-          if (value !== '') params.append(key, value);
-        });
-      }
+      // The same facet exists twice — once in the desktop pill, once in the mobile
+      // drawer — so collect from both and drop duplicate name/value pairs.
+      const seen = {};
+      section.querySelectorAll('[data-filter-input]').forEach(function (input) {
+        if (input.disabled) return;
+        if (input.type === 'checkbox' && !input.checked) return;
+        if (!input.name || input.value === '') return;
+
+        const key = input.name + '=' + input.value;
+        if (seen[key]) return;
+        seen[key] = true;
+        params.append(input.name, input.value);
+      });
+
       if (sortSelect && sortSelect.value) params.set('sort_by', sortSelect.value);
 
       const base = window.location.pathname;
       const query = params.toString();
       return query ? base + '?' + query : base;
+    }
+
+    // Mirror a change made in one surface onto its twin so both stay in sync.
+    function mirrorInput(changed) {
+      if (!changed.name) return;
+      section.querySelectorAll('[data-filter-input]').forEach(function (input) {
+        if (input === changed || input.name !== changed.name) return;
+        if (input.type === 'checkbox') {
+          if (input.value === changed.value) input.checked = changed.checked;
+        } else {
+          input.value = changed.value;
+        }
+      });
     }
 
     function applyFilters() {
@@ -1852,12 +2210,27 @@
     }
 
     if (form) {
-      form.addEventListener('change', applyFilters);
       form.addEventListener('submit', function (evt) {
         evt.preventDefault();
         applyFilters();
       });
     }
+
+    // Delegated so it covers the pill facets and the drawer form alike.
+    section.addEventListener('change', function (evt) {
+      const input = evt.target.closest('[data-filter-input]');
+      if (!input) return;
+      mirrorInput(input);
+      applyFilters();
+    });
+
+    // Clicking outside an open facet dropdown closes it.
+    document.addEventListener('click', function (evt) {
+      if (evt.target.closest('[data-facet]')) return;
+      section.querySelectorAll('[data-facet][open]').forEach(function (facet) {
+        facet.open = false;
+      });
+    });
 
     if (sortSelect) {
       sortSelect.addEventListener('change', applyFilters);
@@ -1953,9 +2326,9 @@
         'ishaya-product-grid--cols-2',
         'ishaya-product-grid--cols-3',
         'ishaya-product-grid--cols-4',
-        'ishaya-product-grid--cols-6'
+        'ishaya-product-grid--list'
       );
-      grid.classList.add('ishaya-product-grid--cols-' + layout);
+      grid.classList.add(layout === 'list' ? 'ishaya-product-grid--list' : 'ishaya-product-grid--cols-' + layout);
 
       section.querySelectorAll('[data-layout]').forEach(function (btn) {
         btn.classList.toggle('is-active', btn.getAttribute('data-layout') === layout);
@@ -1977,51 +2350,59 @@
     initPriceSlider();
     applyLayout(currentLayout());
   })();
-
   /* ----------------------------------------------------------------------
-     Coverflow collection slider — centring, drag, keyboard and autoplay.
+     Coverflow collection slider — stacked deck, drag, keyboard and autoplay.
      ---------------------------------------------------------------------- */
   (function () {
     const root = document.querySelector('[data-coverflow]');
     if (!root) return;
 
     const viewport = root.querySelector('[data-coverflow-viewport]');
-    const track = root.querySelector('[data-coverflow-track]');
     const slides = Array.prototype.slice.call(root.querySelectorAll('[data-coverflow-slide]'));
     const dots = Array.prototype.slice.call(root.querySelectorAll('[data-coverflow-dot]'));
-    if (!viewport || !track || slides.length === 0) return;
+    if (!viewport || slides.length === 0) return;
+
+    // Depth steps: how far behind the centre each neighbour sits.
+    const DEPTH = [
+      { x: 0, scale: 1, rotate: 0, opacity: 1, z: 30 },
+      { x: 34, scale: 0.94, rotate: 6, opacity: 0.65, z: 20 },
+      { x: 58, scale: 0.88, rotate: 9, opacity: 0.3, z: 10 }
+    ];
 
     let current = 0;
     let autoplayTimer = null;
 
-    const reduceMotion =
-      window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
     function update() {
       slides.forEach(function (slide, i) {
-        slide.classList.remove('is-active', 'is-prev', 'is-next');
-        if (i === current) slide.classList.add('is-active');
-        else if (i === current - 1) slide.classList.add('is-prev');
-        else if (i === current + 1) slide.classList.add('is-next');
+        const offset = i - current;
+        const step = DEPTH[Math.min(Math.abs(offset), DEPTH.length - 1)];
+        const beyond = Math.abs(offset) >= DEPTH.length;
+        const direction = offset === 0 ? 0 : offset > 0 ? 1 : -1;
 
-        // Only the centred card is a tab stop.
+        slide.style.setProperty('--cf-x', step.x * direction + 'px');
+        slide.style.setProperty('--cf-scale', step.scale);
+        // Neighbours angle back toward the centre card.
+        slide.style.setProperty('--cf-rotate', -step.rotate * direction + 'deg');
+        slide.style.setProperty('--cf-opacity', beyond ? 0 : step.opacity);
+        slide.style.setProperty('--cf-z', step.z - Math.abs(offset));
+
+        slide.classList.toggle('is-active', offset === 0);
+        slide.classList.toggle('is-near', offset !== 0 && !beyond);
+
         const link = slide.querySelector('a');
-        if (link) link.tabIndex = i === current ? 0 : -1;
+        if (link) link.tabIndex = offset === 0 ? 0 : -1;
       });
 
       dots.forEach(function (dot, i) {
         dot.setAttribute('aria-selected', i === current ? 'true' : 'false');
       });
-
-      // Centre the active slide by translating the track.
-      const active = slides[current];
-      const offset = active.offsetLeft + active.offsetWidth / 2 - viewport.offsetWidth / 2;
-      track.style.transition = reduceMotion ? 'none' : 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
-      track.style.transform = 'translateX(' + -offset + 'px)';
     }
 
     function goTo(index) {
-      current = Math.max(0, Math.min(slides.length - 1, index));
+      // Wrap around so the deck feels endless in both directions.
+      if (index < 0) index = slides.length - 1;
+      if (index > slides.length - 1) index = 0;
+      current = index;
       update();
     }
 
@@ -2046,7 +2427,7 @@
       });
     });
 
-    // Clicking a flanking card centres it rather than following its link.
+    // Clicking a card that is not centred brings it forward instead of navigating.
     slides.forEach(function (slide, i) {
       slide.addEventListener(
         'click',
@@ -2090,10 +2471,10 @@
       viewport.classList.remove('is-dragging');
 
       const delta = evt.clientX - dragStartX;
-      const threshold = 60;
-      if (delta > threshold) goTo(current - 1);
-      else if (delta < -threshold) goTo(current + 1);
-      if (Math.abs(delta) > threshold) stopAutoplay();
+      if (Math.abs(delta) > 50) {
+        goTo(delta > 0 ? current - 1 : current + 1);
+        stopAutoplay();
+      }
     });
 
     viewport.addEventListener('pointercancel', function () {
@@ -2103,11 +2484,11 @@
 
     /* ---- Autoplay ---- */
     function startAutoplay() {
-      if (reduceMotion) return;
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
       if (root.getAttribute('data-autoplay') !== 'true') return;
       const seconds = parseInt(root.getAttribute('data-autoplay-speed'), 10) || 5;
       autoplayTimer = window.setInterval(function () {
-        goTo(current + 1 >= slides.length ? 0 : current + 1);
+        goTo(current + 1);
       }, seconds * 1000);
     }
 
@@ -2121,11 +2502,9 @@
     root.addEventListener('mouseenter', stopAutoplay);
     root.addEventListener('focusin', stopAutoplay);
 
-    window.addEventListener('resize', update);
     update();
     startAutoplay();
   })();
-
 </script>
 
 {% schema %}
