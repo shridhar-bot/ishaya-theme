@@ -31,7 +31,12 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
+  /*
+   * `clip` rather than `hidden`: overflow-x:hidden turns <body> into a scroll
+   * container, which silently breaks `position: sticky` on every descendant
+   * (the collection filter bar). `clip` contains overflow without that side effect.
+   */
+  overflow-x: clip;
 }
 
 html:has(dialog[scroll-lock][open], details[scroll-lock][open], body.drawer-open) {
@@ -265,18 +270,35 @@ select:focus-visible {
 .ishaya-product-grid--cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .ishaya-product-grid--cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .ishaya-product-grid--cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.ishaya-product-grid--cols-6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
 
 .ishaya-product-grid__item {
   display: flex;
   width: 100%;
 }
 
+/* Dense layouts shed columns before the cards become unreadable. */
+@media (max-width: 1400px) {
+  .ishaya-product-grid--cols-6 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+
+@media (max-width: 1200px) {
+  .ishaya-product-grid--cols-6 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
 @media (max-width: 1024px) {
-  .ishaya-product-grid--cols-4 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .ishaya-product-grid--cols-4,
+  .ishaya-product-grid--cols-6 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .ishaya-product-grid { gap: 1.1rem; }
 }
 
 @media (max-width: 767px) {
   .ishaya-product-grid { gap: 1rem; }
+  /* Below tablet the switcher is hidden, so the mobile modifier wins outright. */
+  .ishaya-product-grid--cols-2,
+  .ishaya-product-grid--cols-3,
+  .ishaya-product-grid--cols-4,
+  .ishaya-product-grid--cols-6 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .ishaya-product-grid--mobile-1 { grid-template-columns: 1fr; }
   .ishaya-product-grid--mobile-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

@@ -20,8 +20,23 @@
     class="ishaya-collection full-width"
     aria-label="{{ collection.title | escape }}"
   >
-    <!-- Collection Hero Header -->
-    <header class="ishaya-collection__hero{% if collection.image and section.settings.show_collection_image %} ishaya-collection__hero--has-image{% endif %}">
+    <!-- Breadcrumbs -->
+    <nav class="page-container ishaya-collection__breadcrumbs" aria-label="Breadcrumb">
+      <a href="{{ routes.root_url }}" class="ishaya-collection__crumb">Home</a>
+      <span class="ishaya-collection__crumb-sep" aria-hidden="true">/</span>
+      <a href="{{ routes.collections_url }}" class="ishaya-collection__crumb">Collections</a>
+      <span class="ishaya-collection__crumb-sep" aria-hidden="true">/</span>
+      <span class="ishaya-collection__crumb ishaya-collection__crumb--current" aria-current="page">
+        {{- collection.title -}}
+      </span>
+    </nav>
+
+    {%- comment -%}
+      Deliberately a plain div, not a header element: layout/theme.liquid already
+      renders the site-wide banner header, and a second header element on the page
+      muddies the landmark structure for assistive tech.
+    {%- endcomment -%}
+    <div class="ishaya-collection__hero{% if collection.image and section.settings.show_collection_image %} ishaya-collection__hero--has-image{% endif %} ishaya-collection__hero--{{ section.settings.hero_style | default: 'compact' }}">
       {%- if collection.image and section.settings.show_collection_image -%}
         <div class="ishaya-collection__hero-media" aria-hidden="true">
           {{
@@ -55,17 +70,144 @@
           {%- endif -%}
         </div>
       </div>
-    </header>
+
+      {%- comment -%}
+        Coverflow collection slider. The active card sits at full scale while its
+        neighbours recede in scale, opacity and rotateY, giving depth without a
+        carousel library.
+      {%- endcomment -%}
+      {%- assign slides = section.blocks | where: 'type', 'slide' -%}
+      {%- if slides.size > 0 -%}
+        <div
+          class="ishaya-coverflow"
+          data-coverflow
+          data-autoplay="{{ section.settings.slider_autoplay }}"
+          data-autoplay-speed="{{ section.settings.slider_speed | default: 5 }}"
+        >
+          <div class="ishaya-coverflow__viewport" data-coverflow-viewport>
+            <ul class="ishaya-coverflow__track" data-coverflow-track>
+              {%- for block in slides -%}
+                {%- liquid
+                  assign slide_collection = block.settings.collection
+                  assign slide_image = block.settings.image | default: slide_collection.image
+                  assign slide_title = block.settings.title | default: slide_collection.title
+                  assign slide_url = block.settings.link | default: slide_collection.url
+                -%}
+                <li
+                  class="ishaya-coverflow__slide"
+                  data-coverflow-slide
+                  data-index="{{ forloop.index0 }}"
+                  {{ block.shopify_attributes }}
+                >
+                  <a class="ishaya-coverflow__card" href="{{ slide_url | default: '#' }}">
+                    <div class="ishaya-coverflow__media">
+                      {%- if slide_image != blank -%}
+                        {{
+                          slide_image
+                          | image_url: width: 900
+                          | image_tag:
+                            class: 'ishaya-coverflow__img',
+                            widths: '300, 450, 600, 900',
+                            sizes: '(min-width: 750px) 40vw, 80vw',
+                            loading: 'lazy',
+                            alt: slide_title | default: 'Collection' | escape
+                        }}
+                      {%- else -%}
+                        <div class="ishaya-coverflow__placeholder">
+                          {{ 'collection-1' | placeholder_svg_tag: 'placeholder-svg' }}
+                        </div>
+                      {%- endif -%}
+                    </div>
+
+                    <div class="ishaya-coverflow__caption">
+                      <span class="ishaya-coverflow__name">{{ slide_title | escape }}</span>
+                      {%- if slide_collection != blank -%}
+                        <span class="ishaya-coverflow__count">
+                          {{- slide_collection.all_products_count }} pieces
+                        </span>
+                      {%- endif -%}
+                    </div>
+                  </a>
+                </li>
+              {%- endfor -%}
+            </ul>
+          </div>
+
+          {%- if slides.size > 1 -%}
+            <button
+              type="button"
+              class="ishaya-coverflow__nav ishaya-coverflow__nav--prev"
+              data-coverflow-prev
+              aria-label="Previous collection"
+            >
+              {% render 'icons', name: 'arrow-left', width: 16, height: 16 %}
+            </button>
+            <button
+              type="button"
+              class="ishaya-coverflow__nav ishaya-coverflow__nav--next"
+              data-coverflow-next
+              aria-label="Next collection"
+            >
+              {% render 'icons', name: 'arrow-right', width: 16, height: 16 %}
+            </button>
+
+            <div class="ishaya-coverflow__dots" role="tablist" aria-label="Collection slides">
+              {%- for block in slides -%}
+                <button
+                  type="button"
+                  class="ishaya-coverflow__dot"
+                  data-coverflow-dot
+                  data-index="{{ forloop.index0 }}"
+                  role="tab"
+                  aria-label="Go to slide {{ forloop.index }}"
+                  aria-selected="false"
+                ></button>
+              {%- endfor -%}
+            </div>
+          {%- endif -%}
+        </div>
+      {%- endif -%}
+    </div>
+
+    <!-- Category Quick-Pills: horizontal scrolling capsule navigation across collections -->
+    {%- if section.settings.category_menu != blank -%}
+      <nav class="page-container ishaya-collection__categories" aria-label="Browse collections">
+        <ul class="ishaya-collection__category-list">
+          <li>
+            <a
+              href="{{ routes.all_products_collection_url }}"
+              class="ishaya-collection__category-pill{% if collection.handle == blank %} ishaya-collection__category-pill--active{% endif %}"
+            >
+              All
+            </a>
+          </li>
+          {%- for link in section.settings.category_menu.links -%}
+            <li>
+              <a
+                href="{{ link.url }}"
+                class="ishaya-collection__category-pill{% if link.active or link.object.handle == collection.handle %} ishaya-collection__category-pill--active{% endif %}"
+                {% if link.object.handle == collection.handle %}aria-current="page"{% endif %}
+              >
+                {{ link.title }}
+              </a>
+            </li>
+          {%- endfor -%}
+        </ul>
+      </nav>
+    {%- endif -%}
 
     <!-- Controls Bar: Filtering & Sorting -->
-    <div class="ishaya-collection__controls-bar full-width">
-      <div class="page-container ishaya-collection__controls-inner">
-        <!-- Left: Filter Trigger Button -->
+    <div class="ishaya-collection__controls-bar">
+      <div class="ishaya-collection__controls-inner">
+        {%- comment -%}
+          Desktop exposes each facet as its own dropdown inside the pill; the
+          drawer button below is the mobile equivalent of the same controls.
+        {%- endcomment -%}
         <div class="ishaya-collection__filter-toggle-wrap">
           {%- if has_filters -%}
             <button
               type="button"
-              class="btn btn--secondary ishaya-collection__filter-btn glass-panel"
+              class="ishaya-collection__filter-btn ishaya-collection__filter-btn--mobile"
               id="FilterDrawerOpenBtn"
               aria-expanded="false"
               aria-controls="CollectionFilterDrawer"
@@ -80,11 +222,137 @@
                 <span class="ishaya-collection__filter-count-badge">{{ active_filter_count }}</span>
               {%- endif -%}
             </button>
+
+            <div class="ishaya-collection__facets">
+              {%- for filter in collection.filters -%}
+                <details class="ishaya-facet" data-facet>
+                  <summary class="ishaya-facet__summary">
+                    <span>{{ filter.label | upcase }}</span>
+                    {%- if filter.active_values.size > 0 -%}
+                      <span class="ishaya-facet__badge">{{ filter.active_values.size }}</span>
+                    {%- endif -%}
+                    <span class="ishaya-facet__chevron" aria-hidden="true">
+                      {% render 'icons', name: 'chevron-down', width: 10, height: 10 %}
+                    </span>
+                  </summary>
+
+                  <div class="ishaya-facet__panel">
+                    {%- case filter.type -%}
+                      {%- when 'list' or 'boolean' -%}
+                        <ul class="ishaya-facet__list">
+                          {%- for filter_value in filter.values -%}
+                            <li>
+                              <label class="ishaya-facet__option">
+                                <input
+                                  type="checkbox"
+                                  name="{{ filter_value.param_name }}"
+                                  value="{{ filter_value.value }}"
+                                  data-filter-input
+                                  {% if filter_value.active %}checked="checked"{% endif %}
+                                  {% if filter_value.count == 0 and filter_value.active == false %}
+                                    disabled="disabled"
+                                  {% endif %}
+                                >
+                                <span class="ishaya-facet__check" aria-hidden="true">
+                                  {% render 'icons', name: 'check', width: 9, height: 9 %}
+                                </span>
+                                <span class="ishaya-facet__label">{{ filter_value.label }}</span>
+                                <span class="ishaya-facet__count">{{ filter_value.count }}</span>
+                              </label>
+                            </li>
+                          {%- endfor -%}
+                        </ul>
+
+                      {%- when 'price_range' -%}
+                        <div class="ishaya-facet__price">
+                          <input
+                            name="{{ filter.min_value.param_name }}"
+                            type="number"
+                            inputmode="numeric"
+                            placeholder="Min"
+                            min="0"
+                            max="{{ filter.range_max | divided_by: 100 }}"
+                            {% if filter.min_value.value %}
+                              value="{{ filter.min_value.value | divided_by: 100 }}"
+                            {% endif %}
+                            class="ishaya-facet__price-input"
+                            data-filter-input
+                            aria-label="Minimum price"
+                          >
+                          <span class="ishaya-facet__price-sep">–</span>
+                          <input
+                            name="{{ filter.max_value.param_name }}"
+                            type="number"
+                            inputmode="numeric"
+                            placeholder="Max"
+                            min="0"
+                            max="{{ filter.range_max | divided_by: 100 }}"
+                            {% if filter.max_value.value %}
+                              value="{{ filter.max_value.value | divided_by: 100 }}"
+                            {% endif %}
+                            class="ishaya-facet__price-input"
+                            data-filter-input
+                            aria-label="Maximum price"
+                          >
+                        </div>
+                    {%- endcase -%}
+                  </div>
+                </details>
+              {%- endfor -%}
+            </div>
           {%- endif -%}
+
+          <span class="ishaya-collection__results-count" data-results-count>
+            Showing {{ collection.products.size }} of {{ collection.products_count }}
+          </span>
         </div>
 
         <!-- Right: Sort & Grid View Switcher -->
         <div class="ishaya-collection__tools-right">
+          {%- if section.settings.enable_layout_switcher -%}
+            <div class="ishaya-collection__layout-switch" role="group" aria-label="Grid density">
+              <button
+                type="button"
+                class="ishaya-collection__layout-btn"
+                data-layout="2"
+                aria-label="Two column view"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false">
+                  <rect x="3" y="3" width="7.5" height="18"></rect>
+                  <rect x="13.5" y="3" width="7.5" height="18"></rect>
+                </svg>
+              </button>
+              <button
+                type="button"
+                class="ishaya-collection__layout-btn is-active"
+                data-layout="4"
+                aria-label="Four column view"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false">
+                  <rect x="3" y="3" width="7.5" height="7.5"></rect>
+                  <rect x="13.5" y="3" width="7.5" height="7.5"></rect>
+                  <rect x="3" y="13.5" width="7.5" height="7.5"></rect>
+                  <rect x="13.5" y="13.5" width="7.5" height="7.5"></rect>
+                </svg>
+              </button>
+              <button
+                type="button"
+                class="ishaya-collection__layout-btn"
+                data-layout="6"
+                aria-label="Six column dense view"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false">
+                  <rect x="2.5" y="3" width="5" height="7.5"></rect>
+                  <rect x="9.5" y="3" width="5" height="7.5"></rect>
+                  <rect x="16.5" y="3" width="5" height="7.5"></rect>
+                  <rect x="2.5" y="13.5" width="5" height="7.5"></rect>
+                  <rect x="9.5" y="13.5" width="5" height="7.5"></rect>
+                  <rect x="16.5" y="13.5" width="5" height="7.5"></rect>
+                </svg>
+              </button>
+            </div>
+          {%- endif -%}
+
           {%- if section.settings.enable_sorting -%}
             <div class="ishaya-collection__sort-wrap">
               <label for="SortBySelect" class="sr-only">Sort collection by</label>
@@ -100,7 +368,7 @@
                     value="{{ option.value }}"
                     {% if option.value == current_sort %}selected="selected"{% endif %}
                   >
-                    SORT: {{ option.name | upcase }}
+                    {{ option.name | upcase }}
                   </option>
                 {%- endfor -%}
               </select>
@@ -144,11 +412,15 @@
     {%- endif -%}
 
     <!-- Main Content: Products Grid & Filter Drawer -->
-    <div class="page-container ishaya-collection__grid-container">
+    <div
+      class="ishaya-collection__grid-container{% if section.settings.full_bleed_grid %} ishaya-collection__grid-container--full{% else %} page-container{% endif %}"
+      data-collection-results
+    >
       {%- if collection.products.size > 0 -%}
         <div
           class="ishaya-product-grid ishaya-product-grid--cols-{{ cols_desktop }} ishaya-product-grid--mobile-2"
           id="CollectionProductGrid"
+          data-product-grid
         >
           {%- for product in collection.products -%}
             <div class="ishaya-product-grid__item">
@@ -164,9 +436,33 @@
 
         <!-- Pagination -->
         {%- if paginate.pages > 1 -%}
-          <div class="ishaya-collection__pagination" role="navigation" aria-label="Pagination">
-            {{ paginate | default_pagination: next: 'Next →', previous: '← Prev' }}
-          </div>
+          {%- if section.settings.pagination_style == 'load_more' -%}
+            <div class="ishaya-collection__load-more-wrap">
+              {%- if paginate.next -%}
+                <button
+                  type="button"
+                  class="btn btn--secondary ishaya-collection__load-more"
+                  data-load-more
+                  data-next-url="{{ paginate.next.url }}"
+                >
+                  <span data-load-more-label>
+                    LOAD MORE — SHOWING {{ collection.products.size }} OF {{ collection.products_count }}
+                  </span>
+                </button>
+              {%- endif -%}
+
+              {%- comment -%} Numbered links remain for crawlers and no-JS visitors. {%- endcomment -%}
+              <noscript>
+                <div class="ishaya-collection__pagination" role="navigation" aria-label="Pagination">
+                  {{ paginate | default_pagination: next: 'Next →', previous: '← Prev' }}
+                </div>
+              </noscript>
+            </div>
+          {%- else -%}
+            <div class="ishaya-collection__pagination" role="navigation" aria-label="Pagination">
+              {{ paginate | default_pagination: next: 'Next →', previous: '← Prev' }}
+            </div>
+          {%- endif -%}
         {%- endif -%}
 
       {%- else -%}
@@ -186,6 +482,41 @@
         </div>
       {%- endif -%}
     </div>
+
+    <!-- Editorial / SEO copy and FAQ, below the catalog and above the footer -->
+    {%- if section.settings.bottom_heading != blank
+        or section.settings.bottom_text != blank
+        or section.blocks.size > 0
+    -%}
+      <aside class="page-container ishaya-collection__editorial">
+        {%- if section.settings.bottom_heading != blank -%}
+          <h2 class="ishaya-collection__editorial-title">{{ section.settings.bottom_heading }}</h2>
+        {%- endif -%}
+
+        {%- if section.settings.bottom_text != blank -%}
+          <div class="ishaya-collection__editorial-body rte">{{ section.settings.bottom_text }}</div>
+        {%- endif -%}
+
+        {%- assign faq_blocks = section.blocks | where: 'type', 'faq_item' -%}
+        {%- if faq_blocks.size > 0 -%}
+          <h3 class="ishaya-collection__faq-title">Frequently asked questions</h3>
+
+          <div class="ishaya-collection__faq">
+            {%- for block in faq_blocks -%}
+              <details class="ishaya-collection__faq-item" {{ block.shopify_attributes }}>
+                <summary class="ishaya-collection__faq-q">
+                  <span>{{ block.settings.question }}</span>
+                  <span class="ishaya-collection__faq-chevron" aria-hidden="true">
+                    {% render 'icons', name: 'chevron-down', width: 12, height: 12 %}
+                  </span>
+                </summary>
+                <div class="ishaya-collection__faq-a rte">{{ block.settings.answer }}</div>
+              </details>
+            {%- endfor -%}
+          </div>
+        {%- endif -%}
+      </aside>
+    {%- endif -%}
 
     <!-- Filter Drawer (Slide-out) -->
     {%- if has_filters -%}
@@ -235,6 +566,7 @@
                                   name="{{ filter_value.param_name }}"
                                   value="{{ filter_value.value }}"
                                   class="ishaya-filter-checkbox"
+                                  data-filter-input
                                   {% if filter_value.active %}checked="checked"{% endif %}
                                   {% if filter_value.count == 0 and filter_value.active == false %}disabled="disabled"{% endif %}
                                 >
@@ -251,6 +583,46 @@
                         </ul>
 
                       {%- when 'price_range' -%}
+                        {%- liquid
+                          assign price_max = filter.range_max | divided_by: 100
+                          assign price_min_value = 0
+                          if filter.min_value.value
+                            assign price_min_value = filter.min_value.value | divided_by: 100
+                          endif
+                          assign price_max_value = price_max
+                          if filter.max_value.value
+                            assign price_max_value = filter.max_value.value | divided_by: 100
+                          endif
+                        -%}
+
+                        <div
+                          class="ishaya-filter-slider"
+                          data-price-slider
+                          data-range-max="{{ price_max }}"
+                        >
+                          <div class="ishaya-filter-slider__track" aria-hidden="true">
+                            <div class="ishaya-filter-slider__fill" data-slider-fill></div>
+                          </div>
+                          <input
+                            type="range"
+                            class="ishaya-filter-slider__input ishaya-filter-slider__input--min"
+                            data-slider-min
+                            min="0"
+                            max="{{ price_max }}"
+                            value="{{ price_min_value }}"
+                            aria-label="Minimum price"
+                          >
+                          <input
+                            type="range"
+                            class="ishaya-filter-slider__input ishaya-filter-slider__input--max"
+                            data-slider-max
+                            min="0"
+                            max="{{ price_max }}"
+                            value="{{ price_max_value }}"
+                            aria-label="Maximum price"
+                          >
+                        </div>
+
                         <div class="ishaya-filter-price-range">
                           <div class="ishaya-filter-price-input-wrap">
                             <span class="ishaya-filter-price-cur">{{ cart.currency.symbol }}</span>
@@ -263,6 +635,7 @@
                               max="{{ filter.range_max | divided_by: 100 }}"
                               {% if filter.min_value.value %}value="{{ filter.min_value.value | divided_by: 100 }}"{% endif %}
                               class="ishaya-filter-price-input"
+                              data-filter-input
                               aria-label="Minimum price"
                             >
                           </div>
@@ -278,6 +651,7 @@
                               max="{{ filter.range_max | divided_by: 100 }}"
                               {% if filter.max_value.value %}value="{{ filter.max_value.value | divided_by: 100 }}"{% endif %}
                               class="ishaya-filter-price-input"
+                              data-filter-input
                               aria-label="Maximum price"
                             >
                           </div>
@@ -386,33 +760,68 @@
     max-width: 620px;
   }
 
-  /* Controls Bar */
+  /* Controls Bar — a floating capsule that mirrors the header pill, not a full-width band */
   .ishaya-collection__controls-bar {
     position: sticky;
-    top: 70px;
+    top: 4.5rem;
     z-index: 20;
-    background: rgba(9, 9, 11, 0.85);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border-bottom: 1px solid var(--color-border);
-    padding: 0.85rem 0;
+    padding: 0.5rem 1rem;
+    /* The strip itself is invisible; only the pill inside should catch clicks. */
+    pointer-events: none;
   }
 
   .ishaya-collection__controls-inner {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    gap: 1rem;
+    justify-content: center;
+    gap: 0.5rem;
+    width: fit-content;
+    max-width: 100%;
+    margin-inline: auto;
+    padding: 0.3rem;
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-pill);
+    background-color: var(--surface-floating);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    box-shadow: var(--shadow-floating-sm);
+    pointer-events: auto;
+    transition: box-shadow var(--transition-smooth), border-color var(--transition-smooth);
+  }
+
+  /* Thin separators between the pill's functional groups. */
+  .ishaya-collection__controls-inner > * + *::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -0.25rem;
+    width: 1px;
+    height: 16px;
+    background-color: var(--glass-border);
+    transform: translateY(-50%);
+  }
+
+  .ishaya-collection__filter-toggle-wrap,
+  .ishaya-collection__tools-right {
+    position: relative;
   }
 
   .ishaya-collection__filter-btn {
-    min-height: 40px;
-    padding: 0.4rem 1.25rem;
-    font-size: 0.72rem;
+    min-height: 32px;
+    padding: 0 0.9rem;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background-color: transparent;
+    font-size: 0.58rem;
+    font-weight: 700;
     letter-spacing: 0.16em;
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.45rem;
+  }
+
+  .ishaya-collection__filter-btn:hover {
+    background-color: var(--glass-bg-hover);
   }
 
   .ishaya-collection__filter-count-badge {
@@ -435,16 +844,35 @@
   }
 
   .ishaya-collection__sort-select {
-    min-height: 40px;
-    padding: 0.4rem 1.25rem;
+    min-height: 32px;
+    max-width: 13rem;
+    padding: 0 1.6rem 0 0.9rem;
     border-radius: var(--radius-pill);
-    border: 1px solid var(--color-border);
+    border: 0;
     color: var(--color-foreground);
-    font-size: 0.72rem;
+    font-size: 0.58rem;
     font-weight: 700;
     letter-spacing: 0.14em;
+    text-overflow: ellipsis;
     cursor: pointer;
     background-color: transparent;
+    appearance: none;
+    -webkit-appearance: none;
+    /* Chevron drawn inline so the control keeps the pill's flat treatment. */
+    background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+      linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position: calc(100% - 0.95rem) 50%, calc(100% - 0.65rem) 50%;
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+  }
+
+  .ishaya-collection__sort-select:hover {
+    background-color: var(--glass-bg-hover);
+  }
+
+  .ishaya-collection__sort-select option {
+    background-color: var(--color-surface);
+    color: var(--color-foreground);
   }
 
   .ishaya-collection__sort-select option {
@@ -819,19 +1247,771 @@
     flex: 2;
     min-height: 44px;
   }
+  /* ----------------------------------------------------------------------
+     Breadcrumbs
+     ---------------------------------------------------------------------- */
+  .ishaya-collection__breadcrumbs {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-top: 5.5rem;
+    padding-bottom: 1rem;
+    font-size: 0.55rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .ishaya-collection__crumb {
+    color: var(--color-muted);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+  }
+
+  .ishaya-collection__crumb:hover {
+    color: var(--color-foreground);
+  }
+
+  .ishaya-collection__crumb--current {
+    color: var(--color-foreground);
+  }
+
+  .ishaya-collection__crumb-sep {
+    color: var(--color-muted);
+    opacity: 0.5;
+  }
+
+  /* Compact header trims the vertical drama of the full-bleed variant. */
+  .ishaya-collection__hero--compact:not(.ishaya-collection__hero--has-image) {
+    min-height: 0;
+    padding: 0 0 1.5rem;
+  }
+
+  .ishaya-collection__hero--compact .ishaya-collection__title {
+    font-size: clamp(1.6rem, 4vw, 2.75rem);
+  }
+
+  /* ----------------------------------------------------------------------
+     Category quick-pills
+     ---------------------------------------------------------------------- */
+  .ishaya-collection__categories {
+    padding-bottom: 1rem;
+  }
+
+  .ishaya-collection__category-list {
+    display: flex;
+    gap: 0.4rem;
+    margin: 0;
+    padding: 0 0 0.25rem;
+    overflow-x: auto;
+    list-style: none;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .ishaya-collection__category-list::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ishaya-collection__category-pill {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    padding: 0 0.95rem;
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-pill);
+    background-color: var(--glass-bg);
+    color: var(--color-muted);
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background-color var(--transition-fast), color var(--transition-fast);
+  }
+
+  .ishaya-collection__category-pill:hover {
+    background-color: var(--glass-bg-hover);
+    color: var(--color-foreground);
+  }
+
+  .ishaya-collection__category-pill--active {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-on-accent);
+  }
+
+  /* ----------------------------------------------------------------------
+     Controls bar additions
+     ---------------------------------------------------------------------- */
+  .ishaya-collection__filter-toggle-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+  }
+
+  .ishaya-collection__results-count {
+    color: var(--color-muted);
+    font-size: 0.55rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .ishaya-collection__layout-switch {
+    display: inline-flex;
+    gap: 0.15rem;
+  }
+
+  .ishaya-collection__layout-btn {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background-color: transparent;
+    color: var(--color-muted);
+    cursor: pointer;
+    transition: background-color var(--transition-fast), color var(--transition-fast);
+  }
+
+  .ishaya-collection__layout-btn:hover {
+    color: var(--color-foreground);
+  }
+
+  .ishaya-collection__layout-btn.is-active {
+    background-color: var(--color-accent);
+    color: var(--color-on-accent);
+  }
+
+  /* Full-screen catalog: the grid escapes the page container edge to edge. */
+  .ishaya-collection__grid-container--full {
+    width: 100%;
+    padding-right: clamp(0.75rem, 2vw, 2rem);
+    padding-left: clamp(0.75rem, 2vw, 2rem);
+  }
+
+  /* ----------------------------------------------------------------------
+     Load more
+     ---------------------------------------------------------------------- */
+  .ishaya-collection__load-more-wrap {
+    display: flex;
+    justify-content: center;
+    margin-top: 3rem;
+  }
+
+  .ishaya-collection__load-more {
+    min-width: 260px;
+    min-height: 44px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ishaya-collection__load-more.is-loading {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  /* ----------------------------------------------------------------------
+     Price dual-range slider
+     ---------------------------------------------------------------------- */
+  .ishaya-filter-slider {
+    position: relative;
+    height: 28px;
+    margin-bottom: 0.75rem;
+  }
+
+  .ishaya-filter-slider__track {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    left: 0;
+    height: 3px;
+    border-radius: var(--radius-pill);
+    background-color: var(--glass-border);
+    transform: translateY(-50%);
+  }
+
+  .ishaya-filter-slider__fill {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    border-radius: var(--radius-pill);
+    background-color: var(--color-accent);
+  }
+
+  /* Both inputs are stacked; only their thumbs accept pointer events. */
+  .ishaya-filter-slider__input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 28px;
+    margin: 0;
+    background: none;
+    pointer-events: none;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  .ishaya-filter-slider__input::-webkit-slider-thumb {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--color-background);
+    border-radius: var(--radius-pill);
+    background-color: var(--color-accent);
+    cursor: grab;
+    pointer-events: auto;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  .ishaya-filter-slider__input::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--color-background);
+    border-radius: var(--radius-pill);
+    background-color: var(--color-accent);
+    cursor: grab;
+    pointer-events: auto;
+  }
+
+  .ishaya-filter-slider__input:focus-visible::-webkit-slider-thumb {
+    outline: 2px solid var(--color-foreground);
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 767px) {
+    .ishaya-collection__breadcrumbs {
+      padding-top: 4.5rem;
+    }
+
+    .ishaya-collection__controls-bar {
+      top: 4rem;
+      padding-inline: 0.75rem;
+    }
+
+    .ishaya-collection__results-count {
+      display: none;
+    }
+
+    .ishaya-collection__layout-switch {
+      display: none;
+    }
+
+    .ishaya-collection__sort-select {
+      max-width: 9.5rem;
+    }
+
+    .ishaya-collection__load-more {
+      width: 100%;
+      min-width: 0;
+    }
+  }
+
+  /* ----------------------------------------------------------------------
+     Editorial copy & FAQ
+     ---------------------------------------------------------------------- */
+  .ishaya-collection__editorial {
+    padding-top: clamp(3rem, 7vw, 5.5rem);
+    padding-bottom: clamp(1rem, 3vw, 2rem);
+    max-width: 52rem;
+  }
+
+  .ishaya-collection__editorial-title {
+    margin: 0 0 1rem;
+    font-size: clamp(0.85rem, 2vw, 1.05rem);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    line-height: 1.5;
+  }
+
+  .ishaya-collection__editorial-body {
+    color: var(--color-muted);
+    font-size: 0.75rem;
+    line-height: 1.8;
+  }
+
+  .ishaya-collection__editorial-body p {
+    margin: 0 0 0.85rem;
+  }
+
+  .ishaya-collection__faq-title {
+    margin: 2.5rem 0 1rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .ishaya-collection__faq {
+    border-top: 1px solid var(--color-border);
+  }
+
+  .ishaya-collection__faq-item {
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .ishaya-collection__faq-q {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 0;
+    cursor: pointer;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    list-style: none;
+  }
+
+  .ishaya-collection__faq-q::-webkit-details-marker {
+    display: none;
+  }
+
+  .ishaya-collection__faq-chevron {
+    display: flex;
+    flex-shrink: 0;
+    color: var(--color-muted);
+    transition: transform var(--transition-smooth);
+  }
+
+  .ishaya-collection__faq-item[open] .ishaya-collection__faq-chevron {
+    transform: rotate(180deg);
+  }
+
+  .ishaya-collection__faq-a {
+    padding: 0 0 1.1rem;
+    color: var(--color-muted);
+    font-size: 0.72rem;
+    line-height: 1.8;
+  }
+
+  .ishaya-collection__faq-a p {
+    margin: 0 0 0.6rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ishaya-collection__faq-chevron {
+      transition: none;
+    }
+  }
+
+  /* ----------------------------------------------------------------------
+     Coverflow collection slider — a stacked deck of wide landscape cards.
+     Slides are absolutely stacked on one centre line; JS assigns each an offset
+     from the active index and the transforms below push neighbours behind it.
+     ---------------------------------------------------------------------- */
+  .ishaya-coverflow {
+    --cf-card-width: clamp(280px, 26vw, 460px);
+    --cf-card-ratio: 2.5;
+    position: relative;
+    margin-top: clamp(1rem, 2.5vw, 2rem);
+  }
+
+  .ishaya-coverflow__viewport {
+    perspective: 1600px;
+    cursor: grab;
+    touch-action: pan-y;
+  }
+
+  .ishaya-coverflow__viewport.is-dragging {
+    cursor: grabbing;
+  }
+
+  .ishaya-coverflow__track {
+    position: relative;
+    height: calc(var(--cf-card-width) / var(--cf-card-ratio));
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    transform-style: preserve-3d;
+  }
+
+  .ishaya-coverflow__slide {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: var(--cf-card-width);
+    /* JS supplies --cf-x / --cf-scale / --cf-rotate per slide. */
+    transform: translateX(-50%) translateX(var(--cf-x, 0px)) scale(var(--cf-scale, 1))
+      rotateY(var(--cf-rotate, 0deg));
+    opacity: var(--cf-opacity, 0);
+    z-index: var(--cf-z, 0);
+    pointer-events: none;
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+      opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .ishaya-coverflow__slide.is-active,
+  .ishaya-coverflow__slide.is-near {
+    pointer-events: auto;
+  }
+
+  .ishaya-coverflow__card {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    border-radius: 18px;
+    background-color: var(--color-surface);
+    color: var(--color-foreground);
+    text-decoration: none;
+    box-shadow: var(--glass-shadow);
+  }
+
+  .ishaya-coverflow__media {
+    position: relative;
+    aspect-ratio: 5 / 2;
+    overflow: hidden;
+  }
+
+  .ishaya-coverflow__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @media (hover: hover) {
+    .ishaya-coverflow__slide.is-active .ishaya-coverflow__card:hover .ishaya-coverflow__img {
+      transform: scale(1.04);
+    }
+  }
+
+  .ishaya-coverflow__placeholder {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    background-color: var(--color-surface);
+  }
+
+  .ishaya-coverflow__placeholder .placeholder-svg {
+    width: 100%;
+    height: 100%;
+    fill: var(--color-border);
+  }
+
+  /* Collection name sits over the artwork, centred. */
+  .ishaya-coverflow__caption {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    padding: 1rem;
+    text-align: center;
+    pointer-events: none;
+  }
+
+  .ishaya-coverflow__name {
+    color: #ffffff;
+    font-size: clamp(0.7rem, 1.2vw, 0.95rem);
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+  }
+
+  .ishaya-coverflow__count {
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 0.5rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
+  }
+
+  /* --- Navigation --- */
+  .ishaya-coverflow__nav {
+    position: absolute;
+    top: 50%;
+    z-index: 30;
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-pill);
+    background-color: var(--surface-floating);
+    color: var(--color-foreground);
+    cursor: pointer;
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    box-shadow: var(--shadow-floating-sm);
+    opacity: 0;
+    transform: translateY(-50%);
+    transition: opacity var(--transition-smooth), background-color var(--transition-fast);
+  }
+
+  .ishaya-coverflow:hover .ishaya-coverflow__nav,
+  .ishaya-coverflow__nav:focus-visible {
+    opacity: 1;
+  }
+
+  .ishaya-coverflow__nav:hover {
+    background-color: var(--color-accent);
+    color: var(--color-on-accent);
+  }
+
+  .ishaya-coverflow__nav--prev {
+    left: calc(50% - (var(--cf-card-width) / 2) - 3rem);
+  }
+
+  .ishaya-coverflow__nav--next {
+    right: calc(50% - (var(--cf-card-width) / 2) - 3rem);
+  }
+
+  .ishaya-coverflow__dots {
+    display: flex;
+    justify-content: center;
+    gap: 0.35rem;
+    margin-top: 0.9rem;
+  }
+
+  .ishaya-coverflow__dot {
+    width: 5px;
+    height: 5px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background-color: var(--color-border);
+    cursor: pointer;
+    transition: width var(--transition-smooth), background-color var(--transition-fast);
+  }
+
+  .ishaya-coverflow__dot[aria-selected='true'] {
+    width: 18px;
+    background-color: var(--color-accent);
+  }
+
+  @media (max-width: 767px) {
+    .ishaya-coverflow {
+      --cf-card-width: min(78vw, 400px);
+    }
+
+    /* No room for flanking arrows beside the card at this width. */
+    .ishaya-coverflow__nav {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ishaya-coverflow__slide,
+    .ishaya-coverflow__img,
+    .ishaya-coverflow__dot {
+      transition: none;
+    }
+  }
+
+  /* ----------------------------------------------------------------------
+     Inline facet dropdowns inside the controls pill (desktop)
+     ---------------------------------------------------------------------- */
+  .ishaya-collection__facets {
+    display: flex;
+    align-items: center;
+    gap: 0.15rem;
+  }
+
+  .ishaya-facet {
+    position: relative;
+  }
+
+  .ishaya-facet__summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-height: 32px;
+    padding: 0 0.9rem;
+    border-radius: var(--radius-pill);
+    color: var(--color-foreground);
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    white-space: nowrap;
+    cursor: pointer;
+    list-style: none;
+    transition: background-color var(--transition-fast);
+  }
+
+  .ishaya-facet__summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .ishaya-facet__summary:hover,
+  .ishaya-facet[open] .ishaya-facet__summary {
+    background-color: var(--glass-bg-hover);
+  }
+
+  .ishaya-facet__chevron {
+    display: flex;
+    color: var(--color-muted);
+    transition: transform var(--transition-fast);
+  }
+
+  .ishaya-facet[open] .ishaya-facet__chevron {
+    transform: rotate(180deg);
+  }
+
+  .ishaya-facet__badge {
+    display: inline-grid;
+    place-items: center;
+    min-width: 15px;
+    height: 15px;
+    padding: 0 3px;
+    border-radius: var(--radius-pill);
+    background-color: var(--color-accent);
+    color: var(--color-on-accent);
+    font-size: 0.5rem;
+    font-weight: 800;
+  }
+
+  .ishaya-facet__panel {
+    position: absolute;
+    top: calc(100% + 0.6rem);
+    left: 50%;
+    z-index: 40;
+    width: max-content;
+    min-width: 190px;
+    max-width: 280px;
+    max-height: 320px;
+    overflow-y: auto;
+    padding: 0.5rem;
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    background-color: var(--surface-floating);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    box-shadow: var(--glass-shadow);
+    transform: translateX(-50%);
+    animation: ishayaFacetIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes ishayaFacetIn {
+    from { opacity: 0; transform: translateX(-50%) translateY(-6px); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+  }
+
+  .ishaya-facet__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .ishaya-facet__option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.5rem;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.62rem;
+    letter-spacing: 0.06em;
+    transition: background-color var(--transition-fast);
+  }
+
+  .ishaya-facet__option:hover {
+    background-color: var(--glass-bg-hover);
+  }
+
+  .ishaya-facet__option input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .ishaya-facet__check {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 15px;
+    height: 15px;
+    border: 1px solid var(--glass-border);
+    border-radius: 5px;
+    color: transparent;
+    transition: background-color var(--transition-fast), color var(--transition-fast);
+  }
+
+  .ishaya-facet__option input:checked ~ .ishaya-facet__check {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-on-accent);
+  }
+
+  .ishaya-facet__option input:focus-visible ~ .ishaya-facet__check {
+    outline: 2px solid var(--color-foreground);
+    outline-offset: 2px;
+  }
+
+  .ishaya-facet__option input:disabled ~ .ishaya-facet__label,
+  .ishaya-facet__option input:disabled ~ .ishaya-facet__count {
+    opacity: 0.35;
+  }
+
+  .ishaya-facet__label {
+    flex: 1 1 auto;
+  }
+
+  .ishaya-facet__count {
+    color: var(--color-muted);
+    font-size: 0.55rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ishaya-facet__price {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.25rem;
+  }
+
+  .ishaya-facet__price-input {
+    width: 5.5rem;
+    min-height: 30px;
+    padding: 0 0.6rem;
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-pill);
+    background-color: transparent;
+    color: var(--color-foreground);
+    font-size: 0.62rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ishaya-facet__price-sep {
+    color: var(--color-muted);
+    font-size: 0.6rem;
+  }
+
+  /* The drawer button is the mobile-only counterpart to the facet dropdowns. */
+  .ishaya-collection__filter-btn--mobile {
+    display: none;
+    border: 0;
+    background-color: transparent;
+    color: var(--color-foreground);
+    cursor: pointer;
+  }
+
+  @media (max-width: 900px) {
+    .ishaya-collection__facets {
+      display: none;
+    }
+
+    .ishaya-collection__filter-btn--mobile {
+      display: inline-flex;
+    }
+  }
+
 </style>
 
 <script>
   (function() {
-    // Sort change listener
-    const sortSelect = document.getElementById('SortBySelect');
-    if (sortSelect) {
-      sortSelect.addEventListener('change', function() {
-        const url = new URL(window.location.href);
-        url.searchParams.set('sort_by', sortSelect.value);
-        window.location.href = url.toString();
-      });
-    }
+    // Sorting is handled by the AJAX block below — no full page reload here.
 
     // Filter Drawer Toggle
     const filterBtn = document.getElementById('FilterDrawerOpenBtn');
@@ -862,6 +2042,469 @@
       });
     }
   })();
+
+  /* ----------------------------------------------------------------------
+     AJAX filtering, sorting, load more, layout switcher and price slider.
+
+     Filtering and sorting re-render this section through the Section Rendering
+     API and swap only the results region, so the filter drawer keeps its state
+     and the URL stays shareable via pushState.
+     ---------------------------------------------------------------------- */
+  (function () {
+    const section = document.getElementById('CollectionSection-{{ section.id }}');
+    if (!section) return;
+
+    const sectionId = {{ section.id | json }};
+    const resultsRegion = section.querySelector('[data-collection-results]');
+    const form = document.getElementById('CollectionFiltersForm');
+    const sortSelect = document.getElementById('SortBySelect');
+
+    /* ---------- Price dual-range slider ---------- */
+    function initPriceSlider() {
+      const slider = section.querySelector('[data-price-slider]');
+      if (!slider) return;
+
+      const minInput = slider.querySelector('[data-slider-min]');
+      const maxInput = slider.querySelector('[data-slider-max]');
+      const fill = slider.querySelector('[data-slider-fill]');
+      const rangeMax = parseFloat(slider.getAttribute('data-range-max')) || 0;
+      const minField = document.getElementById('FilterPriceMin');
+      const maxField = document.getElementById('FilterPriceMax');
+      if (!minInput || !maxInput || rangeMax <= 0) return;
+
+      function paint() {
+        const lo = parseFloat(minInput.value);
+        const hi = parseFloat(maxInput.value);
+        if (fill) {
+          fill.style.left = (lo / rangeMax) * 100 + '%';
+          fill.style.width = ((hi - lo) / rangeMax) * 100 + '%';
+        }
+      }
+
+      minInput.addEventListener('input', function () {
+        // Keep the handles from crossing over each other.
+        if (parseFloat(minInput.value) > parseFloat(maxInput.value)) {
+          minInput.value = maxInput.value;
+        }
+        if (minField) minField.value = minInput.value;
+        paint();
+      });
+
+      maxInput.addEventListener('input', function () {
+        if (parseFloat(maxInput.value) < parseFloat(minInput.value)) {
+          maxInput.value = minInput.value;
+        }
+        if (maxField) maxField.value = maxInput.value;
+        paint();
+      });
+
+      [minInput, maxInput].forEach(function (el) {
+        el.addEventListener('change', applyFilters);
+      });
+
+      // Typing in the number fields drives the handles too.
+      if (minField) {
+        minField.addEventListener('input', function () {
+          minInput.value = minField.value || 0;
+          paint();
+        });
+      }
+      if (maxField) {
+        maxField.addEventListener('input', function () {
+          maxInput.value = maxField.value || rangeMax;
+          paint();
+        });
+      }
+
+      paint();
+    }
+
+    /* ---------- Section Rendering API swap ---------- */
+    function renderFromUrl(url, options) {
+      const opts = options || {};
+      if (resultsRegion) resultsRegion.setAttribute('aria-busy', 'true');
+
+      const fetchUrl = url + (url.indexOf('?') === -1 ? '?' : '&') + 'section_id=' + encodeURIComponent(sectionId);
+
+      return fetch(fetchUrl)
+        .then(function (res) {
+          if (!res.ok) throw new Error('Could not load results');
+          return res.text();
+        })
+        .then(function (html) {
+          const parsed = new DOMParser().parseFromString(html, 'text/html');
+
+          // Swap only the regions that change, so drawer state survives.
+          ['[data-collection-results]', '[data-results-count]'].forEach(function (selector) {
+            const next = parsed.querySelector(selector);
+            const current = section.querySelector(selector);
+            if (next && current) current.innerHTML = next.innerHTML;
+          });
+
+          const nextFilters = parsed.querySelector('.ishaya-collection__active-filters');
+          const currentFilters = section.querySelector('.ishaya-collection__active-filters');
+          if (nextFilters && currentFilters) {
+            currentFilters.innerHTML = nextFilters.innerHTML;
+          } else if (currentFilters && !nextFilters) {
+            currentFilters.innerHTML = '';
+          }
+
+          if (!opts.keepScroll) {
+            const top = section.getBoundingClientRect().top + window.scrollY - 120;
+            window.scrollTo({ top: top, behavior: 'smooth' });
+          }
+
+          applyLayout(currentLayout());
+          document.dispatchEvent(new CustomEvent('ishaya:grid:updated'));
+        })
+        .catch(function () {
+          // A failed swap should still get the visitor to the right page.
+          window.location.href = url;
+        })
+        .finally(function () {
+          if (resultsRegion) resultsRegion.removeAttribute('aria-busy');
+        });
+    }
+
+    function buildUrl() {
+      const params = new URLSearchParams();
+
+      // The same facet exists twice — once in the desktop pill, once in the mobile
+      // drawer — so collect from both and drop duplicate name/value pairs.
+      const seen = {};
+      section.querySelectorAll('[data-filter-input]').forEach(function (input) {
+        if (input.disabled) return;
+        if (input.type === 'checkbox' && !input.checked) return;
+        if (!input.name || input.value === '') return;
+
+        const key = input.name + '=' + input.value;
+        if (seen[key]) return;
+        seen[key] = true;
+        params.append(input.name, input.value);
+      });
+
+      if (sortSelect && sortSelect.value) params.set('sort_by', sortSelect.value);
+
+      const base = window.location.pathname;
+      const query = params.toString();
+      return query ? base + '?' + query : base;
+    }
+
+    // Mirror a change made in one surface onto its twin so both stay in sync.
+    function mirrorInput(changed) {
+      if (!changed.name) return;
+      section.querySelectorAll('[data-filter-input]').forEach(function (input) {
+        if (input === changed || input.name !== changed.name) return;
+        if (input.type === 'checkbox') {
+          if (input.value === changed.value) input.checked = changed.checked;
+        } else {
+          input.value = changed.value;
+        }
+      });
+    }
+
+    function applyFilters() {
+      const url = buildUrl();
+      window.history.pushState({ url: url }, '', url);
+      renderFromUrl(url, { keepScroll: true });
+    }
+
+    if (form) {
+      form.addEventListener('submit', function (evt) {
+        evt.preventDefault();
+        applyFilters();
+      });
+    }
+
+    // Delegated so it covers the pill facets and the drawer form alike.
+    section.addEventListener('change', function (evt) {
+      const input = evt.target.closest('[data-filter-input]');
+      if (!input) return;
+      mirrorInput(input);
+      applyFilters();
+    });
+
+    // Clicking outside an open facet dropdown closes it.
+    document.addEventListener('click', function (evt) {
+      if (evt.target.closest('[data-facet]')) return;
+      section.querySelectorAll('[data-facet][open]').forEach(function (facet) {
+        facet.open = false;
+      });
+    });
+
+    if (sortSelect) {
+      sortSelect.addEventListener('change', applyFilters);
+    }
+
+    // Active-filter chips and "clear all" are links — intercept them too.
+    section.addEventListener('click', function (evt) {
+      const chip = evt.target.closest('.ishaya-collection__active-chip, .ishaya-collection__clear-all');
+      if (!chip || !chip.href) return;
+      evt.preventDefault();
+      const url = chip.href.replace(window.location.origin, '');
+      window.history.pushState({ url: url }, '', url);
+      renderFromUrl(url, { keepScroll: true });
+    });
+
+    window.addEventListener('popstate', function () {
+      renderFromUrl(window.location.pathname + window.location.search, { keepScroll: true });
+    });
+
+    /* ---------- Load more ---------- */
+    section.addEventListener('click', function (evt) {
+      const btn = evt.target.closest('[data-load-more]');
+      if (!btn) return;
+
+      const nextUrl = btn.getAttribute('data-next-url');
+      if (!nextUrl || btn.classList.contains('is-loading')) return;
+
+      btn.classList.add('is-loading');
+      const label = btn.querySelector('[data-load-more-label]');
+      const original = label ? label.textContent : '';
+      if (label) label.textContent = 'LOADING…';
+
+      fetch(nextUrl + (nextUrl.indexOf('?') === -1 ? '?' : '&') + 'section_id=' + encodeURIComponent(sectionId))
+        .then(function (res) {
+          if (!res.ok) throw new Error('Could not load more');
+          return res.text();
+        })
+        .then(function (html) {
+          const parsed = new DOMParser().parseFromString(html, 'text/html');
+          const newItems = parsed.querySelectorAll('[data-product-grid] .ishaya-product-grid__item');
+          const grid = section.querySelector('[data-product-grid]');
+
+          if (grid) {
+            newItems.forEach(function (item) {
+              grid.appendChild(item);
+            });
+          }
+
+          // Carry the next page forward, or retire the button on the last page.
+          const nextBtn = parsed.querySelector('[data-load-more]');
+          if (nextBtn) {
+            btn.setAttribute('data-next-url', nextBtn.getAttribute('data-next-url'));
+            const nextLabel = nextBtn.querySelector('[data-load-more-label]');
+            if (label && nextLabel) label.textContent = nextLabel.textContent.trim();
+          } else {
+            btn.remove();
+          }
+
+          const count = section.querySelector('[data-results-count]');
+          const grid2 = section.querySelector('[data-product-grid]');
+          if (count && grid2) {
+            const shown = grid2.querySelectorAll('.ishaya-product-grid__item').length;
+            count.textContent = count.textContent.replace(/Showing\s+\d+/i, 'Showing ' + shown);
+          }
+
+          applyLayout(currentLayout());
+          document.dispatchEvent(new CustomEvent('ishaya:grid:updated'));
+        })
+        .catch(function () {
+          if (label) label.textContent = original;
+        })
+        .finally(function () {
+          btn.classList.remove('is-loading');
+        });
+    });
+
+    /* ---------- Layout / grid density switcher ---------- */
+    const LAYOUT_KEY = 'ishaya:collection-layout';
+
+    function currentLayout() {
+      try {
+        return window.localStorage.getItem(LAYOUT_KEY) || '{{ cols_desktop }}';
+      } catch (e) {
+        return '{{ cols_desktop }}';
+      }
+    }
+
+    function applyLayout(layout) {
+      const grid = section.querySelector('[data-product-grid]');
+      if (!grid) return;
+
+      grid.classList.remove(
+        'ishaya-product-grid--cols-2',
+        'ishaya-product-grid--cols-3',
+        'ishaya-product-grid--cols-4',
+        'ishaya-product-grid--list'
+      );
+      grid.classList.add(layout === 'list' ? 'ishaya-product-grid--list' : 'ishaya-product-grid--cols-' + layout);
+
+      section.querySelectorAll('[data-layout]').forEach(function (btn) {
+        btn.classList.toggle('is-active', btn.getAttribute('data-layout') === layout);
+      });
+    }
+
+    section.addEventListener('click', function (evt) {
+      const btn = evt.target.closest('[data-layout]');
+      if (!btn) return;
+      const layout = btn.getAttribute('data-layout');
+      try {
+        window.localStorage.setItem(LAYOUT_KEY, layout);
+      } catch (e) {
+        /* ignore */
+      }
+      applyLayout(layout);
+    });
+
+    initPriceSlider();
+    applyLayout(currentLayout());
+  })();
+  /* ----------------------------------------------------------------------
+     Coverflow collection slider — stacked deck, drag, keyboard and autoplay.
+     ---------------------------------------------------------------------- */
+  (function () {
+    const root = document.querySelector('[data-coverflow]');
+    if (!root) return;
+
+    const viewport = root.querySelector('[data-coverflow-viewport]');
+    const slides = Array.prototype.slice.call(root.querySelectorAll('[data-coverflow-slide]'));
+    const dots = Array.prototype.slice.call(root.querySelectorAll('[data-coverflow-dot]'));
+    if (!viewport || slides.length === 0) return;
+
+    // Depth steps: how far behind the centre each neighbour sits.
+    const DEPTH = [
+      { x: 0, scale: 1, rotate: 0, opacity: 1, z: 30 },
+      { x: 34, scale: 0.94, rotate: 6, opacity: 0.65, z: 20 },
+      { x: 58, scale: 0.88, rotate: 9, opacity: 0.3, z: 10 }
+    ];
+
+    let current = 0;
+    let autoplayTimer = null;
+
+    function update() {
+      slides.forEach(function (slide, i) {
+        const offset = i - current;
+        const step = DEPTH[Math.min(Math.abs(offset), DEPTH.length - 1)];
+        const beyond = Math.abs(offset) >= DEPTH.length;
+        const direction = offset === 0 ? 0 : offset > 0 ? 1 : -1;
+
+        slide.style.setProperty('--cf-x', step.x * direction + 'px');
+        slide.style.setProperty('--cf-scale', step.scale);
+        // Neighbours angle back toward the centre card.
+        slide.style.setProperty('--cf-rotate', -step.rotate * direction + 'deg');
+        slide.style.setProperty('--cf-opacity', beyond ? 0 : step.opacity);
+        slide.style.setProperty('--cf-z', step.z - Math.abs(offset));
+
+        slide.classList.toggle('is-active', offset === 0);
+        slide.classList.toggle('is-near', offset !== 0 && !beyond);
+
+        const link = slide.querySelector('a');
+        if (link) link.tabIndex = offset === 0 ? 0 : -1;
+      });
+
+      dots.forEach(function (dot, i) {
+        dot.setAttribute('aria-selected', i === current ? 'true' : 'false');
+      });
+    }
+
+    function goTo(index) {
+      // Wrap around so the deck feels endless in both directions.
+      if (index < 0) index = slides.length - 1;
+      if (index > slides.length - 1) index = 0;
+      current = index;
+      update();
+    }
+
+    root.querySelectorAll('[data-coverflow-prev]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        goTo(current - 1);
+        stopAutoplay();
+      });
+    });
+
+    root.querySelectorAll('[data-coverflow-next]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        goTo(current + 1);
+        stopAutoplay();
+      });
+    });
+
+    dots.forEach(function (dot) {
+      dot.addEventListener('click', function () {
+        goTo(parseInt(dot.getAttribute('data-index'), 10) || 0);
+        stopAutoplay();
+      });
+    });
+
+    // Clicking a card that is not centred brings it forward instead of navigating.
+    slides.forEach(function (slide, i) {
+      slide.addEventListener(
+        'click',
+        function (evt) {
+          if (i !== current) {
+            evt.preventDefault();
+            goTo(i);
+            stopAutoplay();
+          }
+        },
+        true
+      );
+    });
+
+    root.addEventListener('keydown', function (evt) {
+      if (evt.key === 'ArrowLeft') {
+        evt.preventDefault();
+        goTo(current - 1);
+        stopAutoplay();
+      } else if (evt.key === 'ArrowRight') {
+        evt.preventDefault();
+        goTo(current + 1);
+        stopAutoplay();
+      }
+    });
+
+    /* ---- Pointer drag ---- */
+    let dragStartX = 0;
+    let dragging = false;
+
+    viewport.addEventListener('pointerdown', function (evt) {
+      dragging = true;
+      dragStartX = evt.clientX;
+      viewport.classList.add('is-dragging');
+      viewport.setPointerCapture(evt.pointerId);
+    });
+
+    viewport.addEventListener('pointerup', function (evt) {
+      if (!dragging) return;
+      dragging = false;
+      viewport.classList.remove('is-dragging');
+
+      const delta = evt.clientX - dragStartX;
+      if (Math.abs(delta) > 50) {
+        goTo(delta > 0 ? current - 1 : current + 1);
+        stopAutoplay();
+      }
+    });
+
+    viewport.addEventListener('pointercancel', function () {
+      dragging = false;
+      viewport.classList.remove('is-dragging');
+    });
+
+    /* ---- Autoplay ---- */
+    function startAutoplay() {
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      if (root.getAttribute('data-autoplay') !== 'true') return;
+      const seconds = parseInt(root.getAttribute('data-autoplay-speed'), 10) || 5;
+      autoplayTimer = window.setInterval(function () {
+        goTo(current + 1);
+      }, seconds * 1000);
+    }
+
+    function stopAutoplay() {
+      if (autoplayTimer) {
+        window.clearInterval(autoplayTimer);
+        autoplayTimer = null;
+      }
+    }
+
+    root.addEventListener('mouseenter', stopAutoplay);
+    root.addEventListener('focusin', stopAutoplay);
+
+    update();
+    startAutoplay();
+  })();
 </script>
 
 {% schema %}
@@ -880,13 +2523,23 @@
       "default": 16
     },
     {
-      "type": "range",
+      "type": "select",
       "id": "columns_desktop",
-      "min": 2,
-      "max": 4,
-      "step": 1,
-      "label": "Columns on desktop",
-      "default": 4
+      "label": "Default columns on desktop",
+      "info": "Shoppers can override this with the grid density switcher.",
+      "default": "4",
+      "options": [
+        { "value": "2", "label": "2 columns" },
+        { "value": "4", "label": "4 columns" },
+        { "value": "6", "label": "6 columns" }
+      ]
+    },
+    {
+      "type": "checkbox",
+      "id": "full_bleed_grid",
+      "label": "Full-screen product grid",
+      "info": "Runs the catalog edge to edge instead of inside the page container.",
+      "default": true
     },
     {
       "type": "checkbox",
@@ -905,6 +2558,119 @@
       "id": "show_collection_image",
       "label": "Show collection banner image",
       "default": true
+    },
+    {
+      "type": "select",
+      "id": "hero_style",
+      "label": "Collection header style",
+      "default": "compact",
+      "options": [
+        { "value": "compact", "label": "Compact" },
+        { "value": "full", "label": "Full height" }
+      ]
+    },
+    {
+      "type": "link_list",
+      "id": "category_menu",
+      "label": "Category pill menu",
+      "info": "Horizontal capsule links shown above the filter bar. Point this at a menu of your collections."
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_layout_switcher",
+      "label": "Enable grid density switcher",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "pagination_style",
+      "label": "Pagination style",
+      "default": "load_more",
+      "options": [
+        { "value": "load_more", "label": "Load more button" },
+        { "value": "numbered", "label": "Numbered pages" }
+      ]
+    },
+    {
+      "type": "header",
+      "content": "Hero collection slider"
+    },
+    {
+      "type": "checkbox",
+      "id": "slider_autoplay",
+      "label": "Autoplay slider",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "slider_speed",
+      "min": 3,
+      "max": 10,
+      "step": 1,
+      "unit": "s",
+      "label": "Autoplay interval",
+      "default": 5
+    },
+    {
+      "type": "header",
+      "content": "Editorial copy & FAQ"
+    },
+    {
+      "type": "text",
+      "id": "bottom_heading",
+      "label": "Heading"
+    },
+    {
+      "type": "richtext",
+      "id": "bottom_text",
+      "label": "Body copy"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "slide",
+      "name": "Slider collection",
+      "settings": [
+        {
+          "type": "collection",
+          "id": "collection",
+          "label": "Collection"
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image override",
+          "info": "Defaults to the collection's own image."
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Label override"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "Link override"
+        }
+      ]
+    },
+    {
+      "type": "faq_item",
+      "name": "FAQ item",
+      "settings": [
+        {
+          "type": "text",
+          "id": "question",
+          "label": "Question",
+          "default": "How do I choose my size?"
+        },
+        {
+          "type": "richtext",
+          "id": "answer",
+          "label": "Answer",
+          "default": "<p>Every garment page lists flat measurements in the size advisor. Between sizes, we recommend sizing down for a boxy fit.</p>"
+        }
+      ]
     }
   ]
 }
