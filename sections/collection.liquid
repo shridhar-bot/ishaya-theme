@@ -234,15 +234,72 @@
           id="CollectionProductGrid"
           data-product-grid
         >
+          {%- comment -%}
+            Editorial rhythm: every Nth product breaks out of the grid as a full-bleed
+            spotlight instead of a card, so rows of cards alternate with one large
+            campaign-scale product image.
+          {%- endcomment -%}
+          {%- liquid
+            assign spotlight_on = section.settings.enable_spotlight
+            assign spotlight_every = section.settings.spotlight_interval | default: 4
+            assign cycle_length = spotlight_every | plus: 1
+          -%}
+
           {%- for product in collection.products -%}
-            <div class="ishaya-product-grid__item">
-              {% render 'product-card',
-                product: product,
-                show_secondary_image: true,
-                show_vendor: false,
-                show_quick_add: true
-              %}
-            </div>
+            {%- liquid
+              assign is_spotlight = false
+              if spotlight_on
+                assign cycle_position = forloop.index | modulo: cycle_length
+                if cycle_position == 0
+                  assign is_spotlight = true
+                endif
+              endif
+            -%}
+
+            {%- if is_spotlight -%}
+              <div class="ishaya-product-grid__item ishaya-product-grid__item--spotlight">
+                <a
+                  class="ishaya-spotlight ishaya-spotlight--{{ section.settings.spotlight_backdrop | default: 'light' }}"
+                  href="{{ product.url }}"
+                  aria-label="{{ product.title | strip_html | escape }}"
+                >
+                  <div class="ishaya-spotlight__media">
+                    {%- if product.featured_image != blank -%}
+                      {{
+                        product.featured_image
+                        | image_url: width: 2000
+                        | image_tag:
+                          class: 'ishaya-spotlight__img',
+                          widths: '800, 1200, 1600, 2000',
+                          sizes: '100vw',
+                          loading: 'lazy',
+                          alt: product.featured_image.alt | default: product.title | escape
+                      }}
+                    {%- else -%}
+                      <div class="ishaya-spotlight__placeholder">
+                        {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg' }}
+                      </div>
+                    {%- endif -%}
+                  </div>
+
+                  <div class="ishaya-spotlight__meta">
+                    <span class="ishaya-spotlight__title">{{ product.title | escape }}</span>
+                    <span class="ishaya-spotlight__price">
+                      {{- product.selected_or_first_available_variant.price | money -}}
+                    </span>
+                  </div>
+                </a>
+              </div>
+            {%- else -%}
+              <div class="ishaya-product-grid__item">
+                {% render 'product-card',
+                  product: product,
+                  show_secondary_image: true,
+                  show_vendor: false,
+                  show_quick_add: true
+                %}
+              </div>
+            {%- endif -%}
           {%- endfor -%}
         </div>
 
@@ -294,6 +351,41 @@
         </div>
       {%- endif -%}
     </div>
+
+    <!-- Editorial / SEO copy and FAQ, below the catalog and above the footer -->
+    {%- if section.settings.bottom_heading != blank
+        or section.settings.bottom_text != blank
+        or section.blocks.size > 0
+    -%}
+      <aside class="page-container ishaya-collection__editorial">
+        {%- if section.settings.bottom_heading != blank -%}
+          <h2 class="ishaya-collection__editorial-title">{{ section.settings.bottom_heading }}</h2>
+        {%- endif -%}
+
+        {%- if section.settings.bottom_text != blank -%}
+          <div class="ishaya-collection__editorial-body rte">{{ section.settings.bottom_text }}</div>
+        {%- endif -%}
+
+        {%- assign faq_blocks = section.blocks | where: 'type', 'faq_item' -%}
+        {%- if faq_blocks.size > 0 -%}
+          <h3 class="ishaya-collection__faq-title">Frequently asked questions</h3>
+
+          <div class="ishaya-collection__faq">
+            {%- for block in faq_blocks -%}
+              <details class="ishaya-collection__faq-item" {{ block.shopify_attributes }}>
+                <summary class="ishaya-collection__faq-q">
+                  <span>{{ block.settings.question }}</span>
+                  <span class="ishaya-collection__faq-chevron" aria-hidden="true">
+                    {% render 'icons', name: 'chevron-down', width: 12, height: 12 %}
+                  </span>
+                </summary>
+                <div class="ishaya-collection__faq-a rte">{{ block.settings.answer }}</div>
+              </details>
+            {%- endfor -%}
+          </div>
+        {%- endif -%}
+      </aside>
+    {%- endif -%}
 
     <!-- Filter Drawer (Slide-out) -->
     {%- if has_filters -%}
@@ -1247,6 +1339,212 @@
     }
   }
 
+  /* ----------------------------------------------------------------------
+     Editorial spotlight — a grid child that breaks out to full viewport width
+     ---------------------------------------------------------------------- */
+  .ishaya-product-grid__item--spotlight {
+    grid-column: 1 / -1;
+    width: 100vw;
+    max-width: 100vw;
+    /* Escape the page container without needing a separate wrapper element. */
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    margin-top: clamp(1.5rem, 4vw, 3.5rem);
+    margin-bottom: clamp(1.5rem, 4vw, 3.5rem);
+  }
+
+  .ishaya-spotlight {
+    position: relative;
+    display: block;
+    width: 100%;
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .ishaya-spotlight--light {
+    background-color: #f4f4f5;
+    color: #09090b;
+  }
+
+  .ishaya-spotlight--surface {
+    background-color: var(--color-surface);
+    color: var(--color-foreground);
+  }
+
+  .ishaya-spotlight__media {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    max-height: 150vh;
+  }
+
+  .ishaya-spotlight__img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @media (hover: hover) {
+    .ishaya-spotlight:hover .ishaya-spotlight__img {
+      transform: scale(1.03);
+    }
+  }
+
+  .ishaya-spotlight__placeholder {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+  }
+
+  .ishaya-spotlight__placeholder .placeholder-svg {
+    width: 60%;
+    height: 60%;
+    fill: currentColor;
+    opacity: 0.15;
+  }
+
+  /* Corner labels, matching the small-caps metadata rhythm of the cards. */
+  .ishaya-spotlight__meta {
+    position: absolute;
+    top: 1.25rem;
+    right: 1.25rem;
+    left: 1.25rem;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    pointer-events: none;
+  }
+
+  .ishaya-spotlight__price {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 767px) {
+    .ishaya-product-grid__item--spotlight {
+      margin-top: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .ishaya-spotlight__media {
+      aspect-ratio: 3 / 4;
+    }
+
+    .ishaya-spotlight__meta {
+      top: 0.75rem;
+      right: 0.75rem;
+      left: 0.75rem;
+      font-size: 0.5rem;
+      letter-spacing: 0.16em;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ishaya-spotlight__img {
+      transition: none;
+    }
+    .ishaya-spotlight:hover .ishaya-spotlight__img {
+      transform: none;
+    }
+  }
+
+  /* ----------------------------------------------------------------------
+     Editorial copy & FAQ
+     ---------------------------------------------------------------------- */
+  .ishaya-collection__editorial {
+    padding-top: clamp(3rem, 7vw, 5.5rem);
+    padding-bottom: clamp(1rem, 3vw, 2rem);
+    max-width: 52rem;
+  }
+
+  .ishaya-collection__editorial-title {
+    margin: 0 0 1rem;
+    font-size: clamp(0.85rem, 2vw, 1.05rem);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    line-height: 1.5;
+  }
+
+  .ishaya-collection__editorial-body {
+    color: var(--color-muted);
+    font-size: 0.75rem;
+    line-height: 1.8;
+  }
+
+  .ishaya-collection__editorial-body p {
+    margin: 0 0 0.85rem;
+  }
+
+  .ishaya-collection__faq-title {
+    margin: 2.5rem 0 1rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .ishaya-collection__faq {
+    border-top: 1px solid var(--color-border);
+  }
+
+  .ishaya-collection__faq-item {
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .ishaya-collection__faq-q {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 0;
+    cursor: pointer;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    list-style: none;
+  }
+
+  .ishaya-collection__faq-q::-webkit-details-marker {
+    display: none;
+  }
+
+  .ishaya-collection__faq-chevron {
+    display: flex;
+    flex-shrink: 0;
+    color: var(--color-muted);
+    transition: transform var(--transition-smooth);
+  }
+
+  .ishaya-collection__faq-item[open] .ishaya-collection__faq-chevron {
+    transform: rotate(180deg);
+  }
+
+  .ishaya-collection__faq-a {
+    padding: 0 0 1.1rem;
+    color: var(--color-muted);
+    font-size: 0.72rem;
+    line-height: 1.8;
+  }
+
+  .ishaya-collection__faq-a p {
+    margin: 0 0 0.6rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ishaya-collection__faq-chevron {
+      transition: none;
+    }
+  }
+
 </style>
 
 <script>
@@ -1627,6 +1925,70 @@
       "options": [
         { "value": "load_more", "label": "Load more button" },
         { "value": "numbered", "label": "Numbered pages" }
+      ]
+    },
+    {
+      "type": "header",
+      "content": "Editorial spotlight"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_spotlight",
+      "label": "Break the grid with full-width product spotlights",
+      "info": "Every Nth product renders edge-to-edge at campaign scale instead of as a card.",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "spotlight_interval",
+      "min": 2,
+      "max": 8,
+      "step": 1,
+      "label": "Cards between spotlights",
+      "default": 4
+    },
+    {
+      "type": "select",
+      "id": "spotlight_backdrop",
+      "label": "Spotlight backdrop",
+      "default": "light",
+      "options": [
+        { "value": "light", "label": "Light studio" },
+        { "value": "surface", "label": "Theme surface" }
+      ]
+    },
+    {
+      "type": "header",
+      "content": "Editorial copy & FAQ"
+    },
+    {
+      "type": "text",
+      "id": "bottom_heading",
+      "label": "Heading"
+    },
+    {
+      "type": "richtext",
+      "id": "bottom_text",
+      "label": "Body copy"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "faq_item",
+      "name": "FAQ item",
+      "settings": [
+        {
+          "type": "text",
+          "id": "question",
+          "label": "Question",
+          "default": "How do I choose my size?"
+        },
+        {
+          "type": "richtext",
+          "id": "answer",
+          "label": "Answer",
+          "default": "<p>Every garment page lists flat measurements in the size advisor. Between sizes, we recommend sizing down for a boxy fit.</p>"
+        }
       ]
     }
   ]
