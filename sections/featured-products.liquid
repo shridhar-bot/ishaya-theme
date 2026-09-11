@@ -166,37 +166,15 @@
     white-space: nowrap;
   }
 
-  /* Product Grid */
-  .ishaya-product-grid {
-    display: grid;
-    gap: 1.5rem;
-    width: 100%;
-  }
-
-  .ishaya-product-grid--cols-2 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .ishaya-product-grid--cols-3 {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-  .ishaya-product-grid--cols-4 {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-
-  .ishaya-product-grid__item {
-    display: flex;
-    width: 100%;
-  }
+  {%- comment -%}
+    `.ishaya-product-grid` and `.ishaya-product-card` are shared by collection.liquid,
+    related-products.liquid and search.liquid, so they live in assets/critical.css.
+    See QA_QC_STANDARDS.md §0.5 — do not move them back into this section.
+  {%- endcomment -%}
 
   .ishaya-product-row__view-all-mobile {
     display: none;
     margin-top: 2rem;
-  }
-
-  @media (max-width: 1024px) {
-    .ishaya-product-grid--cols-4 {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
   }
 
   @media (max-width: 767px) {
@@ -210,18 +188,6 @@
 
     .ishaya-product-row__view-all-mobile-btn {
       width: 100%;
-    }
-
-    .ishaya-product-grid {
-      gap: 1rem;
-    }
-
-    .ishaya-product-grid--mobile-1 {
-      grid-template-columns: 1fr;
-    }
-
-    .ishaya-product-grid--mobile-2 {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 </style>

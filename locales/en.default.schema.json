@@ -20,6 +20,7 @@
     "collection_card": "Collection card",
     "collections_grid": "Collections grid",
     "colors": "Colors",
+    "colors_light": "Colors — Light mode",
     "column": "Column",
     "content": "Content",
     "custom_section": "Custom section",
@@ -77,7 +78,9 @@
     "social_youtube": "YouTube",
     "surface_color": "Surface card background",
     "text": "Text",
-    "text_style": "Text style"
+    "text_style": "Text style",
+    "theme_default": "Default theme",
+    "theme_toggle_enabled": "Show light/dark toggle in header"
   },
   "options": {
     "alignment": {
@@ -97,6 +100,11 @@
     "size": {
       "large": "Large",
       "small": "Small"
+    },
+    "theme_default": {
+      "dark": "Dark",
+      "light": "Light",
+      "system": "Follow device setting"
     },
     "text_style": {
       "normal": "Normal text",

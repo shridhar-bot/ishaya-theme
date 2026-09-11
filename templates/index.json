@@ -1,8 +1,133 @@
 {
   "sections": {
-    "main": {
-      "type": "hello-world",
-      "settings": {}
+    "hero": {
+      "type": "hero",
+      "settings": {
+        "height": "full",
+        "content_alignment": "left",
+        "overlay_opacity": 45,
+        "tag": "EDITION 01 // FW26",
+        "heading": "ARCHITECTURAL UTILITY",
+        "subheading": "Engineered garments built with heavyweight technical textiles, modular silhouettes, and utilitarian craftsmanship.",
+        "button_label_1": "EXPLORE COLLECTION",
+        "button_label_2": "VIEW LOOKBOOK"
+      }
+    },
+    "promo_marquee": {
+      "type": "promo-banner",
+      "blocks": {
+        "announcement_1": {
+          "type": "announcement",
+          "settings": { "text": "GLOBAL DISPATCH ON ORDERS OVER $250" }
+        },
+        "announcement_2": {
+          "type": "announcement",
+          "settings": { "text": "EDITION 01 // ARCHIVE CATALOG OPEN" }
+        },
+        "announcement_3": {
+          "type": "announcement",
+          "settings": { "text": "NUMBERED DROPS — ZERO RESTOCKS" }
+        },
+        "announcement_4": {
+          "type": "announcement",
+          "settings": { "text": "ENGINEERED TEXTILES & INDUSTRIAL UTILITY" }
+        }
+      },
+      "block_order": ["announcement_1", "announcement_2", "announcement_3", "announcement_4"],
+      "settings": {
+        "speed": 30,
+        "background_style": "dark",
+        "font_size": "medium"
+      }
+    },
+    "featured_products": {
+      "type": "featured-products",
+      "settings": {
+        "tag": "CURATED ARCHIVE",
+        "title": "LATEST DROPS",
+        "description": "Constructed with heavyweight textiles and utilitarian form.",
+        "products_to_show": 4,
+        "columns_desktop": 4,
+        "columns_mobile": "2",
+        "show_secondary_image": true,
+        "show_vendor": false,
+        "show_quick_add": true,
+        "show_view_all": true,
+        "view_all_label": "VIEW ALL PIECES"
+      }
+    },
+    "collection_grid": {
+      "type": "collection-tile-grid",
+      "blocks": {
+        "tile_1": {
+          "type": "collection_tile",
+          "settings": { "title": "OUTERWEAR", "subtitle": "WATERPROOF SHELLS", "width": "wide" }
+        },
+        "tile_2": {
+          "type": "collection_tile",
+          "settings": { "title": "CARGO & TROUSERS", "subtitle": "UTILITARIAN POCKETING", "width": "wide" }
+        },
+        "tile_3": {
+          "type": "collection_tile",
+          "settings": { "title": "HEAVY FLEECE", "subtitle": "500GSM COTTON", "width": "standard" }
+        },
+        "tile_4": {
+          "type": "collection_tile",
+          "settings": { "title": "TACTICAL ACCESSORIES", "subtitle": "MODULAR POUCHES", "width": "standard" }
+        },
+        "tile_5": {
+          "type": "collection_tile",
+          "settings": { "title": "FOOTWEAR & OBJECTS", "subtitle": "EDITION RELEASES", "width": "standard" }
+        }
+      },
+      "block_order": ["tile_1", "tile_2", "tile_3", "tile_4", "tile_5"],
+      "settings": {
+        "tag": "SYSTEM CLASSIFICATION",
+        "title": "CATEGORIES & FORMS",
+        "description": "Modular garments classified by technical utility and textile weight."
+      }
+    },
+    "lifestyle_manifesto": {
+      "type": "lifestyle-banner",
+      "settings": {
+        "overlay_opacity": 75,
+        "tag": "ISHAYA PHILOSOPHY // MANIFESTO",
+        "heading": "WE DO NOT FOLLOW CONVENTIONAL SEASONS. WE ENGINEER SILHOUETTES DESIGNED FOR URBAN RESISTANCE AND ARCHITECTURAL CLARITY.",
+        "subtext": "Heavyweight custom-milled textiles, industrial hardware, and articulated cuts developed in strictly limited, non-repeating numbered editions.",
+        "button_label": "DISCOVER THE PROCESS",
+        "spec_1_title": "500GSM TERRY",
+        "spec_1_desc": "Custom-milled organic French terry",
+        "spec_2_title": "MODULAR HARDWARE",
+        "spec_2_desc": "Matte coated industrial zippers",
+        "spec_3_title": "LIMITED EDITIONS",
+        "spec_3_desc": "Numbered release batches, zero re-runs"
+      }
+    },
+    "secondary_products": {
+      "type": "featured-products",
+      "settings": {
+        "tag": "SECOND RELEASE",
+        "title": "THE UTILITY LINE",
+        "description": "Articulated cuts and industrial hardware for everyday load-bearing wear.",
+        "products_to_show": 4,
+        "columns_desktop": 4,
+        "columns_mobile": "2",
+        "show_secondary_image": true,
+        "show_vendor": false,
+        "show_quick_add": true,
+        "show_view_all": true,
+        "view_all_label": "VIEW THE UTILITY LINE"
+      }
+    },
+    "newsletter_block": {
+      "type": "newsletter",
+      "settings": {
+        "tag": "PRIVATE DISPATCH // INNER CIRCLE",
+        "title": "ENTER THE INNER CIRCLE",
+        "subtext": "Subscribers receive priority allocation for limited drops, private lookbook releases, and archival access before public release.",
+        "button_label": "JOIN INNER CIRCLE",
+        "privacy_note": "Encrypted delivery. Zero spam. Unsubscribe with one click."
+      }
     }
   },
   "order": [

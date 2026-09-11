@@ -1,0 +1,268 @@
+{% doc %}
+  Renders an Ishaya product card.
+
+  Markup only — all styling lives in `assets/critical.css` (`.ishaya-product-card`) and all
+  behaviour in `assets/product-card.js`, because this snippet renders inside loops.
+  Never add a `{% style %}` or `{% javascript %}` block here (see QA_QC_STANDARDS.md §0.5).
+
+  @param {object} product - The product to render
+  @param {boolean} [show_secondary_image] - Crossfade to the second image on hover
+  @param {boolean} [show_vendor] - Show the vendor / archive line above the title
+  @param {boolean} [show_quick_add] - Show the floating quick-add control
+  @param {boolean} [show_wishlist] - Show the wishlist heart (defaults to true)
+  @param {boolean} [show_swatches] - Show colour swatch dots when the product has a colour option
+  @param {string} [heading_tag] - Heading element for the title, defaults to h3
+  @param {boolean} [eager] - Load the primary image eagerly (use for above-the-fold cards only)
+
+  @example
+  {% render 'product-card', product: product, show_secondary_image: true, show_quick_add: true %}
+{% enddoc %}
+
+{%- liquid
+  assign heading_tag = heading_tag | default: 'h3'
+  assign show_wishlist = show_wishlist | default: true, allow_false: true
+  assign show_swatches = show_swatches | default: true, allow_false: true
+
+  assign current_variant = product.selected_or_first_available_variant
+  assign primary_image = product.featured_image
+  assign secondary_image = product.images[1]
+
+  assign is_sold_out = false
+  unless product.available
+    assign is_sold_out = true
+  endunless
+
+  assign is_on_sale = false
+  if current_variant.compare_at_price > current_variant.price
+    assign is_on_sale = true
+    assign savings = current_variant.compare_at_price | minus: current_variant.price | times: 100.0 | divided_by: current_variant.compare_at_price | round
+  endif
+
+  assign is_new = false
+  assign new_cutoff = 'now' | date: '%s' | minus: 2592000
+  assign published_at = product.published_at | date: '%s'
+  if published_at > new_cutoff
+    assign is_new = true
+  endif
+
+  assign has_single_variant = false
+  if product.variants.size == 1
+    assign has_single_variant = true
+  endif
+
+  assign primary_loading = 'lazy'
+  if eager
+    assign primary_loading = 'eager'
+  endif
+-%}
+
+{%- if product == blank -%}
+  {%- comment -%} Nothing to render — guard against an unset product. {%- endcomment -%}
+{%- else -%}
+  <article
+    class="ishaya-product-card"
+    data-product-card
+    data-product-id="{{ product.id }}"
+    data-product-handle="{{ product.handle }}"
+    data-product-url="{{ product.url }}"
+  >
+    <div class="ishaya-product-card__media-wrapper ishaya-product-card__media-wrapper--portrait">
+      <a
+        class="ishaya-product-card__media-link"
+        href="{{ product.url }}"
+        aria-label="{{ product.title | strip_html | escape }}"
+        tabindex="-1"
+      >
+        {%- if primary_image != blank -%}
+          {{
+            primary_image
+            | image_url: width: 800
+            | image_tag:
+              class: 'ishaya-product-card__image ishaya-product-card__image--primary',
+              widths: '200, 300, 400, 500, 600, 800',
+              sizes: '(min-width: 1200px) 25vw, (min-width: 750px) 33vw, 50vw',
+              loading: primary_loading,
+              alt: primary_image.alt | default: product.title | escape
+          }}
+        {%- else -%}
+          <div class="ishaya-product-card__placeholder">
+            {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg' }}
+          </div>
+        {%- endif -%}
+
+        {%- if show_secondary_image and secondary_image != blank -%}
+          {{
+            secondary_image
+            | image_url: width: 800
+            | image_tag:
+              class: 'ishaya-product-card__image ishaya-product-card__image--secondary',
+              widths: '200, 300, 400, 500, 600, 800',
+              sizes: '(min-width: 1200px) 25vw, (min-width: 750px) 33vw, 50vw',
+              loading: 'lazy',
+              alt: secondary_image.alt | default: product.title | escape
+          }}
+        {%- endif -%}
+      </a>
+
+      {%- comment -%} Status badges — sold out wins, then sale, then new. {%- endcomment -%}
+      <div class="ishaya-product-card__badges">
+        {%- if is_sold_out -%}
+          <span class="ishaya-product-badge ishaya-product-badge--soldout">Sold out</span>
+        {%- elsif is_on_sale -%}
+          <span class="ishaya-product-badge ishaya-product-badge--sale">Save {{ savings }}%</span>
+        {%- elsif is_new -%}
+          <span class="ishaya-product-badge ishaya-product-badge--new">New arrival</span>
+        {%- endif -%}
+      </div>
+
+      {%- if show_wishlist -%}
+        <button
+          type="button"
+          class="ishaya-product-card__wishlist"
+          data-wishlist-toggle
+          data-wishlist-id="{{ product.id }}"
+          aria-pressed="false"
+          aria-label="Add {{ product.title | strip_html | escape }} to wishlist"
+        >
+          <svg
+            class="ishaya-product-card__wishlist-icon"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1L12 21.2l7.7-7.8 1.1-1a5.5 5.5 0 0 0 0-7.8z"></path>
+          </svg>
+        </button>
+      {%- endif -%}
+
+      {%- if show_quick_add and is_sold_out == false -%}
+        {%- if has_single_variant -%}
+          <button
+            type="button"
+            class="ishaya-product-card__quick-add"
+            data-quick-add
+            data-variant-id="{{ current_variant.id }}"
+            aria-label="Add {{ product.title | strip_html | escape }} to bag"
+          >
+            {% render 'icons', name: 'plus', width: 15, height: 15 %}
+            <span class="ishaya-product-card__quick-add-label">Add</span>
+          </button>
+        {%- else -%}
+          <button
+            type="button"
+            class="ishaya-product-card__quick-add"
+            data-quick-add-open
+            aria-expanded="false"
+            aria-label="Choose a size for {{ product.title | strip_html | escape }}"
+          >
+            {% render 'icons', name: 'plus', width: 15, height: 15 %}
+            <span class="ishaya-product-card__quick-add-label">Add</span>
+          </button>
+
+          {%- comment -%}
+            With a single option the first title segment is the size. With several options
+            that segment repeats across variants, so show the full variant title instead.
+          {%- endcomment -%}
+          {%- assign use_short_variant_label = false -%}
+          {%- if product.options.size == 1 -%}
+            {%- assign use_short_variant_label = true -%}
+          {%- endif -%}
+
+          <div class="ishaya-product-card__variant-tray" data-variant-tray hidden>
+            <span class="ishaya-product-card__variant-tray-label">
+              {%- if use_short_variant_label -%}
+                Select {{ product.options.first | downcase }}
+              {%- else -%}
+                Select an option
+              {%- endif -%}
+            </span>
+            <div class="ishaya-product-card__variant-list">
+              {%- for variant in product.variants limit: 8 -%}
+                <button
+                  type="button"
+                  class="ishaya-product-card__variant-btn{% unless variant.available %} ishaya-product-card__variant-btn--unavailable{% endunless %}"
+                  data-quick-add
+                  data-variant-id="{{ variant.id }}"
+                  {% unless variant.available %}
+                    disabled
+                    aria-label="{{ variant.title | escape }} — sold out"
+                  {% endunless %}
+                >
+                  {%- if use_short_variant_label -%}
+                    {{- variant.title | split: ' / ' | first -}}
+                  {%- else -%}
+                    {{- variant.title -}}
+                  {%- endif -%}
+                </button>
+              {%- endfor -%}
+            </div>
+          </div>
+        {%- endif -%}
+      {%- endif -%}
+    </div>
+
+    <div class="ishaya-product-card__info">
+      {%- if show_vendor and product.vendor != blank -%}
+        <span class="ishaya-product-card__vendor">{{ product.vendor | escape }}</span>
+      {%- endif -%}
+
+      <{{ heading_tag }} class="ishaya-product-card__title">
+        <a class="ishaya-product-card__title-link" href="{{ product.url }}">{{ product.title | escape }}</a>
+      </{{ heading_tag }}>
+
+      {%- if show_swatches -%}
+        {%- for option in product.options_with_values -%}
+          {%- assign option_name = option.name | downcase -%}
+          {%- if option_name contains 'color' or option_name contains 'colour' or option_name contains 'wash' -%}
+            <div class="ishaya-product-card__swatches" aria-label="{{ option.name | escape }} options">
+              {%- for value in option.values limit: 5 -%}
+                {%- liquid
+                  # Prefer the merchant-configured native swatch, fall back to the colour name itself.
+                  assign swatch_style = ''
+                  if value.swatch.image != blank
+                    assign swatch_url = value.swatch.image | image_url: width: 40
+                    assign swatch_style = 'background-image:url(' | append: swatch_url | append: ');'
+                  elsif value.swatch.color != blank
+                    assign swatch_style = 'background-color:' | append: value.swatch.color | append: ';'
+                  else
+                    assign css_color = value | downcase | replace: ' ', ''
+                    assign swatch_style = 'background-color:' | append: css_color | append: ';'
+                  endif
+                -%}
+                <span
+                  class="ishaya-product-card__swatch"
+                  style="{{ swatch_style }}"
+                  title="{{ value | escape }}"
+                ></span>
+              {%- endfor -%}
+              {%- if option.values.size > 5 -%}
+                <span class="ishaya-product-card__swatch-more">+{{ option.values.size | minus: 5 }}</span>
+              {%- endif -%}
+            </div>
+            {%- break -%}
+          {%- endif -%}
+        {%- endfor -%}
+      {%- endif -%}
+
+      <div class="ishaya-product-card__price-row">
+        {%- if is_on_sale -%}
+          <span class="ishaya-product-card__price ishaya-product-card__price--sale">
+            {{- current_variant.price | money -}}
+          </span>
+          <s class="ishaya-product-card__price-compare">{{ current_variant.compare_at_price | money }}</s>
+        {%- else -%}
+          <span class="ishaya-product-card__price">{{ current_variant.price | money }}</span>
+        {%- endif -%}
+      </div>
+    </div>
+
+    <span class="ishaya-product-card__status" data-quick-add-status role="status" aria-live="polite"></span>
+  </article>
+{%- endif -%}
