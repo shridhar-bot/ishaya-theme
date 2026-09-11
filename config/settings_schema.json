@@ -82,6 +82,64 @@
         "id": "accent_color",
         "default": "#ffffff",
         "label": "t:labels.accent_color"
+      },
+      {
+        "type": "select",
+        "id": "default_theme",
+        "label": "t:labels.theme_default",
+        "default": "dark",
+        "options": [
+          { "value": "dark", "label": "t:options.theme_default.dark" },
+          { "value": "light", "label": "t:options.theme_default.light" },
+          { "value": "system", "label": "t:options.theme_default.system" }
+        ]
+      },
+      {
+        "type": "checkbox",
+        "id": "theme_toggle_enabled",
+        "label": "t:labels.theme_toggle_enabled",
+        "default": true
+      }
+    ]
+  },
+  {
+    "name": "t:general.colors_light",
+    "settings": [
+      {
+        "type": "color",
+        "id": "background_color_light",
+        "default": "#fbfbfb",
+        "label": "t:labels.background"
+      },
+      {
+        "type": "color",
+        "id": "foreground_color_light",
+        "default": "#09090b",
+        "label": "t:labels.foreground"
+      },
+      {
+        "type": "color",
+        "id": "muted_color_light",
+        "default": "#71717a",
+        "label": "t:labels.muted_color"
+      },
+      {
+        "type": "color",
+        "id": "border_color_light",
+        "default": "#e4e4e7",
+        "label": "t:labels.border_color"
+      },
+      {
+        "type": "color",
+        "id": "surface_color_light",
+        "default": "#ffffff",
+        "label": "t:labels.surface_color"
+      },
+      {
+        "type": "color",
+        "id": "accent_color_light",
+        "default": "#09090b",
+        "label": "t:labels.accent_color"
       }
     ]
   },

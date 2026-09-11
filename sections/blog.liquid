@@ -370,19 +370,19 @@
     border: 1px solid var(--color-border);
     border-radius: var(--radius-sm);
     transition: all var(--duration-fast) ease;
-    background: rgba(255, 255, 255, 0.02);
+    background: var(--glass-bg);
   }
 
   .ishaya-blog__tag-link:hover {
     color: var(--color-foreground);
-    border-color: rgba(255, 255, 255, 0.3);
-    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--color-muted);
+    background: var(--glass-bg);
   }
 
   .ishaya-blog__tag-link.is-active {
     color: var(--color-foreground);
     background: var(--color-border);
-    border-color: rgba(255, 255, 255, 0.4);
+    border-color: var(--color-muted);
     font-weight: 700;
   }
 
@@ -404,7 +404,7 @@
   }
 
   .ishaya-blog__hero:hover {
-    border-color: rgba(255, 255, 255, 0.25);
+    border-color: var(--color-muted);
   }
 
   .ishaya-blog__hero-media {
@@ -559,7 +559,7 @@
 
   .ishaya-blog__card:hover {
     transform: translateY(-4px);
-    border-color: rgba(255, 255, 255, 0.25);
+    border-color: var(--color-muted);
   }
 
   .ishaya-blog__card-media {
@@ -691,7 +691,7 @@
   }
 
   .ishaya-blog__page-btn:hover {
-    background-color: rgba(255, 255, 255, 0.08);
+    background-color: var(--glass-bg-hover);
   }
 
   .ishaya-blog__page-btn--disabled {
@@ -722,12 +722,12 @@
 
   .ishaya-blog__page-num:hover {
     color: var(--color-foreground);
-    background-color: rgba(255, 255, 255, 0.06);
+    background-color: var(--glass-bg-hover);
   }
 
   .ishaya-blog__page-num.is-current {
     color: var(--color-foreground);
-    background-color: rgba(255, 255, 255, 0.12);
+    background-color: var(--glass-bg-hover);
     font-weight: 700;
   }
 

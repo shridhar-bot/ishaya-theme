@@ -1,3 +1,17 @@
+{% comment %}
+  Global design tokens for the Ishaya theme.
+
+  Emits two complete palettes:
+    :root                    -> dark (the brand default)
+    :root[data-theme=light]  -> light
+  and, when the merchant sets "Default theme" to "Follow device setting", a
+  prefers-color-scheme branch that applies light to visitors who have not yet
+  made an explicit choice.
+
+  The explicit [data-theme] attribute always wins over the media query, so the
+  header toggle works in both directions. See assets/theme-mode.js.
+{% endcomment %}
+
 {% style %}
   {% # Primary Body Font variants %}
   {{ settings.type_primary_font | font_face: font_display: 'swap' }}
@@ -25,25 +39,100 @@
     --page-width: {{ settings.max_page_width }};
     --page-margin: {{ settings.min_page_margin }}px;
 
+    --radius-input: {{ settings.input_corner_radius }}px;
+    --radius-button: {{ settings.button_corner_radius }}px;
+    --radius-card: 16px;
+    --radius-pill: 9999px;
+
+    --transition-fast: 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    --transition-smooth: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+
+    {% # ---- Dark palette (default) ---- %}
+    color-scheme: dark;
+
     --color-background: {{ settings.background_color }};
     --color-foreground: {{ settings.foreground_color }};
     --color-muted: {{ settings.muted_color }};
     --color-border: {{ settings.border_color }};
     --color-surface: {{ settings.surface_color }};
     --color-accent: {{ settings.accent_color }};
-
-    --radius-input: {{ settings.input_corner_radius }}px;
-    --radius-button: {{ settings.button_corner_radius }}px;
-    --radius-card: 16px;
-    --radius-pill: 9999px;
+    --color-on-accent: {{ settings.background_color }};
 
     --glass-bg: rgba(255, 255, 255, 0.04);
     --glass-bg-hover: rgba(255, 255, 255, 0.08);
     --glass-border: rgba(255, 255, 255, 0.1);
-    --glass-blur: blur(20px);
+    --glass-scrim: rgba(9, 9, 11, 0.82);
+    --glass-blur: blur(24px) saturate(180%);
     --glass-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.5);
 
-    --transition-fast: 0.15s cubic-bezier(0.16, 1, 0.3, 1);
-    --transition-smooth: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    {% # Floating chrome (header pill, mobile dock) sits above page content. %}
+    --surface-floating: rgba(14, 14, 17, 0.78);
+    --shadow-floating: 0 15px 40px rgba(0, 0, 0, 0.45);
+    --shadow-floating-sm: 0 10px 30px rgba(0, 0, 0, 0.35);
+  }
+
+  {% # ---- Light palette ---- %}
+  {% capture light_palette %}
+    color-scheme: light;
+
+    --color-background: {{ settings.background_color_light | default: '#fbfbfb' }};
+    --color-foreground: {{ settings.foreground_color_light | default: '#09090b' }};
+    --color-muted: {{ settings.muted_color_light | default: '#71717a' }};
+    --color-border: {{ settings.border_color_light | default: '#e4e4e7' }};
+    --color-surface: {{ settings.surface_color_light | default: '#ffffff' }};
+    --color-accent: {{ settings.accent_color_light | default: '#09090b' }};
+    --color-on-accent: {{ settings.background_color_light | default: '#fbfbfb' }};
+
+    --glass-bg: rgba(255, 255, 255, 0.75);
+    --glass-bg-hover: rgba(0, 0, 0, 0.04);
+    --glass-border: rgba(0, 0, 0, 0.07);
+    --glass-scrim: rgba(255, 255, 255, 0.85);
+    --glass-shadow: 0 10px 35px rgba(0, 0, 0, 0.06);
+
+    --surface-floating: rgba(255, 255, 255, 0.82);
+    --shadow-floating: 0 15px 40px rgba(0, 0, 0, 0.1);
+    --shadow-floating-sm: 0 10px 30px rgba(0, 0, 0, 0.08);
+  {% endcapture %}
+
+  :root[data-theme='light'] {
+    {{ light_palette }}
+  }
+
+  {% if settings.default_theme == 'system' %}
+    @media (prefers-color-scheme: light) {
+      :root:not([data-theme='dark']):not([data-theme='light']) {
+        {{ light_palette }}
+      }
+    }
+  {% endif %}
+
+  {% # Browsers without backdrop-filter fall back to a near-solid surface. %}
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    :root {
+      --glass-bg: var(--color-surface);
+      --glass-bg-hover: var(--color-surface);
+    }
   }
 {% endstyle %}
+
+{% comment %}
+  Applied before first paint so the stored preference never flashes the wrong theme.
+  Intentionally inline and synchronous — an external file would race the render.
+{% endcomment %}
+<script>
+  (function () {
+    try {
+      var stored = window.localStorage.getItem('ishaya:theme');
+      if (stored === 'light' || stored === 'dark') {
+        document.documentElement.setAttribute('data-theme', stored);
+        return;
+      }
+    } catch (e) {
+      /* storage unavailable — fall through to the merchant default */
+    }
+    var fallback = {{ settings.default_theme | default: 'dark' | json }};
+    if (fallback === 'light' || fallback === 'dark') {
+      document.documentElement.setAttribute('data-theme', fallback);
+    }
+  })();
+</script>

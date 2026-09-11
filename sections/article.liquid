@@ -455,7 +455,7 @@
   .ishaya-article__rte {
     font-size: clamp(1rem, 1.2vw, 1.0625rem);
     line-height: 1.85;
-    color: rgba(255, 255, 255, 0.88);
+    color: var(--color-foreground);
   }
 
   .ishaya-article__rte > *:first-child {
@@ -491,7 +491,7 @@
   .ishaya-article__rte blockquote {
     margin: 2.5rem 0;
     padding: 1.5rem 2rem;
-    background: rgba(255, 255, 255, 0.025);
+    background: var(--glass-bg);
     border-left: 2px solid #3b82f6;
     border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
     font-size: 1.15rem;
@@ -554,12 +554,12 @@
     border: 1px solid var(--color-border);
     border-radius: var(--radius-sm);
     transition: all var(--duration-fast) ease;
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--glass-bg);
   }
 
   .ishaya-article__tag-pill:hover {
-    border-color: rgba(255, 255, 255, 0.3);
-    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--color-muted);
+    background: var(--glass-bg-hover);
     color: #3b82f6;
   }
 
@@ -581,15 +581,15 @@
     text-decoration: none;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-sm);
-    background: rgba(255, 255, 255, 0.02);
+    background: var(--glass-bg);
     cursor: pointer;
     transition: all var(--duration-fast) ease;
     min-height: 44px;
   }
 
   .ishaya-article__share-btn:hover {
-    border-color: rgba(255, 255, 255, 0.3);
-    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--color-muted);
+    background: var(--glass-bg-hover);
   }
 
   /* Next / Prev Navigation */
@@ -621,7 +621,7 @@
 
   .ishaya-article__nav-card:hover {
     transform: translateY(-2px);
-    border-color: rgba(255, 255, 255, 0.3);
+    border-color: var(--color-muted);
   }
 
   .ishaya-article__nav-direction {
@@ -720,7 +720,7 @@
   .ishaya-article__comment-body {
     font-size: 0.875rem;
     line-height: 1.6;
-    color: rgba(255, 255, 255, 0.85);
+    color: var(--color-foreground);
   }
 
   /* Comment Form */
@@ -784,7 +784,7 @@
     font-size: 0.875rem;
     font-family: inherit;
     color: var(--color-foreground);
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--glass-bg);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-sm);
     outline: none;
