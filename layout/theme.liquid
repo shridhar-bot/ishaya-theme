@@ -47,5 +47,11 @@
 
     {% # Global Cart Drawer %}
     {% render 'cart-drawer' %}
+
+    {% # Product card behaviour (quick add + wishlist) — delegated, bound once %}
+    <script src="{{ 'product-card.js' | asset_url }}" defer="defer"></script>
+
+    {% # Light/dark toggle interaction (pre-paint bootstrap is inline in css-variables) %}
+    <script src="{{ 'theme-mode.js' | asset_url }}" defer="defer"></script>
   </body>
 </html>
