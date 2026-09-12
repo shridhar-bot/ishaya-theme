@@ -92,7 +92,7 @@
         "tile_1": {
           "type": "collection_tile",
           "settings": {
-            "collection": "",
+            "collection": "frontpage",
             "title": "OUTERWEAR",
             "subtitle": "WATERPROOF SHELLS",
             "width": "wide"
