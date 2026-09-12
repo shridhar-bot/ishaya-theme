@@ -72,7 +72,7 @@
     "featured_products": {
       "type": "featured-products",
       "settings": {
-        "collection": "",
+        "collection": "automated-collection",
         "tag": "CURATED ARCHIVE",
         "title": "LATEST DROPS",
         "description": "Constructed with heavyweight textiles and utilitarian form.",
