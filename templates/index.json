@@ -168,7 +168,7 @@
     "secondary_products": {
       "type": "featured-products",
       "settings": {
-        "collection": "",
+        "collection": "automated-collection",
         "tag": "SECOND RELEASE",
         "title": "THE UTILITY LINE",
         "description": "Articulated cuts and industrial hardware for everyday load-bearing wear.",
