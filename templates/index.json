@@ -151,6 +151,7 @@
     "lifestyle_manifesto": {
       "type": "lifestyle-banner",
       "settings": {
+        "image": "shopify://shop_images/5.jpg",
         "overlay_opacity": 75,
         "tag": "ISHAYA PHILOSOPHY // MANIFESTO",
         "heading": "WE DO NOT FOLLOW CONVENTIONAL SEASONS. WE ENGINEER SILHOUETTES DESIGNED FOR URBAN RESISTANCE AND ARCHITECTURAL CLARITY.",
