@@ -101,7 +101,7 @@
         "tile_2": {
           "type": "collection_tile",
           "settings": {
-            "collection": "",
+            "collection": "automated-collection",
             "title": "CARGO & TROUSERS",
             "subtitle": "UTILITARIAN POCKETING",
             "width": "wide"
@@ -110,7 +110,7 @@
         "tile_3": {
           "type": "collection_tile",
           "settings": {
-            "collection": "",
+            "collection": "hydrogen",
             "title": "HEAVY FLEECE",
             "subtitle": "500GSM COTTON",
             "width": "standard"
@@ -128,7 +128,7 @@
         "tile_5": {
           "type": "collection_tile",
           "settings": {
-            "collection": "",
+            "collection": "automated-collection",
             "title": "FOOTWEAR & OBJECTS",
             "subtitle": "EDITION RELEASES",
             "width": "standard"
