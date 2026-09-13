@@ -134,23 +134,6 @@
           </div>
 
           {%- if slides.size > 1 -%}
-            <button
-              type="button"
-              class="ishaya-coverflow__nav ishaya-coverflow__nav--prev"
-              data-coverflow-prev
-              aria-label="Previous collection"
-            >
-              {% render 'icons', name: 'arrow-left', width: 16, height: 16 %}
-            </button>
-            <button
-              type="button"
-              class="ishaya-coverflow__nav ishaya-coverflow__nav--next"
-              data-coverflow-next
-              aria-label="Next collection"
-            >
-              {% render 'icons', name: 'arrow-right', width: 16, height: 16 %}
-            </button>
-
             <div class="ishaya-coverflow__dots" role="tablist" aria-label="Collection slides">
               {%- for block in slides -%}
                 <button
@@ -1602,9 +1585,10 @@
   }
 
   /* ----------------------------------------------------------------------
-     Coverflow collection slider — a stacked deck of wide landscape cards.
-     Slides are absolutely stacked on one centre line; JS assigns each an offset
-     from the active index and the transforms below push neighbours behind it.
+     Collection slider — centred card with flat side peeks. Slides are absolutely
+     stacked on one centre line; JS assigns each an offset from the active index
+     and the custom properties below slide neighbours out to either side.
+     Navigation is dots, drag, keyboard and optional autoplay only — no arrows.
      ---------------------------------------------------------------------- */
   .ishaya-coverflow {
     --cf-card-width: clamp(280px, 26vw, 460px);
@@ -1614,7 +1598,8 @@
   }
 
   .ishaya-coverflow__viewport {
-    perspective: 1600px;
+    overflow: hidden;
+    padding: 0.5rem 0 1rem;
     cursor: grab;
     touch-action: pan-y;
   }
@@ -1629,7 +1614,6 @@
     margin: 0;
     padding: 0;
     list-style: none;
-    transform-style: preserve-3d;
   }
 
   .ishaya-coverflow__slide {
@@ -1637,9 +1621,8 @@
     top: 0;
     left: 50%;
     width: var(--cf-card-width);
-    /* JS supplies --cf-x / --cf-scale / --cf-rotate per slide. */
-    transform: translateX(-50%) translateX(var(--cf-x, 0px)) scale(var(--cf-scale, 1))
-      rotateY(var(--cf-rotate, 0deg));
+    /* JS supplies --cf-x / --cf-scale / --cf-opacity / --cf-z per slide. */
+    transform: translateX(-50%) translateX(var(--cf-x, 0px)) scale(var(--cf-scale, 1));
     opacity: var(--cf-opacity, 0);
     z-index: var(--cf-z, 0);
     pointer-events: none;
@@ -1696,7 +1679,8 @@
     fill: var(--color-border);
   }
 
-  /* Collection name sits over the artwork, centred. */
+  /* Collection name sits over the artwork, centred; only the active card is
+     labelled so neighbouring captions never read through each other. */
   .ishaya-coverflow__caption {
     position: absolute;
     inset: 0;
@@ -1707,7 +1691,14 @@
     gap: 0.3rem;
     padding: 1rem;
     text-align: center;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.05) 0%, rgba(0, 0, 0, 0.35) 100%);
+    opacity: 0;
     pointer-events: none;
+    transition: opacity 0.4s ease;
+  }
+
+  .ishaya-coverflow__slide.is-active .ishaya-coverflow__caption {
+    opacity: 1;
   }
 
   .ishaya-coverflow__name {
@@ -1728,56 +1719,17 @@
     text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
   }
 
-  /* --- Navigation --- */
-  .ishaya-coverflow__nav {
-    position: absolute;
-    top: 50%;
-    z-index: 30;
-    display: grid;
-    place-items: center;
-    width: 36px;
-    height: 36px;
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius-pill);
-    background-color: var(--surface-floating);
-    color: var(--color-foreground);
-    cursor: pointer;
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    box-shadow: var(--shadow-floating-sm);
-    opacity: 0;
-    transform: translateY(-50%);
-    transition: opacity var(--transition-smooth), background-color var(--transition-fast);
-  }
-
-  .ishaya-coverflow:hover .ishaya-coverflow__nav,
-  .ishaya-coverflow__nav:focus-visible {
-    opacity: 1;
-  }
-
-  .ishaya-coverflow__nav:hover {
-    background-color: var(--color-accent);
-    color: var(--color-on-accent);
-  }
-
-  .ishaya-coverflow__nav--prev {
-    left: calc(50% - (var(--cf-card-width) / 2) - 3rem);
-  }
-
-  .ishaya-coverflow__nav--next {
-    right: calc(50% - (var(--cf-card-width) / 2) - 3rem);
-  }
-
+  /* --- Dots --- */
   .ishaya-coverflow__dots {
     display: flex;
     justify-content: center;
     gap: 0.35rem;
-    margin-top: 0.9rem;
+    margin-top: 0.25rem;
   }
 
   .ishaya-coverflow__dot {
-    width: 5px;
-    height: 5px;
+    width: 6px;
+    height: 6px;
     padding: 0;
     border: 0;
     border-radius: var(--radius-pill);
@@ -1786,8 +1738,12 @@
     transition: width var(--transition-smooth), background-color var(--transition-fast);
   }
 
+  .ishaya-coverflow__dot:hover {
+    background-color: var(--color-muted);
+  }
+
   .ishaya-coverflow__dot[aria-selected='true'] {
-    width: 18px;
+    width: 20px;
     background-color: var(--color-accent);
   }
 
@@ -1795,16 +1751,12 @@
     .ishaya-coverflow {
       --cf-card-width: min(78vw, 400px);
     }
-
-    /* No room for flanking arrows beside the card at this width. */
-    .ishaya-coverflow__nav {
-      display: none;
-    }
   }
 
   @media (prefers-reduced-motion: reduce) {
     .ishaya-coverflow__slide,
     .ishaya-coverflow__img,
+    .ishaya-coverflow__caption,
     .ishaya-coverflow__dot {
       transition: none;
     }
@@ -2362,27 +2314,30 @@
     const dots = Array.prototype.slice.call(root.querySelectorAll('[data-coverflow-dot]'));
     if (!viewport || slides.length === 0) return;
 
-    // Depth steps: how far behind the centre each neighbour sits.
+    // Side steps: how far out (as a fraction of the card width) each neighbour sits.
     const DEPTH = [
-      { x: 0, scale: 1, rotate: 0, opacity: 1, z: 30 },
-      { x: 34, scale: 0.94, rotate: 6, opacity: 0.65, z: 20 },
-      { x: 58, scale: 0.88, rotate: 9, opacity: 0.3, z: 10 }
+      { x: 0, scale: 1, opacity: 1, z: 30 },
+      { x: 0.86, scale: 0.86, opacity: 0.55, z: 20 },
+      { x: 1.6, scale: 0.74, opacity: 0.2, z: 10 }
     ];
 
     let current = 0;
     let autoplayTimer = null;
 
     function update() {
+      const count = slides.length;
       slides.forEach(function (slide, i) {
-        const offset = i - current;
+        // Shortest circular distance, so the deck stays balanced either side of
+        // the centre card and wraps visually the way goTo() wraps.
+        let offset = i - current;
+        if (offset > count / 2) offset -= count;
+        if (offset < -count / 2) offset += count;
         const step = DEPTH[Math.min(Math.abs(offset), DEPTH.length - 1)];
         const beyond = Math.abs(offset) >= DEPTH.length;
         const direction = offset === 0 ? 0 : offset > 0 ? 1 : -1;
 
-        slide.style.setProperty('--cf-x', step.x * direction + 'px');
+        slide.style.setProperty('--cf-x', 'calc(var(--cf-card-width) * ' + step.x * direction + ')');
         slide.style.setProperty('--cf-scale', step.scale);
-        // Neighbours angle back toward the centre card.
-        slide.style.setProperty('--cf-rotate', -step.rotate * direction + 'deg');
         slide.style.setProperty('--cf-opacity', beyond ? 0 : step.opacity);
         slide.style.setProperty('--cf-z', step.z - Math.abs(offset));
 
@@ -2405,20 +2360,6 @@
       current = index;
       update();
     }
-
-    root.querySelectorAll('[data-coverflow-prev]').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        goTo(current - 1);
-        stopAutoplay();
-      });
-    });
-
-    root.querySelectorAll('[data-coverflow-next]').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        goTo(current + 1);
-        stopAutoplay();
-      });
-    });
 
     dots.forEach(function (dot) {
       dot.addEventListener('click', function () {
