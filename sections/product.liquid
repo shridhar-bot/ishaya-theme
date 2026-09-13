@@ -176,7 +176,7 @@
                 {%- for option in product.options_with_values -%}
                   <fieldset class="ishaya-pdp__option-group" data-option-index="{{ forloop.index0 }}">
                     <legend class="ishaya-pdp__option-legend">
-                      <span class="ishaya-pdp__option-name">{{ option.name }}:</span>
+                      <span class="ishaya-pdp__option-name">Select {{ option.name }}</span>
                       <strong class="ishaya-pdp__option-selected" id="OptionSelected-{{ forloop.index0 }}">
                         {{ option.selected_value }}
                       </strong>
@@ -195,7 +195,7 @@
                           data-size-guide-open
                           aria-haspopup="dialog"
                         >
-                          {{ section.settings.size_guide_label | default: 'SIZE ADVISOR' }}
+                          {{ section.settings.size_guide_label | default: 'GUIDE' }}
                         </button>
                       {%- endif -%}
                     </legend>
@@ -225,8 +225,8 @@
             {%- endunless -%}
 
             <!-- Quantity Stepper & Add to Cart -->
-            <div class="ishaya-pdp__actions-row">
-              <div class="ishaya-pdp__qty-stepper glass-panel" aria-label="Quantity selector">
+            <div class="ishaya-pdp__actions-row{% unless section.settings.show_quantity %} ishaya-pdp__actions-row--no-qty{% endunless %}">
+              <div class="ishaya-pdp__qty-stepper glass-panel" aria-label="Quantity selector"{% unless section.settings.show_quantity %} hidden{% endunless %}>
                 <button
                   type="button"
                   class="ishaya-pdp__qty-btn"
@@ -259,10 +259,9 @@
                 type="submit"
                 name="add"
                 id="AddToCartBtn"
-                class="btn btn--primary ishaya-pdp__add-btn"
+                class="btn btn--secondary ishaya-pdp__add-btn"
                 {% if is_sold_out %}disabled="disabled"{% endif %}
               >
-                {% render 'icons', name: 'cart', width: 15, height: 15 %}
                 <span id="AddToCartText">
                   {%- if is_sold_out -%}
                     SOLD OUT
@@ -279,6 +278,95 @@
             </div>
           {% endform %}
 
+          <!-- Product information — tabbed card -->
+          {%- liquid
+            assign info_tabs = ''
+            if product.description != blank
+              assign info_tabs = info_tabs | append: 'description,'
+            endif
+            if section.settings.info_details != blank
+              assign info_tabs = info_tabs | append: 'details,'
+            endif
+            if section.settings.info_size_fit != blank
+              assign info_tabs = info_tabs | append: 'size_fit,'
+            endif
+            if section.settings.info_care != blank
+              assign info_tabs = info_tabs | append: 'care,'
+            endif
+            if section.settings.info_shipping != blank
+              assign info_tabs = info_tabs | append: 'shipping,'
+            endif
+            assign info_tabs = info_tabs | split: ','
+          -%}
+          {%- if info_tabs.size > 0 -%}
+            <div class="ishaya-pdp__info glass-panel" data-pdp-info>
+              <div class="ishaya-pdp__info-tabs" role="tablist" aria-label="Product information">
+                {%- for tab in info_tabs -%}
+                  {%- liquid
+                    case tab
+                      when 'description'
+                        assign tab_label = 'Description'
+                      when 'details'
+                        assign tab_label = 'Details'
+                      when 'size_fit'
+                        assign tab_label = 'Size & fit'
+                      when 'care'
+                        assign tab_label = 'Care'
+                      when 'shipping'
+                        assign tab_label = 'Shipping & return'
+                    endcase
+                  -%}
+                  <button
+                    type="button"
+                    class="ishaya-pdp__info-tab{% if forloop.first %} is-active{% endif %}"
+                    role="tab"
+                    id="PdpTab-{{ tab }}-{{ section.id }}"
+                    aria-controls="PdpPanel-{{ tab }}-{{ section.id }}"
+                    aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"
+                    data-pdp-tab="{{ tab }}"
+                  >
+                    {{ tab_label }}
+                  </button>
+                {%- endfor -%}
+              </div>
+
+              {%- for tab in info_tabs -%}
+                <div
+                  class="ishaya-pdp__info-panel"
+                  role="tabpanel"
+                  id="PdpPanel-{{ tab }}-{{ section.id }}"
+                  aria-labelledby="PdpTab-{{ tab }}-{{ section.id }}"
+                  data-pdp-panel="{{ tab }}"
+                  {% unless forloop.first %}hidden{% endunless %}
+                >
+                  <div class="ishaya-pdp__info-body rte" data-pdp-info-body>
+                    {%- case tab -%}
+                      {%- when 'description' -%}
+                        {{ product.description }}
+                      {%- when 'details' -%}
+                        {{ section.settings.info_details }}
+                      {%- when 'size_fit' -%}
+                        {{ section.settings.info_size_fit }}
+                      {%- when 'care' -%}
+                        {{ section.settings.info_care }}
+                      {%- when 'shipping' -%}
+                        {{ section.settings.info_shipping }}
+                    {%- endcase -%}
+                  </div>
+                  <button
+                    type="button"
+                    class="ishaya-pdp__info-more"
+                    data-pdp-info-more
+                    aria-expanded="false"
+                    hidden
+                  >
+                    <span data-pdp-info-more-label>View more</span>
+                  </button>
+                </div>
+              {%- endfor -%}
+            </div>
+          {%- endif -%}
+
           <!-- Shipping / Guarantee Strip -->
           <div class="ishaya-pdp__guarantee glass-panel">
             <div class="ishaya-pdp__guarantee-item">
@@ -289,77 +377,6 @@
               {% render 'icons', name: 'shield', width: 16, height: 16, class: 'ishaya-pdp__guarantee-icon' %}
               <span>Guaranteed authentic. Numbered edition packaging.</span>
             </div>
-          </div>
-
-          <!-- Utilitarian Garment Spec Accordions -->
-          <div class="ishaya-pdp__accordions">
-            <!-- Accordion 1: Description -->
-            <details class="ishaya-accordion" open>
-              <summary class="ishaya-accordion__summary">
-                <span class="ishaya-accordion__title">DETAILS & SILHOUETTE</span>
-                <span class="ishaya-accordion__chevron" aria-hidden="true">
-                  {% render 'icons', name: 'chevron-down', width: 12, height: 12 %}
-                </span>
-              </summary>
-              <div class="ishaya-accordion__content">
-                <div class="ishaya-accordion__body">
-                  {{ product.description }}
-                </div>
-              </div>
-            </details>
-
-            <!-- Accordion 2: Textile Specs -->
-            <details class="ishaya-accordion">
-              <summary class="ishaya-accordion__summary">
-                <span class="ishaya-accordion__title">TEXTILE & SPECIFICATIONS</span>
-                <span class="ishaya-accordion__chevron" aria-hidden="true">
-                  {% render 'icons', name: 'chevron-down', width: 12, height: 12 %}
-                </span>
-              </summary>
-              <div class="ishaya-accordion__content">
-                <ul class="ishaya-accordion__list">
-                  <li><strong>Fabric Weight:</strong> 500GSM Custom-milled French Terry</li>
-                  <li><strong>Composition:</strong> 100% Organic Heavyweight Combed Cotton</li>
-                  <li><strong>Hardware:</strong> Industrial matte black double-pull zippers</li>
-                  <li><strong>Finishing:</strong> Garment pre-shrunk with enzyme wash</li>
-                  <li><strong>Origin:</strong> Crafted in limited numbered runs</li>
-                </ul>
-              </div>
-            </details>
-
-            <!-- Accordion 3: Sizing & Fit -->
-            <details class="ishaya-accordion">
-              <summary class="ishaya-accordion__summary">
-                <span class="ishaya-accordion__title">SIZING & FIT PROFILE</span>
-                <span class="ishaya-accordion__chevron" aria-hidden="true">
-                  {% render 'icons', name: 'chevron-down', width: 12, height: 12 %}
-                </span>
-              </summary>
-              <div class="ishaya-accordion__content">
-                <div class="ishaya-accordion__body">
-                  <p>Architectural relaxed fit with dropped shoulders and articulated sleeves. Fits true to size for an intentionally oversized silhouette. For a tailored profile, size down one step.</p>
-                  <p>Model is 6'2" / 188cm and wears a size L.</p>
-                </div>
-              </div>
-            </details>
-
-            <!-- Accordion 4: Shipping & Care -->
-            <details class="ishaya-accordion">
-              <summary class="ishaya-accordion__summary">
-                <span class="ishaya-accordion__title">CARE & ARCHIVAL MAINTENANCE</span>
-                <span class="ishaya-accordion__chevron" aria-hidden="true">
-                  {% render 'icons', name: 'chevron-down', width: 12, height: 12 %}
-                </span>
-              </summary>
-              <div class="ishaya-accordion__content">
-                <ul class="ishaya-accordion__list">
-                  <li>Machine wash cold inside-out on gentle cycle</li>
-                  <li>Hang dry naturally away from direct sunlight</li>
-                  <li>Do not tumble dry to preserve fabric density</li>
-                  <li>Cool iron on reverse if necessary</li>
-                </ul>
-              </div>
-            </details>
           </div>
         </div>
       </div>
@@ -484,6 +501,7 @@
   }
 
   .ishaya-pdp__breadcrumb-link {
+    white-space: nowrap;
     color: var(--color-muted);
     text-decoration: none;
     transition: color var(--transition-fast);
@@ -644,6 +662,7 @@
 
   /* Details Column */
   .ishaya-pdp__details {
+    min-width: 0;
     width: 100%;
   }
 
@@ -762,42 +781,46 @@
   }
 
   .ishaya-pdp__option-legend {
-    font-size: 0.75rem;
+    font-size: 0.68rem;
     font-weight: 700;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
     display: flex;
-    gap: 0.5rem;
+    align-items: baseline;
+    gap: 0.6rem;
+    width: 100%;
     padding: 0;
     margin-bottom: 8px;
   }
 
   .ishaya-pdp__option-name {
-    color: var(--color-muted);
-  }
-
-  .ishaya-pdp__option-selected {
     color: var(--color-foreground);
   }
 
+  .ishaya-pdp__option-selected {
+    color: var(--color-muted);
+    font-weight: 600;
+  }
+
+  /* Equal-width value tiles across the full column. */
   .ishaya-pdp__pills {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
     gap: 0.5rem;
   }
 
   .ishaya-pdp__pill-btn {
     min-height: 44px;
-    min-width: 48px;
-    padding: 0.5rem 1rem;
-    border-radius: var(--radius-pill);
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-input);
     border: 1px solid var(--color-border);
-    background: transparent;
+    background: var(--color-surface);
     color: var(--color-foreground);
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     font-weight: 700;
     letter-spacing: 0.1em;
     text-transform: uppercase;
+    text-align: center;
     cursor: pointer;
     transition: all var(--transition-fast);
   }
@@ -818,6 +841,14 @@
     display: flex;
     gap: 0.75rem;
     width: 100%;
+  }
+
+  .ishaya-pdp__actions-row--no-qty {
+    flex-direction: column;
+  }
+
+  .ishaya-pdp__qty-stepper[hidden] {
+    display: none;
   }
 
   .ishaya-pdp__qty-stepper {
@@ -869,10 +900,12 @@
 
   .ishaya-pdp__add-btn {
     flex: 1;
+    width: 100%;
     height: 52px;
     font-size: 0.8rem;
     letter-spacing: 0.18em;
-    border-radius: var(--radius-pill);
+    border-radius: var(--radius-input);
+    background-color: var(--color-surface);
   }
 
   .ishaya-pdp__add-btn:disabled {
@@ -881,8 +914,164 @@
     border-color: var(--color-border);
   }
 
+  /* Dynamic checkout — the solid primary action, stacked under Add to bag. */
   .ishaya-pdp__dynamic-checkout {
     width: 100%;
+    margin-top: -0.25rem;
+  }
+
+  .ishaya-pdp__dynamic-checkout .shopify-payment-button {
+    width: 100%;
+  }
+
+  .ishaya-pdp__dynamic-checkout .shopify-payment-button__button,
+  .ishaya-pdp__dynamic-checkout .shopify-payment-button__button--unbranded {
+    width: 100%;
+    min-height: 52px;
+    border-radius: var(--radius-input);
+    background-color: var(--color-foreground);
+    color: var(--color-background);
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    transition: opacity var(--transition-fast);
+  }
+
+  .ishaya-pdp__dynamic-checkout .shopify-payment-button__button--unbranded:hover:not([disabled]) {
+    background-color: var(--color-foreground);
+    opacity: 0.85;
+  }
+
+  .ishaya-pdp__dynamic-checkout .shopify-payment-button__more-options {
+    color: var(--color-muted);
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* Product information — tabbed card */
+  .ishaya-pdp__info {
+    min-width: 0;
+    padding: 1rem 1.15rem 1.15rem;
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+    background-color: var(--color-surface);
+  }
+
+  .ishaya-pdp__info-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.35rem;
+    margin-bottom: 1rem;
+  }
+
+  .ishaya-pdp__info-tab {
+    padding: 0.5rem 0.9rem;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--color-muted);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: color var(--transition-fast), background-color var(--transition-fast);
+  }
+
+  .ishaya-pdp__info-tab:hover {
+    color: var(--color-foreground);
+  }
+
+  .ishaya-pdp__info-tab.is-active {
+    background-color: var(--color-foreground);
+    color: var(--color-background);
+  }
+
+  .ishaya-pdp__info-panel[hidden] {
+    display: none;
+  }
+
+  .ishaya-pdp__info-body {
+    position: relative;
+    max-height: 7.5rem;
+    overflow: hidden;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    color: var(--color-muted);
+  }
+
+  .ishaya-pdp__info-body p:not(:last-child),
+  .ishaya-pdp__info-body ul:not(:last-child) {
+    margin-bottom: 0.75rem;
+  }
+
+  .ishaya-pdp__info-body ul {
+    padding-left: 1.1rem;
+  }
+
+  .ishaya-pdp__info-body strong {
+    color: var(--color-foreground);
+  }
+
+  /* Fade the clipped tail so the cut never looks accidental. */
+  .ishaya-pdp__info-body.is-clamped::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0;
+    height: 3rem;
+    background: linear-gradient(180deg, transparent, var(--color-surface));
+    pointer-events: none;
+  }
+
+  .ishaya-pdp__info-body.is-expanded {
+    max-height: none;
+  }
+
+  .ishaya-pdp__info-more {
+    display: inline-flex;
+    align-items: center;
+    min-height: 30px;
+    margin-top: 0.9rem;
+    padding: 0 0.85rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--color-foreground);
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background-color var(--transition-fast), border-color var(--transition-fast);
+  }
+
+  .ishaya-pdp__info-more:hover {
+    border-color: var(--color-foreground);
+    background-color: var(--glass-bg-hover);
+  }
+
+  .ishaya-pdp__info-more[hidden] {
+    display: none;
+  }
+
+  @media (max-width: 640px) {
+    /* One swipeable row instead of stacking three deep. */
+    .ishaya-pdp__info-tabs {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      margin-inline: -1.15rem;
+      padding-inline: 1.15rem;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .ishaya-pdp__info-tabs::-webkit-scrollbar {
+      display: none;
+    }
   }
 
   /* Guarantee Strip */
@@ -906,69 +1095,6 @@
   .ishaya-pdp__guarantee-icon {
     color: var(--color-foreground);
     flex-shrink: 0;
-  }
-
-  /* Accordions */
-  .ishaya-pdp__accordions {
-    display: flex;
-    flex-direction: column;
-    border-top: 1px solid var(--color-border);
-    margin-top: 0.5rem;
-  }
-
-  .ishaya-accordion {
-    border-bottom: 1px solid var(--color-border);
-  }
-
-  .ishaya-accordion__summary {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1.15rem 0;
-    cursor: pointer;
-    list-style: none;
-    font-size: 0.78rem;
-    font-weight: 700;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    user-select: none;
-  }
-
-  .ishaya-accordion__summary::-webkit-details-marker {
-    display: none;
-  }
-
-  .ishaya-accordion__chevron {
-    transition: transform var(--transition-smooth);
-    color: var(--color-muted);
-  }
-
-  .ishaya-accordion[open] .ishaya-accordion__chevron {
-    transform: rotate(180deg);
-    color: var(--color-foreground);
-  }
-
-  .ishaya-accordion__content {
-    padding-bottom: 1.25rem;
-    font-size: 0.85rem;
-    line-height: 1.6;
-    color: #a1a1aa;
-  }
-
-  .ishaya-accordion__body p:not(:last-child) {
-    margin-bottom: 0.75rem;
-  }
-
-  .ishaya-accordion__list {
-    list-style: none;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .ishaya-accordion__list li strong {
-    color: var(--color-foreground);
   }
 
   @media (max-width: 1024px) {
@@ -1005,7 +1131,7 @@
     border: 0;
     background: none;
     color: var(--color-muted);
-    font-size: 0.55rem;
+    font-size: 0.6rem;
     font-weight: 700;
     letter-spacing: 0.16em;
     text-transform: uppercase;
@@ -1254,6 +1380,68 @@
     const mainImg = document.getElementById('ProductFeaturedImage');
     const priceEl = document.getElementById('ProductPrice');
     const comparePriceEl = document.getElementById('ProductComparePrice');
+    /* ---- Product information tabs + "View more" clamp ---- */
+    (function () {
+      const info = section.querySelector('[data-pdp-info]');
+      if (!info) return;
+
+      const tabs = Array.prototype.slice.call(info.querySelectorAll('[data-pdp-tab]'));
+      const panels = Array.prototype.slice.call(info.querySelectorAll('[data-pdp-panel]'));
+
+      // Only offer "View more" when the body actually overflows its clamp.
+      function measure(panel) {
+        const body = panel.querySelector('[data-pdp-info-body]');
+        const more = panel.querySelector('[data-pdp-info-more]');
+        if (!body || !more) return;
+        if (body.classList.contains('is-expanded')) return;
+        const overflows = body.scrollHeight > body.clientHeight + 4;
+        body.classList.toggle('is-clamped', overflows);
+        more.hidden = !overflows;
+      }
+
+      function activate(name) {
+        tabs.forEach(function (tab) {
+          const on = tab.getAttribute('data-pdp-tab') === name;
+          tab.classList.toggle('is-active', on);
+          tab.setAttribute('aria-selected', on ? 'true' : 'false');
+        });
+        panels.forEach(function (panel) {
+          const on = panel.getAttribute('data-pdp-panel') === name;
+          panel.hidden = !on;
+          if (on) measure(panel);
+        });
+      }
+
+      tabs.forEach(function (tab) {
+        tab.addEventListener('click', function () {
+          activate(tab.getAttribute('data-pdp-tab'));
+        });
+      });
+
+      info.addEventListener('click', function (evt) {
+        const more = evt.target.closest('[data-pdp-info-more]');
+        if (!more) return;
+        const panel = more.closest('[data-pdp-panel]');
+        const body = panel && panel.querySelector('[data-pdp-info-body]');
+        const label = more.querySelector('[data-pdp-info-more-label]');
+        if (!body) return;
+        const expand = !body.classList.contains('is-expanded');
+        body.classList.toggle('is-expanded', expand);
+        body.classList.toggle('is-clamped', !expand);
+        more.setAttribute('aria-expanded', expand ? 'true' : 'false');
+        if (label) label.textContent = expand ? 'View less' : 'View more';
+      });
+
+      panels.forEach(function (panel) {
+        if (!panel.hidden) measure(panel);
+      });
+      window.addEventListener('resize', function () {
+        panels.forEach(function (panel) {
+          if (!panel.hidden) measure(panel);
+        });
+      });
+    })();
+
     const addBtn = document.getElementById('AddToCartBtn');
     const addText = document.getElementById('AddToCartText');
     const stockStatus = document.getElementById('ProductStockStatus');
@@ -1566,13 +1754,52 @@
       "type": "text",
       "id": "size_guide_label",
       "label": "Link label",
-      "default": "SIZE ADVISOR & MEASUREMENTS"
+      "default": "GUIDE"
     },
     {
       "type": "text",
       "id": "size_guide_note",
       "label": "Fit note",
       "default": "Garment measured flat. Model is 6'1\" / 185cm and wears a size M."
+    },
+    {
+      "type": "header",
+      "content": "Buy box"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_quantity",
+      "label": "Show quantity selector",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "Product information tabs",
+      "info": "The Description tab always shows the product description. Leave a field empty to hide its tab."
+    },
+    {
+      "type": "richtext",
+      "id": "info_details",
+      "label": "Details",
+      "default": "<ul><li><strong>Fabric weight:</strong> 500GSM custom-milled French terry</li><li><strong>Composition:</strong> 100% organic heavyweight combed cotton</li><li><strong>Hardware:</strong> Industrial matte black double-pull zippers</li><li><strong>Finishing:</strong> Garment pre-shrunk with enzyme wash</li><li><strong>Origin:</strong> Crafted in limited numbered runs</li></ul>"
+    },
+    {
+      "type": "richtext",
+      "id": "info_size_fit",
+      "label": "Size & fit",
+      "default": "<p>Architectural relaxed fit with dropped shoulders and articulated sleeves. Fits true to size for an intentionally oversized silhouette. For a tailored profile, size down one step.</p><p>Model is 6'2\" / 188cm and wears a size L.</p>"
+    },
+    {
+      "type": "richtext",
+      "id": "info_care",
+      "label": "Care",
+      "default": "<ul><li>Machine wash cold inside-out on gentle cycle</li><li>Hang dry naturally away from direct sunlight</li><li>Do not tumble dry to preserve fabric density</li><li>Cool iron on reverse if necessary</li></ul>"
+    },
+    {
+      "type": "richtext",
+      "id": "info_shipping",
+      "label": "Shipping & return",
+      "default": "<p>Orders dispatch within 1–2 business days. Complimentary worldwide shipping on orders over $250; standard rates apply below that threshold.</p><p>Unworn pieces with tags attached can be returned within 14 days of delivery for a full refund or exchange.</p>"
     },
     {
       "type": "header",

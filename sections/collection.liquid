@@ -2270,25 +2270,31 @@
     /* ---------- Layout / grid density switcher ---------- */
     const LAYOUT_KEY = 'ishaya:collection-layout';
 
+    const LAYOUTS = ['2', '4', '6'];
+
     function currentLayout() {
+      let stored = null;
       try {
-        return window.localStorage.getItem(LAYOUT_KEY) || '{{ cols_desktop }}';
+        stored = window.localStorage.getItem(LAYOUT_KEY);
       } catch (e) {
-        return '{{ cols_desktop }}';
+        /* ignore */
       }
+      // Ignore values the switcher no longer offers (e.g. 'list' from the old 4/2/list build).
+      return LAYOUTS.indexOf(stored) !== -1 ? stored : '{{ cols_desktop }}';
     }
 
     function applyLayout(layout) {
       const grid = section.querySelector('[data-product-grid]');
       if (!grid) return;
 
-      grid.classList.remove(
-        'ishaya-product-grid--cols-2',
-        'ishaya-product-grid--cols-3',
-        'ishaya-product-grid--cols-4',
-        'ishaya-product-grid--list'
-      );
-      grid.classList.add(layout === 'list' ? 'ishaya-product-grid--list' : 'ishaya-product-grid--cols-' + layout);
+      // Strip every density class before adding the chosen one — a leftover
+      // `--cols-6` (declared last in the CSS) would otherwise win over 2 or 4.
+      Array.prototype.slice.call(grid.classList).forEach(function (cls) {
+        if (cls.indexOf('ishaya-product-grid--cols-') === 0 || cls === 'ishaya-product-grid--list') {
+          grid.classList.remove(cls);
+        }
+      });
+      grid.classList.add('ishaya-product-grid--cols-' + layout);
 
       section.querySelectorAll('[data-layout]').forEach(function (btn) {
         btn.classList.toggle('is-active', btn.getAttribute('data-layout') === layout);
@@ -2299,6 +2305,7 @@
       const btn = evt.target.closest('[data-layout]');
       if (!btn) return;
       const layout = btn.getAttribute('data-layout');
+      if (LAYOUTS.indexOf(layout) === -1) return;
       try {
         window.localStorage.setItem(LAYOUT_KEY, layout);
       } catch (e) {
