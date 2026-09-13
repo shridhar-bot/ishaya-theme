@@ -15,9 +15,10 @@
       <!-- Col 1: Brand (Span 3) -->
       <div class="zb-footer-col zb-footer-col--brand">
         <div class="zb-footer-brand-header">
-          <div class="zb-footer-logo-box">
+          <div class="zb-footer-logo-box"{% if settings.logo != blank %} style="--logo-width: {{ settings.logo_width | default: 130 }}px;"{% endif %}>
             {% if settings.logo != blank %}
-              {% render 'brand-logo', width: 144, class: 'zb-footer-logo-img' %}
+              {%- assign footer_logo_px = settings.logo_width | default: 130 | times: 2 -%}
+              {% render 'brand-logo', width: footer_logo_px, class: 'zb-footer-logo-img' %}
             {% else %}
               <svg class="zb-footer-logo-svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square">
                 <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
@@ -26,7 +27,9 @@
               </svg>
             {% endif %}
           </div>
-          <h2 class="zb-footer-brand-title">ISHAYA</h2>
+          {% if settings.logo == blank %}
+            <h2 class="zb-footer-brand-title">ISHAYA</h2>
+          {% endif %}
         </div>
         <p class="zb-footer-brand-statement">
           {{ section.settings.brand_text | default: 'Meticulously engineered streetwear. Architectural silhouettes, heavyweight textiles, and modern utilitarian craftsmanship.' }}
@@ -160,9 +163,10 @@
   <div class="zb-footer-mobile">
     <!-- Centered Brand -->
     <div class="zb-mobile-footer-brand">
-      <div class="zb-mobile-footer-logo-box">
+      <div class="zb-mobile-footer-logo-box"{% if settings.logo != blank %} style="--logo-width: {{ settings.logo_width | default: 130 }}px;"{% endif %}>
         {% if settings.logo != blank %}
-          {% render 'brand-logo', width: 128, class: 'zb-footer-logo-img' %}
+          {%- assign footer_logo_px = settings.logo_width | default: 130 | times: 2 -%}
+          {% render 'brand-logo', width: footer_logo_px, class: 'zb-footer-logo-img' %}
         {% else %}
           <svg class="zb-footer-logo-svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square">
             <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
@@ -171,7 +175,9 @@
           </svg>
         {% endif %}
       </div>
-      <h2 class="zb-mobile-footer-title">ISHAYA</h2>
+      {% if settings.logo == blank %}
+        <h2 class="zb-mobile-footer-title">ISHAYA</h2>
+      {% endif %}
     </div>
 
     <!-- Centered Circular Social Pills -->
@@ -336,6 +342,14 @@
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+  /* Uploaded logo replaces the wordmark; sized by the global Logo width setting. */
+  .zb-footer-logo-img {
+    display: block;
+    height: 34px;
+    width: auto;
+    max-width: var(--logo-width, 130px);
+    object-fit: contain;
   }
   .zb-footer-brand-title {
     font-size: 0.5625rem; /* 9px */

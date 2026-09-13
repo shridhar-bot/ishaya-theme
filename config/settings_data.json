@@ -8,11 +8,5 @@
  * ------------------------------------------------------------
  */
 {
-  "current": {
-    "logo": "shopify://shop_images/White_Logo_320.png",
-    "social_instagram_link": "#",
-    "social_tiktok_link": "#",
-    "social_x_link": "#",
-    "content_for_index": []
-  }
+  "current": {}
 }
