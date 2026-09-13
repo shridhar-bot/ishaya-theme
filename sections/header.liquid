@@ -86,17 +86,17 @@
       {% render 'icons', name: 'search', width: 15, height: 15 %}
     </button>
 
-    <a
-      href="{{ routes.search_url }}?q=&type=product"
+    <button
+      type="button"
       class="zb-action-btn zb-wishlist-btn"
-      data-wishlist-link
+      data-open-wishlist
       aria-label="View saved pieces"
+      aria-haspopup="dialog"
+      aria-controls="WishlistDrawer"
     >
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
-        <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1L12 21.2l7.7-7.8 1.1-1a5.5 5.5 0 0 0 0-7.8z"></path>
-      </svg>
-      <span id="HeaderWishlistCount" class="zb-cart-count zb-cart-count--hidden" aria-hidden="true">0</span>
-    </a>
+      {% render 'icons', name: 'heart', width: 15, height: 15 %}
+      <span class="zb-cart-count zb-cart-count--hidden" data-wishlist-count aria-hidden="true">0</span>
+    </button>
 
     {% if shop.customer_accounts_enabled %}
       <a
@@ -162,6 +162,18 @@
       aria-label="{{ 'header.search' | t }}"
     >
       {% render 'icons', name: 'search', width: 15, height: 15 %}
+    </button>
+
+    <button
+      type="button"
+      class="zb-mobile-action-btn glass-panel"
+      data-open-wishlist
+      aria-label="View saved pieces"
+      aria-haspopup="dialog"
+      aria-controls="WishlistDrawer"
+    >
+      {% render 'icons', name: 'heart', width: 15, height: 15 %}
+      <span class="zb-cart-count zb-cart-count--hidden" data-wishlist-count aria-hidden="true">0</span>
     </button>
 
     {% if shop.customer_accounts_enabled %}

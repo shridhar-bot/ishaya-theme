@@ -48,6 +48,9 @@
     {% # Global Cart Drawer %}
     {% render 'cart-drawer' %}
 
+    {% # Global Wishlist Drawer (localStorage-backed, populated client-side) %}
+    {% render 'wishlist-drawer' %}
+
     {% # Product card behaviour (quick add + wishlist) — delegated, bound once %}
     <script src="{{ 'product-card.js' | asset_url }}" defer="defer"></script>
 

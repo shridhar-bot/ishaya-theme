@@ -1,0 +1,671 @@
+{% doc %}
+  Renders the global slide-out wishlist ("Saved pieces") drawer.
+
+  The wishlist is `localStorage`-backed and owned by `assets/product-card.js`
+  (`window.IshayaWishlist`). Each entry is `{ id, handle }`; this drawer resolves
+  every handle through `/products/<handle>.js` and renders the result client-side,
+  so nothing here depends on a customer account or an app.
+
+  Opened by any `[data-open-wishlist]` element (header + mobile pill). Rendered once
+  from `layout/theme.liquid`, next to the cart drawer.
+{% enddoc %}
+
+<div
+  id="WishlistDrawer"
+  class="ishaya-wishlist-drawer"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="WishlistDrawerTitle"
+  data-money-format="{{ shop.money_format | escape }}"
+  data-root-url="{{ routes.root_url }}"
+  hidden
+>
+  <div class="ishaya-wishlist-drawer__backdrop" data-close-wishlist tabindex="-1"></div>
+
+  <div class="ishaya-wishlist-drawer__panel">
+    <div class="ishaya-wishlist-drawer__header">
+      <div class="ishaya-wishlist-drawer__header-title-wrap">
+        <h2 class="ishaya-wishlist-drawer__title" id="WishlistDrawerTitle">SAVED PIECES</h2>
+        <span
+          class="ishaya-wishlist-drawer__count-badge ishaya-wishlist-drawer__count-badge--hidden"
+          data-wishlist-drawer-count
+        >0</span>
+      </div>
+
+      <button
+        type="button"
+        class="ishaya-wishlist-drawer__close-btn"
+        data-close-wishlist
+        aria-label="Close saved pieces"
+      >
+        {% render 'icons', name: 'close', width: 18, height: 18 %}
+      </button>
+    </div>
+
+    <div class="ishaya-wishlist-drawer__body">
+      <div class="ishaya-wishlist-drawer__items-list" data-wishlist-items role="list"></div>
+
+      <div class="ishaya-wishlist-drawer__empty" data-wishlist-empty hidden>
+        <div class="ishaya-wishlist-drawer__empty-icon" aria-hidden="true">
+          {% render 'icons', name: 'heart', width: 32, height: 32 %}
+        </div>
+        <h3 class="ishaya-wishlist-drawer__empty-title">NOTHING SAVED YET</h3>
+        <p class="ishaya-wishlist-drawer__empty-desc">
+          Tap the heart on any piece to keep it here for later. Saved pieces stay on this device.
+        </p>
+        <a href="{{ routes.all_products_collection_url }}" class="btn btn--primary ishaya-wishlist-drawer__empty-btn" data-close-wishlist>
+          <span>EXPLORE ARCHIVE</span>
+          {% render 'icons', name: 'arrow-right', width: 14, height: 14 %}
+        </a>
+      </div>
+
+      <p class="ishaya-wishlist-drawer__loading" data-wishlist-loading hidden aria-live="polite">Loading saved pieces…</p>
+    </div>
+
+    <div class="ishaya-wishlist-drawer__footer" data-wishlist-footer hidden>
+      <p class="ishaya-wishlist-drawer__footer-note">Saved on this device only — sign-in sync is not required.</p>
+      <button type="button" class="btn btn--secondary ishaya-wishlist-drawer__clear-btn" data-wishlist-clear>
+        CLEAR SAVED PIECES
+      </button>
+    </div>
+  </div>
+</div>
+
+<template id="WishlistDrawerItemTemplate">
+  <div class="ishaya-wishlist-drawer__item" role="listitem" data-wishlist-item>
+    <a class="ishaya-wishlist-drawer__item-media" data-wishlist-item-link>
+      <img class="ishaya-wishlist-drawer__item-img" alt="" loading="lazy" width="300" height="400" data-wishlist-item-img>
+    </a>
+    <div class="ishaya-wishlist-drawer__item-content">
+      <div class="ishaya-wishlist-drawer__item-header">
+        <h3 class="ishaya-wishlist-drawer__item-title">
+          <a class="ishaya-wishlist-drawer__item-link" data-wishlist-item-link data-wishlist-item-title></a>
+        </h3>
+        <button type="button" class="ishaya-wishlist-drawer__remove-btn" data-wishlist-remove aria-label="Remove from saved pieces">
+          {% render 'icons', name: 'close', width: 14, height: 14 %}
+        </button>
+      </div>
+      <span class="ishaya-wishlist-drawer__item-meta" data-wishlist-item-meta></span>
+      <div class="ishaya-wishlist-drawer__item-footer">
+        <div class="ishaya-wishlist-drawer__item-price">
+          <span data-wishlist-item-price></span>
+          <s class="ishaya-wishlist-drawer__item-compare" data-wishlist-item-compare hidden></s>
+        </div>
+        <div class="ishaya-wishlist-drawer__item-actions" data-wishlist-item-actions></div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style>
+  .ishaya-wishlist-drawer {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .ishaya-wishlist-drawer[hidden] {
+    display: none;
+  }
+
+  .ishaya-wishlist-drawer__backdrop {
+    position: fixed;
+    inset: 0;
+    background: var(--glass-scrim);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .ishaya-wishlist-drawer__panel {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 480px;
+    height: 100%;
+    background-color: var(--color-background);
+    border-left: 1px solid var(--color-border);
+    box-shadow: var(--shadow-floating);
+    animation: ishayaWishlistSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes ishayaWishlistSlideIn {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+  }
+
+  .ishaya-wishlist-drawer__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .ishaya-wishlist-drawer__header-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .ishaya-wishlist-drawer__title {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 800;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  .ishaya-wishlist-drawer__count-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 0.4rem;
+    border-radius: var(--radius-pill);
+    background-color: var(--color-foreground);
+    color: var(--color-background);
+    font-size: 0.62rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ishaya-wishlist-drawer__count-badge--hidden {
+    display: none;
+  }
+
+  .ishaya-wishlist-drawer__close-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--color-muted);
+    cursor: pointer;
+    transition: color var(--transition-fast), background-color var(--transition-fast);
+  }
+
+  .ishaya-wishlist-drawer__close-btn:hover {
+    color: var(--color-foreground);
+    background-color: var(--glass-bg-hover);
+  }
+
+  .ishaya-wishlist-drawer__body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.25rem 1.5rem;
+  }
+
+  .ishaya-wishlist-drawer__items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .ishaya-wishlist-drawer__items-list:empty {
+    display: none;
+  }
+
+  .ishaya-wishlist-drawer__loading {
+    margin: 1rem 0;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    text-align: center;
+  }
+
+  .ishaya-wishlist-drawer__item {
+    display: flex;
+    gap: 1rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .ishaya-wishlist-drawer__item-media {
+    flex-shrink: 0;
+    width: 80px;
+    aspect-ratio: 3 / 4;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-input);
+    background-color: var(--color-surface);
+  }
+
+  .ishaya-wishlist-drawer__item-img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .ishaya-wishlist-drawer__item-content {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    justify-content: space-between;
+    min-width: 0;
+  }
+
+  .ishaya-wishlist-drawer__item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .ishaya-wishlist-drawer__item-title {
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    line-height: 1.3;
+  }
+
+  .ishaya-wishlist-drawer__item-link {
+    color: var(--color-foreground);
+    text-decoration: none;
+    transition: opacity var(--transition-fast);
+  }
+
+  .ishaya-wishlist-drawer__item-link:hover {
+    opacity: 0.85;
+  }
+
+  .ishaya-wishlist-drawer__remove-btn {
+    flex-shrink: 0;
+    padding: 0.2rem;
+    border: none;
+    background: transparent;
+    color: var(--color-muted);
+    cursor: pointer;
+    transition: color var(--transition-fast);
+  }
+
+  .ishaya-wishlist-drawer__remove-btn:hover {
+    color: var(--color-foreground);
+  }
+
+  .ishaya-wishlist-drawer__item-meta {
+    margin-top: 0.2rem;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .ishaya-wishlist-drawer__item-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+  }
+
+  .ishaya-wishlist-drawer__item-price {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-foreground);
+  }
+
+  .ishaya-wishlist-drawer__item-compare {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--color-muted);
+  }
+
+  .ishaya-wishlist-drawer__item-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 34px;
+    padding: 0 0.85rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    background-color: transparent;
+    color: var(--color-foreground);
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color var(--transition-fast), color var(--transition-fast);
+  }
+
+  .ishaya-wishlist-drawer__item-btn:hover {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-on-accent);
+  }
+
+  .ishaya-wishlist-drawer__item-btn.is-loading {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  .ishaya-wishlist-drawer__item-btn--soldout {
+    cursor: default;
+    color: var(--color-muted);
+  }
+
+  .ishaya-wishlist-drawer__item-btn--soldout:hover {
+    background-color: transparent;
+    border-color: var(--color-border);
+    color: var(--color-muted);
+  }
+
+  .ishaya-wishlist-drawer__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 2rem 1rem;
+    text-align: center;
+  }
+
+  .ishaya-wishlist-drawer__empty-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    margin-bottom: 1.25rem;
+    border: 1px solid var(--color-border);
+    border-radius: 50%;
+    background: var(--glass-bg);
+    color: var(--color-muted);
+  }
+
+  .ishaya-wishlist-drawer__empty-title {
+    margin-bottom: 0.5rem;
+    font-size: 1.15rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .ishaya-wishlist-drawer__empty-desc {
+    max-width: 280px;
+    margin-bottom: 1.5rem;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: var(--color-muted);
+  }
+
+  .ishaya-wishlist-drawer__empty-btn {
+    font-size: 0.75rem;
+    letter-spacing: 0.16em;
+  }
+
+  .ishaya-wishlist-drawer__footer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    padding: 1.25rem 1.5rem;
+    border-top: 1px solid var(--color-border);
+    background-color: var(--color-background);
+  }
+
+  .ishaya-wishlist-drawer__footer-note {
+    margin: 0;
+    font-size: 0.68rem;
+    line-height: 1.5;
+    color: var(--color-muted);
+  }
+
+  .ishaya-wishlist-drawer__clear-btn {
+    width: 100%;
+    min-height: 44px;
+    font-size: 0.7rem;
+    letter-spacing: 0.16em;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ishaya-wishlist-drawer__panel {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  (function () {
+    var drawer = document.getElementById('WishlistDrawer');
+    var template = document.getElementById('WishlistDrawerItemTemplate');
+    if (!drawer || !template) return;
+
+    var list = drawer.querySelector('[data-wishlist-items]');
+    var empty = drawer.querySelector('[data-wishlist-empty]');
+    var loading = drawer.querySelector('[data-wishlist-loading]');
+    var footer = drawer.querySelector('[data-wishlist-footer]');
+    var countBadge = drawer.querySelector('[data-wishlist-drawer-count]');
+    var moneyFormat = drawer.getAttribute('data-money-format') || '{' + '{amount}}';
+    var rootUrl = drawer.getAttribute('data-root-url') || '/';
+    var productCache = {};
+    var lastFocused = null;
+    var renderToken = 0;
+    var internalChange = false;
+
+    /* ---------- Money ---------- */
+    function formatMoney(cents) {
+      var value = (Number(cents) || 0) / 100;
+      function withSeparators(num, decimals, thousands, decimal) {
+        var fixed = num.toFixed(decimals);
+        var parts = fixed.split('.');
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, thousands);
+        return parts.length > 1 ? parts[0] + decimal + parts[1] : parts[0];
+      }
+      return moneyFormat.replace(/\{\{\s*(\w+)\s*\}\}/, function (_, key) {
+        switch (key) {
+          case 'amount_no_decimals': return withSeparators(value, 0, ',', '.');
+          case 'amount_with_comma_separator': return withSeparators(value, 2, '.', ',');
+          case 'amount_no_decimals_with_comma_separator': return withSeparators(value, 0, '.', ',');
+          case 'amount_with_apostrophe_separator': return withSeparators(value, 2, "'", '.');
+          case 'amount_no_decimals_with_space_separator': return withSeparators(value, 0, ' ', '.');
+          case 'amount_with_space_separator': return withSeparators(value, 2, ' ', ',');
+          default: return withSeparators(value, 2, ',', '.');
+        }
+      });
+    }
+
+    /* ---------- Open / close ---------- */
+    function openDrawer() {
+      lastFocused = document.activeElement;
+      if (typeof window.closeCartDrawer === 'function') window.closeCartDrawer();
+      drawer.removeAttribute('hidden');
+      document.body.classList.add('drawer-open');
+      render();
+      var closeBtn = drawer.querySelector('.ishaya-wishlist-drawer__close-btn');
+      if (closeBtn) closeBtn.focus();
+    }
+
+    function closeDrawer() {
+      if (drawer.hasAttribute('hidden')) return;
+      drawer.setAttribute('hidden', '');
+      document.body.classList.remove('drawer-open');
+      if (lastFocused && typeof lastFocused.focus === 'function') lastFocused.focus();
+    }
+
+    window.openWishlistDrawer = openDrawer;
+    window.closeWishlistDrawer = closeDrawer;
+
+    /* ---------- Data ---------- */
+    function fetchProduct(handle) {
+      if (productCache[handle]) return productCache[handle];
+      productCache[handle] = fetch(rootUrl + 'products/' + encodeURIComponent(handle) + '.js', {
+        headers: { Accept: 'application/json' }
+      })
+        .then(function (res) {
+          if (!res.ok) throw new Error('unavailable');
+          return res.json();
+        })
+        .catch(function (err) {
+          delete productCache[handle];
+          throw err;
+        });
+      return productCache[handle];
+    }
+
+    function setState(count, isLoading) {
+      if (countBadge) {
+        countBadge.textContent = count;
+        countBadge.classList.toggle('ishaya-wishlist-drawer__count-badge--hidden', count === 0);
+      }
+      empty.hidden = count !== 0 || isLoading;
+      footer.hidden = count === 0;
+      loading.hidden = !isLoading;
+    }
+
+    function buildItem(entry, product) {
+      var node = template.content.firstElementChild.cloneNode(true);
+      var url = rootUrl.replace(/\/$/, '') + '/products/' + product.handle;
+      var variant = null;
+      for (var i = 0; i < product.variants.length; i++) {
+        if (product.variants[i].available) { variant = product.variants[i]; break; }
+      }
+      var priceVariant = variant || product.variants[0];
+
+      node.setAttribute('data-wishlist-id', entry.id);
+      node.querySelectorAll('[data-wishlist-item-link]').forEach(function (a) { a.href = url; });
+
+      var img = node.querySelector('[data-wishlist-item-img]');
+      if (product.featured_image) {
+        img.src = product.featured_image.replace(/(\.[a-z]+)(\?.*)?$/i, '_300x400_crop_center$1$2');
+        img.alt = product.title;
+      } else {
+        img.remove();
+      }
+
+      node.querySelector('[data-wishlist-item-title]').textContent = product.title;
+
+      var meta = node.querySelector('[data-wishlist-item-meta]');
+      if (!product.available) meta.textContent = 'Sold out';
+      else if (product.variants.length > 1) meta.textContent = product.variants.length + ' options';
+      else meta.remove();
+
+      var price = node.querySelector('[data-wishlist-item-price]');
+      var compare = node.querySelector('[data-wishlist-item-compare]');
+      if (priceVariant) {
+        price.textContent = formatMoney(priceVariant.price);
+        if (priceVariant.compare_at_price && priceVariant.compare_at_price > priceVariant.price) {
+          compare.textContent = formatMoney(priceVariant.compare_at_price);
+          compare.hidden = false;
+        }
+      }
+
+      var actions = node.querySelector('[data-wishlist-item-actions]');
+      var action;
+      if (!product.available) {
+        action = document.createElement('span');
+        action.className = 'ishaya-wishlist-drawer__item-btn ishaya-wishlist-drawer__item-btn--soldout';
+        action.textContent = 'Sold out';
+      } else if (product.variants.length === 1 && variant) {
+        // Single variant — delegated quick add in product-card.js handles [data-quick-add].
+        action = document.createElement('button');
+        action.type = 'button';
+        action.className = 'ishaya-wishlist-drawer__item-btn';
+        action.setAttribute('data-quick-add', '');
+        action.setAttribute('data-variant-id', variant.id);
+        action.textContent = 'Add to bag';
+      } else {
+        action = document.createElement('a');
+        action.className = 'ishaya-wishlist-drawer__item-btn';
+        action.href = url;
+        action.textContent = 'Choose options';
+      }
+      actions.appendChild(action);
+      return node;
+    }
+
+    function render() {
+      if (!window.IshayaWishlist) return;
+      var entries = window.IshayaWishlist.read();
+      var token = ++renderToken;
+
+      list.innerHTML = '';
+      setState(entries.length, entries.length > 0);
+      if (!entries.length) return;
+
+      Promise.all(
+        entries.map(function (entry) {
+          return fetchProduct(entry.handle).then(
+            function (product) { return { entry: entry, product: product }; },
+            function () { return { entry: entry, product: null }; }
+          );
+        })
+      ).then(function (results) {
+        if (token !== renderToken) return; // a newer render superseded this one
+        var stale = [];
+        results.forEach(function (result) {
+          if (result.product) list.appendChild(buildItem(result.entry, result.product));
+          else stale.push(result.entry.id);
+        });
+        // Products deleted or unpublished since they were saved are pruned silently.
+        stale.forEach(function (id) { window.IshayaWishlist.remove(id); });
+        setState(window.IshayaWishlist.read().length, false);
+      });
+    }
+
+    /* ---------- Bindings ---------- */
+    document.addEventListener('click', function (evt) {
+      if (evt.target.closest('[data-open-wishlist]')) {
+        evt.preventDefault();
+        openDrawer();
+        return;
+      }
+
+      if (evt.target.closest('[data-close-wishlist]')) {
+        closeDrawer();
+        return;
+      }
+
+      var removeBtn = evt.target.closest('[data-wishlist-remove]');
+      if (removeBtn && drawer.contains(removeBtn)) {
+        var item = removeBtn.closest('[data-wishlist-item]');
+        if (item) {
+          internalChange = true;
+          window.IshayaWishlist.remove(item.getAttribute('data-wishlist-id'));
+          internalChange = false;
+          item.remove();
+          setState(window.IshayaWishlist.read().length, false);
+        }
+        return;
+      }
+
+      if (evt.target.closest('[data-wishlist-clear]')) {
+        internalChange = true;
+        window.IshayaWishlist.read().forEach(function (entry) { window.IshayaWishlist.remove(entry.id); });
+        internalChange = false;
+        render();
+      }
+    });
+
+    document.addEventListener('keydown', function (evt) {
+      if (evt.key === 'Escape' && !drawer.hasAttribute('hidden')) closeDrawer();
+    });
+
+    // Hearts toggled elsewhere while the drawer is open keep it in sync.
+    document.addEventListener('ishaya:wishlist:change', function () {
+      if (!internalChange && !drawer.hasAttribute('hidden')) render();
+    });
+
+    // Quick add from the drawer opens the bag — close this one so they don't stack.
+    document.addEventListener('ishaya:cart:added', function () {
+      closeDrawer();
+    });
+  })();
+</script>

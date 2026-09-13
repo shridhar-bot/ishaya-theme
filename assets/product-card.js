@@ -14,66 +14,101 @@
      Wishlist — localStorage backed
      ---------------------------------------------------------------------- */
 
+  /*
+   * Entries are `{ id, handle }` objects. The handle is what lets the wishlist
+   * drawer fetch `/products/<handle>.js` — product IDs alone are not resolvable
+   * from the storefront. Legacy bare-ID entries (from before the drawer existed)
+   * are dropped on read because they can never be rendered.
+   */
   function readWishlist() {
     try {
       var raw = window.localStorage.getItem(WISHLIST_KEY);
       var parsed = raw ? JSON.parse(raw) : [];
-      return Array.isArray(parsed) ? parsed : [];
+      if (!Array.isArray(parsed)) return [];
+      return parsed.filter(function (entry) {
+        return entry && typeof entry === 'object' && entry.id && entry.handle;
+      });
     } catch (e) {
       // Private mode / storage disabled — degrade to an in-memory session.
       return [];
     }
   }
 
-  function writeWishlist(ids) {
+  function writeWishlist(items) {
     try {
-      window.localStorage.setItem(WISHLIST_KEY, JSON.stringify(ids));
+      window.localStorage.setItem(WISHLIST_KEY, JSON.stringify(items));
     } catch (e) {
       /* no-op */
     }
-    updateWishlistCount(ids.length);
+    updateWishlistCount(items.length);
+    document.dispatchEvent(new CustomEvent('ishaya:wishlist:change', { detail: { items: items } }));
+  }
+
+  function indexOfId(items, id) {
+    for (var i = 0; i < items.length; i++) {
+      if (String(items[i].id) === String(id)) return i;
+    }
+    return -1;
   }
 
   function updateWishlistCount(count) {
-    var badge = document.getElementById('HeaderWishlistCount');
-    if (!badge) return;
-    badge.textContent = count;
-    badge.classList.toggle('zb-cart-count--hidden', count === 0);
+    document.querySelectorAll('[data-wishlist-count]').forEach(function (badge) {
+      badge.textContent = count;
+      badge.classList.toggle('zb-cart-count--hidden', count === 0);
+    });
   }
 
   function syncWishlistButtons() {
-    var ids = readWishlist();
+    var items = readWishlist();
     document.querySelectorAll('[data-wishlist-toggle]').forEach(function (btn) {
-      var active = ids.indexOf(btn.getAttribute('data-wishlist-id')) !== -1;
+      var active = indexOfId(items, btn.getAttribute('data-wishlist-id')) !== -1;
       btn.setAttribute('aria-pressed', active ? 'true' : 'false');
       btn.classList.toggle('is-active', active);
     });
-    updateWishlistCount(ids.length);
+    updateWishlistCount(items.length);
   }
 
   function toggleWishlist(btn) {
     var id = btn.getAttribute('data-wishlist-id');
-    if (!id) return;
+    var handle = btn.getAttribute('data-wishlist-handle');
+    if (!id || !handle) return;
 
-    var ids = readWishlist();
-    var index = ids.indexOf(id);
+    var items = readWishlist();
+    var index = indexOfId(items, id);
 
     if (index === -1) {
-      ids.push(id);
+      items.push({ id: String(id), handle: handle });
       btn.classList.add('is-active', 'is-bursting');
       btn.setAttribute('aria-pressed', 'true');
       window.setTimeout(function () {
         btn.classList.remove('is-bursting');
       }, 450);
     } else {
-      ids.splice(index, 1);
+      items.splice(index, 1);
       btn.classList.remove('is-active');
       btn.setAttribute('aria-pressed', 'false');
     }
 
-    writeWishlist(ids);
-    document.dispatchEvent(new CustomEvent('ishaya:wishlist:change', { detail: { ids: ids } }));
+    writeWishlist(items);
+    // Every other heart for the same product (other grids on the page) follows.
+    syncWishlistButtons();
   }
+
+  function removeFromWishlist(id) {
+    var items = readWishlist();
+    var index = indexOfId(items, id);
+    if (index === -1) return;
+    items.splice(index, 1);
+    writeWishlist(items);
+    syncWishlistButtons();
+  }
+
+  // Public surface for the wishlist drawer (snippets/wishlist-drawer.liquid).
+  window.IshayaWishlist = {
+    read: readWishlist,
+    remove: removeFromWishlist,
+    sync: syncWishlistButtons
+  };
 
   /* ----------------------------------------------------------------------
      Variant tray (multi-variant quick add)
