@@ -462,7 +462,9 @@
 
 <style>
   .ishaya-pdp {
-    padding-top: clamp(1.5rem, 3vw, 2.5rem);
+    /* Clear the fixed floating header pill (1rem offset + 46px tall) — matches
+       the collection page's breadcrumb offset so the crumbs never sit under it. */
+    padding-top: 5.5rem;
     padding-bottom: clamp(4rem, 8vw, 7rem);
     background-color: var(--color-background);
     color: var(--color-foreground);
@@ -493,6 +495,12 @@
 
   .ishaya-pdp__breadcrumb-sep {
     opacity: 0.4;
+  }
+
+  @media (max-width: 767px) {
+    .ishaya-pdp {
+      padding-top: 4.5rem;
+    }
   }
 
   .ishaya-pdp__breadcrumb-current {
@@ -761,7 +769,6 @@
     display: flex;
     gap: 0.5rem;
     padding: 0;
-    margin-bottom: 8px;
   }
 
   .ishaya-pdp__option-name {
