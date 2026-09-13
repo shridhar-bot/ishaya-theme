@@ -12,11 +12,17 @@
   role="banner"
 >
   <!-- Left: Brand Logo / Wordmark -->
-  <a href="{{ routes.root_url }}" class="zb-header-brand" aria-label="{{ shop.name }}">
+  <a
+    href="{{ routes.root_url }}"
+    class="zb-header-brand{% if settings.logo != blank %} zb-header-brand--has-logo{% endif %}"
+    aria-label="{{ shop.name }}"
+    {% if settings.logo != blank %}style="--logo-width: {{ settings.logo_width | default: 130 }}px;"{% endif %}
+  >
     <div class="zb-header-brand__icon">
       {% if settings.logo != blank %}
         {%- assign logo_alt = settings.logo.alt | default: shop.name | escape -%}
-        {{ settings.logo | image_url: width: 60 | image_tag:
+        {%- assign logo_px = settings.logo_width | default: 130 | times: 2 -%}
+        {{ settings.logo | image_url: width: logo_px | image_tag:
           class: 'zb-header-brand__img',
           alt: logo_alt
         }}
@@ -28,7 +34,9 @@
         </svg>
       {% endif %}
     </div>
-    <span class="zb-header-brand__name">ISHAYA</span>
+    {% if settings.logo == blank %}
+      <span class="zb-header-brand__name">ISHAYA</span>
+    {% endif %}
   </a>
 
   <!-- Center: Nav Link Pills -->
@@ -140,7 +148,7 @@
       <div class="zb-mobile-brand-icon">
         {% if settings.logo != blank %}
           {%- assign logo_alt = settings.logo.alt | default: shop.name | escape -%}
-          {{ settings.logo | image_url: width: 36 | image_tag: class: 'zb-mobile-brand-img', alt: logo_alt }}
+          {{ settings.logo | image_url: width: 240 | image_tag: class: 'zb-mobile-brand-img', alt: logo_alt }}
         {% else %}
           <svg class="zb-mobile-brand-svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square">
             <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
@@ -149,7 +157,9 @@
           </svg>
         {% endif %}
       </div>
-      <span class="zb-mobile-brand-name">ISHAYA</span>
+      {% if settings.logo == blank %}
+        <span class="zb-mobile-brand-name">ISHAYA</span>
+      {% endif %}
     </a>
   </div>
 
@@ -214,10 +224,10 @@
     left: 50%;
     transform: translateX(-50%);
     width: calc(100% - 3rem);
-    max-width: 64rem; /* 1024px */
-    height: 2.875rem; /* 46px */
+    max-width: 68rem; /* 1088px */
+    height: 3.5rem; /* 56px */
     z-index: 100;
-    padding: 0 1.25rem;
+    padding: 0 1.4rem;
     border-radius: 9999px;
     align-items: center;
     justify-content: space-between;
@@ -260,12 +270,20 @@
     color: var(--color-foreground);
   }
   .zb-header-brand__img {
-    height: 18px;
+    display: block;
+    height: 30px;
     width: auto;
+    max-width: var(--logo-width, 130px);
     object-fit: contain;
+    object-position: left center;
+  }
+  /* An uploaded logo replaces the wordmark, so drop the icon/text gap. */
+  .zb-header-brand--has-logo {
+    gap: 0;
+    padding-inline: 0.4rem;
   }
   .zb-header-brand__name {
-    font-size: 0.625rem; /* 10px */
+    font-size: 0.7rem; /* 11px */
     font-weight: 800;
     letter-spacing: 0.24em;
     text-transform: uppercase;
@@ -286,12 +304,12 @@
     display: inline-flex;
     align-items: center;
     gap: 0.3rem;
-    font-size: 0.5625rem; /* 9px */
+    font-size: 0.625rem; /* 10px */
     font-weight: 700;
     letter-spacing: 0.22em;
     text-transform: uppercase;
     color: var(--color-muted);
-    padding: 0.35rem 0.85rem;
+    padding: 0.45rem 0.95rem;
     border-radius: 9999px;
     text-decoration: none;
     transition: color var(--transition-fast), background-color var(--transition-fast);
@@ -351,8 +369,8 @@
     gap: 0.4rem;
   }
   .zb-action-btn {
-    width: 1.875rem; /* 30px */
-    height: 1.875rem; /* 30px */
+    width: 2.25rem; /* 36px */
+    height: 2.25rem; /* 36px */
     border-radius: 9999px;
     display: flex;
     align-items: center;
@@ -440,8 +458,8 @@
     pointer-events: auto;
   }
   .zb-mobile-menu-btn {
-    width: 1.75rem; /* 28px */
-    height: 1.75rem;
+    width: 2rem; /* 32px */
+    height: 2rem;
     border-radius: 9999px;
     display: flex;
     align-items: center;
@@ -473,8 +491,10 @@
     display: block;
   }
   .zb-mobile-brand-img {
-    height: 14px;
+    display: block;
+    height: 22px;
     width: auto;
+    max-width: 90px;
     object-fit: contain;
   }
   .zb-mobile-brand-name {
@@ -492,8 +512,8 @@
     pointer-events: auto;
   }
   .zb-mobile-action-btn {
-    width: 2.25rem; /* 36px */
-    height: 2.25rem;
+    width: 2.375rem; /* 38px */
+    height: 2.375rem;
     border-radius: 9999px;
     display: inline-flex;
     align-items: center;
