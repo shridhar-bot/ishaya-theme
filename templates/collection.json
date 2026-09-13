@@ -11,7 +11,53 @@
   "sections": {
     "main": {
       "type": "collection",
-      "settings": {}
+      "blocks": {
+        "slide_NfdgTd": {
+          "type": "slide",
+          "settings": {
+            "collection": "frontpage",
+            "title": "",
+            "link": ""
+          }
+        },
+        "slide_bBrA7j": {
+          "type": "slide",
+          "settings": {
+            "collection": "hydrogen",
+            "title": "",
+            "link": ""
+          }
+        },
+        "slide_wcabhH": {
+          "type": "slide",
+          "settings": {
+            "collection": "automated-collection",
+            "title": "",
+            "link": ""
+          }
+        }
+      },
+      "block_order": [
+        "slide_NfdgTd",
+        "slide_bBrA7j",
+        "slide_wcabhH"
+      ],
+      "settings": {
+        "products_per_page": 16,
+        "columns_desktop": "4",
+        "full_bleed_grid": true,
+        "enable_filtering": true,
+        "enable_sorting": true,
+        "show_collection_image": true,
+        "hero_style": "compact",
+        "category_menu": "",
+        "enable_layout_switcher": true,
+        "pagination_style": "load_more",
+        "slider_autoplay": false,
+        "slider_speed": 5,
+        "bottom_heading": "",
+        "bottom_text": ""
+      }
     }
   },
   "order": [
