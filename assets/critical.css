@@ -317,6 +317,10 @@ select:focus-visible {
 /* --- Media ---------------------------------------------------------------- */
 .ishaya-product-card__media-wrapper {
   position: relative;
+  /* Above the stretched title link (::after, z-index 1) so the heart, quick add
+     and variant tray stay clickable. `isolation` alone would pin this whole
+     stacking context at level 0, underneath that overlay. */
+  z-index: 2;
   overflow: hidden;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-card);
