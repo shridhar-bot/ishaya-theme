@@ -304,6 +304,36 @@ select:focus-visible {
 }
 
 /* ==========================================================================
+   Brand logo — theme-mode aware (snippets/brand-logo.liquid)
+   The light artwork is emitted first, the dark one second, so the sibling
+   combinator can hide the dark one whenever a light one exists and applies.
+   Doubled class selectors out-rank the per-slot `display: block` rules that
+   header/footer apply to the same <img>.
+   ========================================================================== */
+.ishaya-logo.ishaya-logo--light {
+  display: none;
+}
+
+:root[data-theme='light'] .ishaya-logo.ishaya-logo--light {
+  display: block;
+}
+
+:root[data-theme='light'] .ishaya-logo--light ~ .ishaya-logo.ishaya-logo--dark {
+  display: none;
+}
+
+/* System mode: no explicit attribute, follow the OS. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']):not([data-theme='light']) .ishaya-logo.ishaya-logo--light {
+    display: block;
+  }
+
+  :root:not([data-theme='dark']):not([data-theme='light']) .ishaya-logo--light ~ .ishaya-logo.ishaya-logo--dark {
+    display: none;
+  }
+}
+
+/* ==========================================================================
    Product Card
    ========================================================================== */
 .ishaya-product-card {

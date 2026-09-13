@@ -47,6 +47,9 @@
     "theme": "Theme",
     "typography": "Typography"
   },
+  "info": {
+    "logo_light": "Shown instead of the dark-mode logo while the light theme is active. Leave empty to use the same logo in both modes."
+  },
   "labels": {
     "accent_color": "Accent color",
     "alignment": "Alignment",
@@ -63,7 +66,8 @@
     "heading_uppercase": "Uppercase headings",
     "input_corner_radius": "Input corner radius",
     "layout_direction": "Layout direction",
-    "logo": "Logo image",
+    "logo": "Logo image (dark mode)",
+    "logo_light": "Logo image (light mode)",
     "logo_width": "Custom logo width",
     "menu": "Menu",
     "muted_color": "Muted text",

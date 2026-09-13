@@ -1,0 +1,32 @@
+{% doc %}
+  Renders the merchant's uploaded logo, theme-mode aware.
+
+  `settings.logo` is the dark-mode artwork and `settings.logo_light` the light-mode
+  artwork. Both are output and `assets/critical.css` (`.ishaya-logo`) shows only the
+  one matching the active mode — `:root[data-theme]` or, in system mode, the
+  `prefers-color-scheme` query — so switching themes swaps the logo without JS.
+  When no light logo is uploaded the dark one shows in both modes.
+
+  Only call this when `settings.logo != blank`; the caller owns the fallback mark.
+
+  @param {number} width - Pixel width to request from the CDN (2× the rendered size)
+  @param {string} class - Class(es) applied to each <img>
+
+  @example
+  {% render 'brand-logo', width: 260, class: 'zb-header-brand__img' %}
+{% enddoc %}
+
+{%- liquid
+  assign img_width = width | default: 260
+  assign img_class = class | default: 'ishaya-logo__img'
+  assign dark_alt = settings.logo.alt | default: shop.name | escape
+-%}
+
+{%- if settings.logo_light != blank -%}
+  {%- assign light_alt = settings.logo_light.alt | default: dark_alt -%}
+  {%- assign light_class = img_class | append: ' ishaya-logo ishaya-logo--light' -%}
+  {{ settings.logo_light | image_url: width: img_width | image_tag: class: light_class, alt: light_alt }}
+{%- endif -%}
+
+{%- assign dark_class = img_class | append: ' ishaya-logo ishaya-logo--dark' -%}
+{{ settings.logo | image_url: width: img_width | image_tag: class: dark_class, alt: dark_alt }}

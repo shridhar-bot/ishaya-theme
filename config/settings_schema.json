@@ -207,6 +207,12 @@
         "label": "t:labels.logo"
       },
       {
+        "type": "image_picker",
+        "id": "logo_light",
+        "label": "t:labels.logo_light",
+        "info": "t:info.logo_light"
+      },
+      {
         "type": "range",
         "id": "logo_width",
         "min": 60,

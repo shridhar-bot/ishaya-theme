@@ -17,8 +17,7 @@
         <div class="zb-footer-brand-header">
           <div class="zb-footer-logo-box">
             {% if settings.logo != blank %}
-              {%- assign logo_alt = settings.logo.alt | default: shop.name | escape -%}
-              {{ settings.logo | image_url: width: 72 | image_tag: class: 'zb-footer-logo-img', alt: logo_alt }}
+              {% render 'brand-logo', width: 144, class: 'zb-footer-logo-img' %}
             {% else %}
               <svg class="zb-footer-logo-svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square">
                 <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
@@ -163,8 +162,7 @@
     <div class="zb-mobile-footer-brand">
       <div class="zb-mobile-footer-logo-box">
         {% if settings.logo != blank %}
-          {%- assign logo_alt = settings.logo.alt | default: shop.name | escape -%}
-          {{ settings.logo | image_url: width: 64 | image_tag: class: 'zb-footer-logo-img', alt: logo_alt }}
+          {% render 'brand-logo', width: 128, class: 'zb-footer-logo-img' %}
         {% else %}
           <svg class="zb-footer-logo-svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square">
             <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>

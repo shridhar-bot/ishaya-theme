@@ -20,12 +20,8 @@
   >
     <div class="zb-header-brand__icon">
       {% if settings.logo != blank %}
-        {%- assign logo_alt = settings.logo.alt | default: shop.name | escape -%}
         {%- assign logo_px = settings.logo_width | default: 130 | times: 2 -%}
-        {{ settings.logo | image_url: width: logo_px | image_tag:
-          class: 'zb-header-brand__img',
-          alt: logo_alt
-        }}
+        {% render 'brand-logo', width: logo_px, class: 'zb-header-brand__img' %}
       {% else %}
         <svg class="zb-header-brand__svg-mark" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square">
           <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
@@ -147,8 +143,7 @@
     <a href="{{ routes.root_url }}" class="zb-mobile-brand-link" aria-label="{{ shop.name }}">
       <div class="zb-mobile-brand-icon">
         {% if settings.logo != blank %}
-          {%- assign logo_alt = settings.logo.alt | default: shop.name | escape -%}
-          {{ settings.logo | image_url: width: 240 | image_tag: class: 'zb-mobile-brand-img', alt: logo_alt }}
+          {% render 'brand-logo', width: 240, class: 'zb-mobile-brand-img' %}
         {% else %}
           <svg class="zb-mobile-brand-svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square">
             <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
