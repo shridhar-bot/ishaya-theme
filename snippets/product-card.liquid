@@ -144,29 +144,7 @@
       {%- endif -%}
 
       {%- if show_quick_add and is_sold_out == false -%}
-        {%- if has_single_variant -%}
-          <button
-            type="button"
-            class="ishaya-product-card__quick-add"
-            data-quick-add
-            data-variant-id="{{ current_variant.id }}"
-            aria-label="Add {{ product.title | strip_html | escape }} to bag"
-          >
-            {% render 'icons', name: 'plus', width: 15, height: 15 %}
-            <span class="ishaya-product-card__quick-add-label">Add</span>
-          </button>
-        {%- else -%}
-          <button
-            type="button"
-            class="ishaya-product-card__quick-add"
-            data-quick-add-open
-            aria-expanded="false"
-            aria-label="Choose a size for {{ product.title | strip_html | escape }}"
-          >
-            {% render 'icons', name: 'plus', width: 15, height: 15 %}
-            <span class="ishaya-product-card__quick-add-label">Add</span>
-          </button>
-
+        {%- unless has_single_variant -%}
           {%- comment -%}
             With a single option the first title segment is the size. With several options
             that segment repeats across variants, so show the full variant title instead.
@@ -205,7 +183,7 @@
               {%- endfor -%}
             </div>
           </div>
-        {%- endif -%}
+        {%- endunless -%}
       {%- endif -%}
     </div>
 
@@ -252,16 +230,69 @@
         {%- endfor -%}
       {%- endif -%}
 
+      {%- comment -%}
+        Price sits beside Add to bag; Buy now runs full width beneath. Buy now uses the
+        cart permalink (straight to checkout) when there is a single variant, otherwise
+        it hands off to the product page where a variant can be chosen.
+      {%- endcomment -%}
       <div class="ishaya-product-card__price-row">
-        {%- if is_on_sale -%}
-          <span class="ishaya-product-card__price ishaya-product-card__price--sale">
-            {{- current_variant.price | money -}}
-          </span>
-          <s class="ishaya-product-card__price-compare">{{ current_variant.compare_at_price | money }}</s>
-        {%- else -%}
-          <span class="ishaya-product-card__price">{{ current_variant.price | money }}</span>
+        <div class="ishaya-product-card__price-wrap">
+          {%- if is_on_sale -%}
+            <span class="ishaya-product-card__price ishaya-product-card__price--sale">
+              {{- current_variant.price | money -}}
+            </span>
+            <s class="ishaya-product-card__price-compare">{{ current_variant.compare_at_price | money }}</s>
+          {%- else -%}
+            <span class="ishaya-product-card__price">{{ current_variant.price | money }}</span>
+          {%- endif -%}
+        </div>
+
+        {%- if show_quick_add -%}
+          {%- if is_sold_out -%}
+            <span class="ishaya-product-card__add ishaya-product-card__add--soldout" aria-disabled="true">Sold out</span>
+          {%- elsif has_single_variant -%}
+            <button
+              type="button"
+              class="ishaya-product-card__add"
+              data-quick-add
+              data-variant-id="{{ current_variant.id }}"
+              aria-label="Add {{ product.title | strip_html | escape }} to bag"
+            >
+              <span class="ishaya-product-card__quick-add-label">Add to bag</span>
+            </button>
+          {%- else -%}
+            <button
+              type="button"
+              class="ishaya-product-card__add"
+              data-quick-add-open
+              aria-expanded="false"
+              aria-label="Choose an option for {{ product.title | strip_html | escape }}"
+            >
+              <span class="ishaya-product-card__quick-add-label">Add to bag</span>
+            </button>
+          {%- endif -%}
         {%- endif -%}
       </div>
+
+      {%- if show_quick_add and is_sold_out == false -%}
+        {%- if has_single_variant -%}
+          <a
+            class="ishaya-product-card__buy-now"
+            href="{{ routes.cart_url }}/{{ current_variant.id }}:1"
+            aria-label="Buy {{ product.title | strip_html | escape }} now"
+          >
+            Buy now
+          </a>
+        {%- else -%}
+          <a
+            class="ishaya-product-card__buy-now"
+            href="{{ product.url }}"
+            aria-label="Buy {{ product.title | strip_html | escape }} now"
+          >
+            Buy now
+          </a>
+        {%- endif -%}
+      {%- endif -%}
     </div>
 
     <span class="ishaya-product-card__status" data-quick-add-status role="status" aria-live="polite"></span>
