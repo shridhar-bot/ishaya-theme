@@ -1,10 +1,3 @@
-/**
- * ISHAYA THEME — Product Card behaviour
- *
- * Delegated listeners, bound once at document level, so cards rendered inside any
- * loop (featured row, collection grid, related products, search) work without
- * per-card script tags. Also survives DOM swaps from AJAX pagination/filtering.
- */
 (function () {
   'use strict';
 
@@ -14,12 +7,6 @@
      Wishlist — localStorage backed
      ---------------------------------------------------------------------- */
 
-  /*
-   * Entries are `{ id, handle }` objects. The handle is what lets the wishlist
-   * drawer fetch `/products/<handle>.js` — product IDs alone are not resolvable
-   * from the storefront. Legacy bare-ID entries (from before the drawer existed)
-   * are dropped on read because they can never be rendered.
-   */
   function readWishlist() {
     try {
       var raw = window.localStorage.getItem(WISHLIST_KEY);
@@ -29,7 +16,6 @@
         return entry && typeof entry === 'object' && entry.id && entry.handle;
       });
     } catch (e) {
-      // Private mode / storage disabled — degrade to an in-memory session.
       return [];
     }
   }
@@ -90,7 +76,6 @@
     }
 
     writeWishlist(items);
-    // Every other heart for the same product (other grids on the page) follows.
     syncWishlistButtons();
   }
 
@@ -103,7 +88,6 @@
     syncWishlistButtons();
   }
 
-  // Public surface for the wishlist drawer (snippets/wishlist-drawer.liquid).
   window.IshayaWishlist = {
     read: readWishlist,
     remove: removeFromWishlist,
@@ -226,7 +210,6 @@
       return;
     }
 
-    // Any click outside a card closes open variant trays.
     if (!evt.target.closest('[data-variant-tray]')) closeAllTrays();
   });
 
@@ -235,7 +218,6 @@
   });
 
   document.addEventListener('DOMContentLoaded', syncWishlistButtons);
-  // Re-sync after AJAX grid swaps (collection filtering / load more).
   document.addEventListener('ishaya:grid:updated', syncWishlistButtons);
 
   if (document.readyState !== 'loading') syncWishlistButtons();

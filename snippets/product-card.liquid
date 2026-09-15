@@ -57,7 +57,6 @@
 -%}
 
 {%- if product == blank -%}
-  {%- comment -%} Nothing to render — guard against an unset product. {%- endcomment -%}
 {%- else -%}
   <article
     class="ishaya-product-card"
@@ -104,7 +103,6 @@
         {%- endif -%}
       </a>
 
-      {%- comment -%} Status badges — sold out wins, then sale, then new. {%- endcomment -%}
       <div class="ishaya-product-card__badges">
         {%- if is_sold_out -%}
           <span class="ishaya-product-badge ishaya-product-badge--soldout">Sold out</span>
@@ -145,10 +143,6 @@
 
       {%- if show_quick_add and is_sold_out == false -%}
         {%- unless has_single_variant -%}
-          {%- comment -%}
-            With a single option the first title segment is the size. With several options
-            that segment repeats across variants, so show the full variant title instead.
-          {%- endcomment -%}
           {%- assign use_short_variant_label = false -%}
           {%- if product.options.size == 1 -%}
             {%- assign use_short_variant_label = true -%}
@@ -230,11 +224,6 @@
         {%- endfor -%}
       {%- endif -%}
 
-      {%- comment -%}
-        Price sits beside Add to bag; Buy now runs full width beneath. Buy now uses the
-        cart permalink (straight to checkout) when there is a single variant, otherwise
-        it hands off to the product page where a variant can be chosen.
-      {%- endcomment -%}
       <div class="ishaya-product-card__price-row">
         <div class="ishaya-product-card__price-wrap">
           {%- if is_on_sale -%}

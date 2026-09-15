@@ -574,7 +574,6 @@
         action.className = 'ishaya-wishlist-drawer__item-btn ishaya-wishlist-drawer__item-btn--soldout';
         action.textContent = 'Sold out';
       } else if (product.variants.length === 1 && variant) {
-        // Single variant — delegated quick add in product-card.js handles [data-quick-add].
         action = document.createElement('button');
         action.type = 'button';
         action.className = 'ishaya-wishlist-drawer__item-btn';
@@ -614,7 +613,6 @@
           if (result.product) list.appendChild(buildItem(result.entry, result.product));
           else stale.push(result.entry.id);
         });
-        // Products deleted or unpublished since they were saved are pruned silently.
         stale.forEach(function (id) { window.IshayaWishlist.remove(id); });
         setState(window.IshayaWishlist.read().length, false);
       });
@@ -658,12 +656,10 @@
       if (evt.key === 'Escape' && !drawer.hasAttribute('hidden')) closeDrawer();
     });
 
-    // Hearts toggled elsewhere while the drawer is open keep it in sync.
     document.addEventListener('ishaya:wishlist:change', function () {
       if (!internalChange && !drawer.hasAttribute('hidden')) render();
     });
 
-    // Quick add from the drawer opens the bag — close this one so they don't stack.
     document.addEventListener('ishaya:cart:added', function () {
       closeDrawer();
     });

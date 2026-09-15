@@ -1,9 +1,3 @@
-{% comment %}
-  ISHAYA Collection Page
-  Architectural streetwear collection catalog featuring native Shopify Storefront
-  filtering, sorting controls, active filter chips, responsive grid density,
-  and accessible pagination.
-{% endcomment %}
 
 {%- liquid
   assign products_limit = section.settings.products_per_page | default: 16
@@ -31,11 +25,6 @@
       </span>
     </nav>
 
-    {%- comment -%}
-      Deliberately a plain div, not a header element: layout/theme.liquid already
-      renders the site-wide banner header, and a second header element on the page
-      muddies the landmark structure for assistive tech.
-    {%- endcomment -%}
     <div class="ishaya-collection__hero{% if collection.image and section.settings.show_collection_image %} ishaya-collection__hero--has-image{% endif %} ishaya-collection__hero--{{ section.settings.hero_style | default: 'compact' }}">
       {%- if collection.image and section.settings.show_collection_image -%}
         <div class="ishaya-collection__hero-media" aria-hidden="true">
@@ -71,11 +60,6 @@
         </div>
       </div>
 
-      {%- comment -%}
-        Coverflow collection slider. The active card sits at full scale while its
-        neighbours recede in scale, opacity and rotateY, giving depth without a
-        carousel library.
-      {%- endcomment -%}
       {%- assign slides = section.blocks | where: 'type', 'slide' -%}
       {%- if slides.size > 0 -%}
         <div
@@ -182,10 +166,6 @@
     <!-- Controls Bar: Filtering & Sorting -->
     <div class="ishaya-collection__controls-bar">
       <div class="ishaya-collection__controls-inner">
-        {%- comment -%}
-          Desktop exposes each facet as its own dropdown inside the pill; the
-          drawer button below is the mobile equivalent of the same controls.
-        {%- endcomment -%}
         <div class="ishaya-collection__filter-toggle-wrap">
           {%- if has_filters -%}
             <button
@@ -434,7 +414,6 @@
                 </button>
               {%- endif -%}
 
-              {%- comment -%} Numbered links remain for crawlers and no-JS visitors. {%- endcomment -%}
               <noscript>
                 <div class="ishaya-collection__pagination" role="navigation" aria-label="Pagination">
                   {{ paginate | default_pagination: next: 'Next →', previous: '← Prev' }}
@@ -743,13 +722,11 @@
     max-width: 620px;
   }
 
-  /* Controls Bar — a floating capsule that mirrors the header pill, not a full-width band */
   .ishaya-collection__controls-bar {
     position: sticky;
     top: 5rem;
     z-index: 20;
     padding: 0.5rem 1rem;
-    /* The strip itself is invisible; only the pill inside should catch clicks. */
     pointer-events: none;
   }
 
@@ -772,7 +749,6 @@
     transition: box-shadow var(--transition-smooth), border-color var(--transition-smooth);
   }
 
-  /* Thin separators between the pill's functional groups. */
   .ishaya-collection__controls-inner > * + *::before {
     content: '';
     position: absolute;
@@ -841,7 +817,6 @@
     background-color: transparent;
     appearance: none;
     -webkit-appearance: none;
-    /* Chevron drawn inline so the control keeps the pill's flat treatment. */
     background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
       linear-gradient(135deg, currentColor 50%, transparent 50%);
     background-position: calc(100% - 0.95rem) 50%, calc(100% - 0.65rem) 50%;
@@ -1264,7 +1239,6 @@
     opacity: 0.5;
   }
 
-  /* Compact header trims the vertical drama of the full-bleed variant. */
   .ishaya-collection__hero--compact:not(.ishaya-collection__hero--has-image) {
     min-height: 0;
     padding: 0 0 1.5rem;
@@ -1371,7 +1345,6 @@
     color: var(--color-on-accent);
   }
 
-  /* Full-screen catalog: the grid escapes the page container edge to edge. */
   .ishaya-collection__grid-container--full {
     width: 100%;
     padding-right: clamp(0.75rem, 2vw, 2rem);
@@ -1426,7 +1399,6 @@
     background-color: var(--color-accent);
   }
 
-  /* Both inputs are stacked; only their thumbs accept pointer events. */
   .ishaya-filter-slider__input {
     position: absolute;
     top: 0;
@@ -1629,7 +1601,6 @@
     top: 0;
     left: 50%;
     width: var(--cf-card-width);
-    /* JS supplies --cf-x / --cf-scale / --cf-opacity / --cf-z per slide. */
     transform: translateX(-50%) translateX(var(--cf-x, 0px)) scale(var(--cf-scale, 1));
     opacity: var(--cf-opacity, 0);
     z-index: var(--cf-z, 0);
@@ -1687,8 +1658,6 @@
     fill: var(--color-border);
   }
 
-  /* Collection name sits over the artwork, centred; only the active card is
-     labelled so neighbouring captions never read through each other. */
   .ishaya-coverflow__caption {
     position: absolute;
     inset: 0;
@@ -1948,7 +1917,6 @@
     font-size: 0.6rem;
   }
 
-  /* The drawer button is the mobile-only counterpart to the facet dropdowns. */
   .ishaya-collection__filter-btn--mobile {
     display: none;
     border: 0;
@@ -1971,7 +1939,6 @@
 
 <script>
   (function() {
-    // Sorting is handled by the AJAX block below — no full page reload here.
 
     // Filter Drawer Toggle
     const filterBtn = document.getElementById('FilterDrawerOpenBtn');
@@ -2042,7 +2009,6 @@
       }
 
       minInput.addEventListener('input', function () {
-        // Keep the handles from crossing over each other.
         if (parseFloat(minInput.value) > parseFloat(maxInput.value)) {
           minInput.value = maxInput.value;
         }
@@ -2062,7 +2028,6 @@
         el.addEventListener('change', applyFilters);
       });
 
-      // Typing in the number fields drives the handles too.
       if (minField) {
         minField.addEventListener('input', function () {
           minInput.value = minField.value || 0;
@@ -2094,7 +2059,6 @@
         .then(function (html) {
           const parsed = new DOMParser().parseFromString(html, 'text/html');
 
-          // Swap only the regions that change, so drawer state survives.
           ['[data-collection-results]', '[data-results-count]'].forEach(function (selector) {
             const next = parsed.querySelector(selector);
             const current = section.querySelector(selector);
@@ -2118,7 +2082,6 @@
           document.dispatchEvent(new CustomEvent('ishaya:grid:updated'));
         })
         .catch(function () {
-          // A failed swap should still get the visitor to the right page.
           window.location.href = url;
         })
         .finally(function () {
@@ -2129,8 +2092,6 @@
     function buildUrl() {
       const params = new URLSearchParams();
 
-      // The same facet exists twice — once in the desktop pill, once in the mobile
-      // drawer — so collect from both and drop duplicate name/value pairs.
       const seen = {};
       section.querySelectorAll('[data-filter-input]').forEach(function (input) {
         if (input.disabled) return;
@@ -2150,7 +2111,6 @@
       return query ? base + '?' + query : base;
     }
 
-    // Mirror a change made in one surface onto its twin so both stay in sync.
     function mirrorInput(changed) {
       if (!changed.name) return;
       section.querySelectorAll('[data-filter-input]').forEach(function (input) {
@@ -2176,7 +2136,6 @@
       });
     }
 
-    // Delegated so it covers the pill facets and the drawer form alike.
     section.addEventListener('change', function (evt) {
       const input = evt.target.closest('[data-filter-input]');
       if (!input) return;
@@ -2184,7 +2143,6 @@
       applyFilters();
     });
 
-    // Clicking outside an open facet dropdown closes it.
     document.addEventListener('click', function (evt) {
       if (evt.target.closest('[data-facet]')) return;
       section.querySelectorAll('[data-facet][open]').forEach(function (facet) {
@@ -2196,7 +2154,6 @@
       sortSelect.addEventListener('change', applyFilters);
     }
 
-    // Active-filter chips and "clear all" are links — intercept them too.
     section.addEventListener('click', function (evt) {
       const chip = evt.target.closest('.ishaya-collection__active-chip, .ishaya-collection__clear-all');
       if (!chip || !chip.href) return;
@@ -2239,7 +2196,6 @@
             });
           }
 
-          // Carry the next page forward, or retire the button on the last page.
           const nextBtn = parsed.querySelector('[data-load-more]');
           if (nextBtn) {
             btn.setAttribute('data-next-url', nextBtn.getAttribute('data-next-url'));
@@ -2279,7 +2235,6 @@
       } catch (e) {
         /* ignore */
       }
-      // Ignore values the switcher no longer offers (e.g. 'list' from the old 4/2/list build).
       return LAYOUTS.indexOf(stored) !== -1 ? stored : '{{ cols_desktop }}';
     }
 
@@ -2287,8 +2242,6 @@
       const grid = section.querySelector('[data-product-grid]');
       if (!grid) return;
 
-      // Strip every density class before adding the chosen one — a leftover
-      // `--cols-6` (declared last in the CSS) would otherwise win over 2 or 4.
       Array.prototype.slice.call(grid.classList).forEach(function (cls) {
         if (cls.indexOf('ishaya-product-grid--cols-') === 0 || cls === 'ishaya-product-grid--list') {
           grid.classList.remove(cls);
@@ -2329,7 +2282,6 @@
     const dots = Array.prototype.slice.call(root.querySelectorAll('[data-coverflow-dot]'));
     if (!viewport || slides.length === 0) return;
 
-    // Side steps: how far out (as a fraction of the card width) each neighbour sits.
     const DEPTH = [
       { x: 0, scale: 1, opacity: 1, z: 30 },
       { x: 0.86, scale: 0.86, opacity: 0.55, z: 20 },
@@ -2342,8 +2294,6 @@
     function update() {
       const count = slides.length;
       slides.forEach(function (slide, i) {
-        // Shortest circular distance, so the deck stays balanced either side of
-        // the centre card and wraps visually the way goTo() wraps.
         let offset = i - current;
         if (offset > count / 2) offset -= count;
         if (offset < -count / 2) offset += count;
@@ -2369,7 +2319,6 @@
     }
 
     function goTo(index) {
-      // Wrap around so the deck feels endless in both directions.
       if (index < 0) index = slides.length - 1;
       if (index > slides.length - 1) index = 0;
       current = index;
@@ -2383,7 +2332,6 @@
       });
     });
 
-    // Clicking a card that is not centred brings it forward instead of navigating.
     slides.forEach(function (slide, i) {
       slide.addEventListener(
         'click',
@@ -2416,9 +2364,6 @@
 
     let dragMoved = false;
 
-    // The cards are links wrapping images: without this the browser starts a
-    // native drag-and-drop on mousedown+move, which cancels the pointer stream
-    // and the swipe never completes.
     viewport.addEventListener('dragstart', function (evt) {
       evt.preventDefault();
     });
@@ -2449,7 +2394,6 @@
       }
     });
 
-    // A swipe must not also fire the card link underneath.
     viewport.addEventListener(
       'click',
       function (evt) {
@@ -2462,7 +2406,6 @@
       true
     );
 
-    // Horizontal trackpad / shift+wheel also steps the deck.
     let wheelLock = 0;
     viewport.addEventListener(
       'wheel',

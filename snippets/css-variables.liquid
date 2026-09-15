@@ -1,25 +1,10 @@
-{% comment %}
-  Global design tokens for the Ishaya theme.
-
-  Emits two complete palettes:
-    :root                    -> dark (the brand default)
-    :root[data-theme=light]  -> light
-  and, when the merchant sets "Default theme" to "Follow device setting", a
-  prefers-color-scheme branch that applies light to visitors who have not yet
-  made an explicit choice.
-
-  The explicit [data-theme] attribute always wins over the media query, so the
-  header toggle works in both directions. See assets/theme-mode.js.
-{% endcomment %}
 
 {% style %}
-  {% # Primary Body Font variants %}
   {{ settings.type_primary_font | font_face: font_display: 'swap' }}
   {{ settings.type_primary_font | font_modify: 'weight', 'bold' | font_face: font_display: 'swap' }}
   {{ settings.type_primary_font | font_modify: 'weight', 'bold' | font_modify: 'style', 'italic' | font_face: font_display: 'swap' }}
   {{ settings.type_primary_font | font_modify: 'style', 'italic' | font_face: font_display: 'swap' }}
 
-  {% # Heading Font variants %}
   {% if settings.type_heading_font.family != settings.type_primary_font.family %}
     {{ settings.type_heading_font | font_face: font_display: 'swap' }}
     {{ settings.type_heading_font | font_modify: 'weight', 'bold' | font_face: font_display: 'swap' }}
@@ -47,7 +32,6 @@
     --transition-fast: 0.15s cubic-bezier(0.16, 1, 0.3, 1);
     --transition-smooth: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 
-    {% # ---- Dark palette (default) ---- %}
     color-scheme: dark;
 
     --color-background: {{ settings.background_color }};
@@ -65,13 +49,11 @@
     --glass-blur: blur(24px) saturate(180%);
     --glass-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.5);
 
-    {% # Floating chrome (header pill, mobile dock) sits above page content. %}
     --surface-floating: rgba(14, 14, 17, 0.78);
     --shadow-floating: 0 15px 40px rgba(0, 0, 0, 0.45);
     --shadow-floating-sm: 0 10px 30px rgba(0, 0, 0, 0.35);
   }
 
-  {% # ---- Light palette ---- %}
   {% capture light_palette %}
     color-scheme: light;
 
@@ -106,7 +88,6 @@
     }
   {% endif %}
 
-  {% # Browsers without backdrop-filter fall back to a near-solid surface. %}
   @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
     :root {
       --glass-bg: var(--color-surface);
@@ -115,10 +96,6 @@
   }
 {% endstyle %}
 
-{% comment %}
-  Applied before first paint so the stored preference never flashes the wrong theme.
-  Intentionally inline and synchronous — an external file would race the render.
-{% endcomment %}
 <script>
   (function () {
     try {
@@ -128,7 +105,6 @@
         return;
       }
     } catch (e) {
-      /* storage unavailable — fall through to the merchant default */
     }
     var fallback = {{ settings.default_theme | default: 'dark' | json }};
     if (fallback === 'light' || fallback === 'dark') {

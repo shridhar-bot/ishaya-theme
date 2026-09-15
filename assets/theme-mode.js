@@ -1,10 +1,3 @@
-/**
- * ISHAYA THEME — Light / dark mode toggle
- *
- * The pre-paint bootstrap that applies the stored preference lives inline in
- * snippets/css-variables.liquid (it has to run before first paint). This file
- * only handles the toggle interaction afterwards.
- */
 (function () {
   'use strict';
 
@@ -14,7 +7,6 @@
   function currentTheme() {
     var attr = root.getAttribute('data-theme');
     if (attr === 'light' || attr === 'dark') return attr;
-    // No explicit attribute means the merchant chose "follow device setting".
     return window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
   }
 
@@ -33,7 +25,6 @@
     try {
       window.localStorage.setItem(STORAGE_KEY, theme);
     } catch (e) {
-      /* storage unavailable — the choice still applies for this page view */
     }
     syncButtons(theme);
     document.dispatchEvent(new CustomEvent('ishaya:theme:change', { detail: { theme: theme } }));
@@ -46,7 +37,6 @@
     setTheme(currentTheme() === 'light' ? 'dark' : 'light');
   });
 
-  // Follow the OS while the visitor has not made an explicit choice.
   if (window.matchMedia) {
     var query = window.matchMedia('(prefers-color-scheme: light)');
     var onChange = function () {
