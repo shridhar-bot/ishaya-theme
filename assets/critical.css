@@ -564,8 +564,11 @@ select:focus-visible {
 }
 
 /* --- Info ----------------------------------------------------------------- */
+/* Grows to fill the grid cell so the price row and buttons pin to the bottom —
+   cards with swatches or two-line titles then stay level with their neighbours. */
 .ishaya-product-card__info {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 0.35rem;
 }
@@ -632,7 +635,8 @@ select:focus-visible {
   align-items: center;
   justify-content: space-between;
   gap: 0.6rem;
-  margin-top: 0.15rem;
+  margin-top: auto;
+  padding-top: 0.15rem;
   font-variant-numeric: tabular-nums;
 }
 
