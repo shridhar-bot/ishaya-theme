@@ -78,7 +78,7 @@
                     name="contact[name]"
                     id="ContactFormName"
                     class="ishaya-contact__input"
-                    value="{% if form.name %}{{ form.name }}{% elsif customer %}{{ customer.name }}{% endif %}"
+                    value="{% if form.name %}{{ form.name | escape }}{% elsif customer %}{{ customer.name | escape }}{% endif %}"
                     required
                     placeholder="ENTER YOUR FULL NAME"
                   >
@@ -91,7 +91,7 @@
                     name="contact[email]"
                     id="ContactFormEmail"
                     class="ishaya-contact__input"
-                    value="{% if form.email %}{{ form.email }}{% elsif customer %}{{ customer.email }}{% endif %}"
+                    value="{% if form.email %}{{ form.email | escape }}{% elsif customer %}{{ customer.email | escape }}{% endif %}"
                     required
                     spellcheck="false"
                     autocomplete="email"
@@ -138,7 +138,7 @@
                   class="ishaya-contact__textarea"
                   required
                   placeholder="DETAIL YOUR INQUIRY OR SPECIFICATION QUESTIONS HERE..."
-                >{{ form.body }}</textarea>
+                >{{ form.body | escape }}</textarea>
               </div>
 
               <button

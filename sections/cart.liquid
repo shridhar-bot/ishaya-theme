@@ -168,7 +168,7 @@
                   id="CartPageOrderNote"
                   class="ishaya-cart-page__note-textarea"
                   placeholder="Special delivery notes or packaging requests..."
-                >{{ cart.note }}</textarea>
+                >{{ cart.note | escape }}</textarea>
               </details>
             {%- endif -%}
 

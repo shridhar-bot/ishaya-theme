@@ -175,7 +175,7 @@
                   {%- for comment in article.comments -%}
                     <article class="ishaya-article__comment-item glass-panel">
                       <div class="ishaya-article__comment-meta">
-                        <span class="ishaya-article__comment-author">{{ comment.author }}</span>
+                        <span class="ishaya-article__comment-author">{{ comment.author | escape }}</span>
                         <span class="ishaya-article__comment-sep" aria-hidden="true">//</span>
                         <time datetime="{{ comment.created_at | date: '%Y-%m-%d' }}" class="ishaya-article__comment-date">
                           {{ comment.created_at | date: '%B %d, %Y' }}
@@ -243,7 +243,7 @@
                       name="comment[author]"
                       id="CommentForm-author"
                       class="ishaya-article__form-input"
-                      value="{{ form.author }}"
+                      value="{{ form.author | escape }}"
                       placeholder="e.g. MARCUS V."
                       required
                       autocomplete="name"
@@ -257,7 +257,7 @@
                       name="comment[email]"
                       id="CommentForm-email"
                       class="ishaya-article__form-input"
-                      value="{{ form.email }}"
+                      value="{{ form.email | escape }}"
                       placeholder="user@domain.com"
                       required
                       autocomplete="email"
@@ -274,7 +274,7 @@
                     class="ishaya-article__form-textarea"
                     placeholder="Enter your observations on this dispatch..."
                     required
-                  >{{ form.body }}</textarea>
+                  >{{ form.body | escape }}</textarea>
                 </div>
 
                 <div class="ishaya-article__form-actions">

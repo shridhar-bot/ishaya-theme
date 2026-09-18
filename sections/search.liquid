@@ -29,10 +29,11 @@
 
     {% if search.performed %}
       <div class="search-page__status">
+        {%- assign search_terms_safe = search.terms | escape -%}
         {% if search.results_count == 0 %}
-          <p class="search-page__count">{{ 'search.no_results_html' | t: terms: search.terms }}</p>
+          <p class="search-page__count">{{ 'search.no_results_html' | t: terms: search_terms_safe }}</p>
         {% else %}
-          <p class="search-page__count">{{ 'search.results_for_html' | t: terms: search.terms, count: search.results_count }}</p>
+          <p class="search-page__count">{{ 'search.results_for_html' | t: terms: search_terms_safe, count: search.results_count }}</p>
         {% endif %}
       </div>
     {% endif %}

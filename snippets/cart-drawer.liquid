@@ -179,7 +179,7 @@
             id="CartDrawerOrderNote"
             class="ishaya-cart-drawer__note-textarea"
             placeholder="Add delivery instructions or archival packaging notes..."
-          >{{ cart.note }}</textarea>
+          >{{ cart.note | escape }}</textarea>
         </details>
       {%- endif -%}
 

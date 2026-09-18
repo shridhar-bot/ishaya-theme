@@ -108,7 +108,7 @@
                   name="contact[email]"
                   class="zb-newsletter-input"
                   placeholder="Enter your email"
-                  value="{{ form.email }}"
+                  value="{{ form.email | escape }}"
                   required
                 >
                 <div class="zb-newsletter-mail-icon">
