@@ -750,6 +750,22 @@ select:focus-visible {
   }
 }
 
+@media (max-width: 767px) {
+  .ishaya-product-card__price-row {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .ishaya-product-card__price-wrap {
+    flex: 1 1 100%;
+  }
+
+  .ishaya-product-card__add {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+}
+
 @media (hover: none) {
   .ishaya-product-card__wishlist {
     opacity: 1;
