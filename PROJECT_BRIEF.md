@@ -4,6 +4,13 @@
 
 ---
 
+## 0. Quick Links
+
+- **Theme Preview (live dev):** https://ishaya-dev.myshopify.com/?preview_theme_id=164112793818
+- **GitHub Repo:** [D1]ishaya-theme[/D1]
+- **Theme Editor (customizer):** https://ishaya-dev.myshopify.com/admin/themes/164112793818/editor
+- **Current Dev Store:** `ishaya-dev.myshopify.com`
+
 ## 1. Project Overview
 
 - **Brand:** Ishaya
