@@ -464,7 +464,7 @@
         disabled="disabled"
       {% endif %}
     >
-      {%- if is_sold_out -%}SOLD OUT{%- else -%}ADD{%- endif -%}
+      {%- if is_sold_out -%}SOLD OUT{%- else -%}ADD TO BAG{%- endif -%}
     </button>
   </div>
 {%- endif -%}
@@ -1266,19 +1266,17 @@
   .ishaya-sticky-buy {
     position: fixed;
     right: 0.75rem;
-    bottom: 0.75rem;
+    bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
     left: 0.75rem;
     z-index: 90;
     display: none;
     align-items: center;
     gap: 0.75rem;
-    padding: 0.6rem;
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius-pill);
-    background-color: var(--surface-floating);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    box-shadow: var(--shadow-floating-sm);
+    padding: 0.55rem 0.55rem 0.55rem 0.55rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    background-color: var(--color-background);
+    box-shadow: var(--shadow-floating);
     opacity: 0;
     transform: translateY(120%);
     transition: opacity var(--transition-smooth), transform var(--transition-smooth);
@@ -1291,10 +1289,11 @@
 
   .ishaya-sticky-buy__media {
     flex-shrink: 0;
-    width: 38px;
-    height: 46px;
+    width: 44px;
+    height: 54px;
     overflow: hidden;
-    border-radius: 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
     background-color: var(--color-surface);
   }
 
@@ -1314,7 +1313,8 @@
 
   .ishaya-sticky-buy__title {
     overflow: hidden;
-    font-size: 0.6rem;
+    color: var(--color-muted);
+    font-size: 0.58rem;
     font-weight: 600;
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -1323,18 +1323,20 @@
   }
 
   .ishaya-sticky-buy__price {
-    color: var(--color-muted);
-    font-size: 0.6rem;
+    color: var(--color-foreground);
+    font-size: 0.9rem;
+    font-weight: 700;
     font-variant-numeric: tabular-nums;
   }
 
   .ishaya-sticky-buy__btn {
     flex-shrink: 0;
     min-height: 44px;
-    padding: 0 1.25rem;
-    border-radius: var(--radius-pill);
-    font-size: 0.6rem;
-    letter-spacing: 0.16em;
+    padding: 0 1rem;
+    border-radius: var(--radius-card);
+    font-size: 0.58rem;
+    letter-spacing: 0.14em;
+    white-space: nowrap;
   }
 
   @media (max-width: 767px) {
