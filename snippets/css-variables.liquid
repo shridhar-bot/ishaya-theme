@@ -88,6 +88,28 @@
     }
   {% endif %}
 
+  .ishaya-dark-scope {
+    color-scheme: dark;
+
+    --color-background: {{ settings.background_color }};
+    --color-foreground: {{ settings.foreground_color }};
+    --color-muted: {{ settings.muted_color }};
+    --color-border: {{ settings.border_color }};
+    --color-surface: {{ settings.surface_color }};
+    --color-accent: {{ settings.accent_color }};
+    --color-on-accent: {{ settings.background_color }};
+
+    --glass-bg: rgba(255, 255, 255, 0.04);
+    --glass-bg-hover: rgba(255, 255, 255, 0.08);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-scrim: rgba(9, 9, 11, 0.82);
+    --glass-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.5);
+
+    --surface-floating: rgba(14, 14, 17, 0.78);
+    --shadow-floating: 0 15px 40px rgba(0, 0, 0, 0.45);
+    --shadow-floating-sm: 0 10px 30px rgba(0, 0, 0, 0.35);
+  }
+
   @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
     :root {
       --glass-bg: var(--color-surface);

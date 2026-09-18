@@ -430,8 +430,8 @@ select:focus-visible {
 
 .ishaya-product-badge--soldout {
   background-color: rgba(0, 0, 0, 0.6);
-  border: 1px solid var(--glass-border);
-  color: var(--color-foreground);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ffffff;
 }
 
 /* --- Wishlist ------------------------------------------------------------- */
