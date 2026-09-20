@@ -8,5 +8,9 @@
  * ------------------------------------------------------------
  */
 {
-  "current": {}
+  "current": {
+    "logo": "shopify://shop_images/White_Logo_320.png",
+    "logo_light": "shopify://shop_images/White_Logo_320.png",
+    "content_for_index": []
+  }
 }
