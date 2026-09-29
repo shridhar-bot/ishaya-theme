@@ -67,6 +67,7 @@
           data-coverflow
           data-autoplay="{{ section.settings.slider_autoplay }}"
           data-autoplay-speed="{{ section.settings.slider_speed | default: 5 }}"
+          data-current-collection="{{ collection.handle }}"
         >
           <div class="ishaya-coverflow__viewport" data-coverflow-viewport>
             <ul class="ishaya-coverflow__track" data-coverflow-track>
@@ -81,6 +82,7 @@
                   class="ishaya-coverflow__slide"
                   data-coverflow-slide
                   data-index="{{ forloop.index0 }}"
+                  data-collection-handle="{{ slide_collection.handle }}"
                   {{ block.shopify_attributes }}
                 >
                   <a class="ishaya-coverflow__card" href="{{ slide_url | default: '#' }}">
@@ -2288,7 +2290,16 @@
       { x: 1.6, scale: 0.74, opacity: 0.2, z: 10 }
     ];
 
+    // Open on the slide for the collection this page is showing, so the deck
+    // stays in sync with the product grid below after a slide is clicked.
+    const currentHandle = root.getAttribute('data-current-collection');
     let current = 0;
+    if (currentHandle) {
+      const matchIndex = slides.findIndex(function (slide) {
+        return slide.getAttribute('data-collection-handle') === currentHandle;
+      });
+      if (matchIndex > -1) current = matchIndex;
+    }
     let autoplayTimer = null;
 
     function update() {
@@ -2310,7 +2321,15 @@
         slide.classList.toggle('is-near', offset !== 0 && !beyond);
 
         const link = slide.querySelector('a');
-        if (link) link.tabIndex = offset === 0 ? 0 : -1;
+        if (link) {
+          link.tabIndex = offset === 0 ? 0 : -1;
+          const isCurrentPage = currentHandle && slide.getAttribute('data-collection-handle') === currentHandle;
+          if (isCurrentPage) {
+            link.setAttribute('aria-current', 'page');
+          } else {
+            link.removeAttribute('aria-current');
+          }
+        }
       });
 
       dots.forEach(function (dot, i) {
