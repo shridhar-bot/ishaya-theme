@@ -11,3 +11,9 @@
 #
 # Ignore templates and sections with a regular expression:
 #   /(templates|sections)/.*\.json/
+
+# Merchant-owned data. These are written by the theme editor on the store and
+# are the store's state, not the repo's. Pushing the repo's copy over them wipes
+# the live logo, colours and section content — see config/settings_data.json,
+# which was emptied this way on 2026-09-15 and again on 2026-09-29.
+config/settings_data.json
