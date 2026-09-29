@@ -671,86 +671,61 @@
       }
     });
 
-    // Function to re-render drawer contents using AJAX
+    // Re-render the drawer from the server so line items, totals and the
+    // free-shipping bar always match what Liquid would render on a full load.
+    const sectionUrl = (window.Shopify && window.Shopify.routes && window.Shopify.routes.root
+      ? window.Shopify.routes.root
+      : '/') + '?sections=cart-drawer';
+
+    function swapRegion(freshDoc, id) {
+      const current = document.getElementById(id);
+      const next = freshDoc.getElementById(id);
+      if (!current || !next) return;
+      current.innerHTML = next.innerHTML;
+      current.className = next.className;
+    }
+
     window.refreshCartDrawer = function() {
-      fetch('/cart.js')
+      return fetch(sectionUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
         .then(function(res) { return res.json(); })
-        .then(function(cart) {
-          // Update Header Badge
+        .then(function(sections) {
+          const markup = sections && sections['cart-drawer'];
+          if (!markup) return;
+
+          const fresh = new DOMParser().parseFromString(markup, 'text/html');
+
+          // Keep an unsaved order note across the swap
+          const currentNote = document.getElementById('CartDrawerOrderNote');
+          const pendingNote = currentNote ? currentNote.value : null;
+
+          swapRegion(fresh, 'CartDrawerShippingBar');
+          swapRegion(fresh, 'CartDrawerBody');
+          swapRegion(fresh, 'CartDrawerFooter');
+
+          const restoredNote = document.getElementById('CartDrawerOrderNote');
+          if (restoredNote && pendingNote !== null) restoredNote.value = pendingNote;
+
+          // Count badges (drawer header + site header)
+          const nextBadge = fresh.getElementById('CartDrawerCountBadge');
+          const drawerBadge = document.getElementById('CartDrawerCountBadge');
+          if (nextBadge && drawerBadge) {
+            drawerBadge.textContent = nextBadge.textContent.trim();
+            drawerBadge.className = nextBadge.className;
+          }
+
           const headerBadge = document.getElementById('HeaderCartCount');
-          if (headerBadge) {
-            headerBadge.textContent = cart.item_count;
-            if (cart.item_count > 0) {
+          if (headerBadge && nextBadge) {
+            const count = parseInt(nextBadge.textContent.trim(), 10) || 0;
+            headerBadge.textContent = count;
+            if (count > 0) {
               headerBadge.classList.remove('zb-cart-count--hidden');
             } else {
               headerBadge.classList.add('zb-cart-count--hidden');
             }
           }
-
-          // Update Drawer Badge
-          const drawerBadge = document.getElementById('CartDrawerCountBadge');
-          if (drawerBadge) {
-            drawerBadge.textContent = cart.item_count;
-            if (cart.item_count > 0) {
-              drawerBadge.classList.remove('ishaya-cart-drawer__count-badge--hidden');
-            } else {
-              drawerBadge.classList.add('ishaya-cart-drawer__count-badge--hidden');
-            }
-          }
-
-          // Update Free Shipping Bar
-          const thresholdCents = {{ threshold_cents }};
-          const diff = thresholdCents - cart.total_price;
-          const percent = Math.min(100, Math.round((cart.total_price / thresholdCents) * 100));
-
-          const progressFill = document.getElementById('CartShippingProgressFill');
-          if (progressFill) progressFill.style.width = percent + '%';
-
-          const shippingMsg = document.getElementById('CartDrawerShippingMsg');
-          if (shippingMsg) {
-            if (diff > 0) {
-              const diffFormatted = '$' + (diff / 100).toFixed(2);
-              shippingMsg.innerHTML = 'Add <strong>' + diffFormatted + '</strong> more to unlock complimentary worldwide shipping.';
-            } else {
-              shippingMsg.innerHTML = '<span class="ishaya-cart-drawer__shipping-unlocked">Complimentary worldwide shipping unlocked ✓</span>';
-            }
-          }
-
-          // Update Subtotal
-          const subtotal = document.getElementById('CartDrawerSubtotal');
-          if (subtotal) {
-            subtotal.textContent = '$' + (cart.total_price / 100).toFixed(2);
-          }
-
-          // If cart count is 0, show empty state, hide footer
-          const footer = document.getElementById('CartDrawerFooter');
-          const body = document.getElementById('CartDrawerBody');
-
-          if (cart.item_count === 0) {
-            if (footer) footer.classList.add('ishaya-cart-drawer__footer--hidden');
-            if (body) {
-              body.innerHTML = `
-                <div class="ishaya-cart-drawer__empty">
-                  <div class="ishaya-cart-drawer__empty-icon" aria-hidden="true">
-                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
-                  </div>
-                  <h3 class="ishaya-cart-drawer__empty-title">YOUR BAG IS EMPTY</h3>
-                  <p class="ishaya-cart-drawer__empty-desc">Explore our curated catalog of architectural silhouettes and heavyweight textiles.</p>
-                  <a href="{{ routes.all_products_collection_url }}" class="btn btn--primary ishaya-cart-drawer__empty-btn" onclick="window.closeCartDrawer()">
-                    <span>EXPLORE ARCHIVE</span>
-                  </a>
-                </div>
-              `;
-            }
-          } else {
-            if (footer) footer.classList.remove('ishaya-cart-drawer__footer--hidden');
-            // Fetch the section HTML to update line items cleanly
-            fetch(window.location.pathname + '?sections=header-group')
-              .then(function(res) { return res.json(); })
-              .catch(function() {
-                // If section rendering is unavailable, soft reload or update items
-              });
-          }
+        })
+        .catch(function(err) {
+          console.error('Error refreshing cart drawer:', err);
         });
     };
 
@@ -777,24 +752,22 @@
       })
       .then(function(res) { return res.json(); })
       .then(function() {
-        // Refresh page or drawer items
-        window.location.reload();
+        window.refreshCartDrawer();
       })
       .catch(function(err) {
         console.error('Error changing cart quantity:', err);
       });
     }
 
-    // Auto-save Order Note on blur
-    const noteTextarea = document.getElementById('CartDrawerOrderNote');
-    if (noteTextarea) {
-      noteTextarea.addEventListener('change', function() {
-        fetch('/cart/update.js', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-          body: JSON.stringify({ note: noteTextarea.value })
-        });
+    // Auto-save Order Note on blur (delegated so it survives drawer re-renders)
+    drawer.addEventListener('change', function(e) {
+      const noteTextarea = e.target.closest('#CartDrawerOrderNote');
+      if (!noteTextarea) return;
+      fetch('/cart/update.js', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        body: JSON.stringify({ note: noteTextarea.value })
       });
-    }
+    });
   })();
 </script>

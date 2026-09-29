@@ -1,0 +1,14 @@
+{%- comment -%}
+  Section wrapper for the global cart drawer. Rendering the drawer as a static
+  section (rather than a bare snippet) lets AJAX cart updates re-request it via
+  the Section Rendering API, so line items come back rendered by Liquid.
+{%- endcomment -%}
+
+{% render 'cart-drawer' %}
+
+{% schema %}
+{
+  "name": "Cart drawer",
+  "settings": []
+}
+{% endschema %}
