@@ -554,7 +554,11 @@
     height: 100%;
     object-fit: cover;
     object-position: center;
-    transition: transform 0.4s ease;
+    transition: transform 0.4s ease, opacity 0.2s ease;
+  }
+
+  .ishaya-pdp__main-img--loading {
+    opacity: 0.45;
   }
 
   .ishaya-pdp__placeholder {
@@ -1459,15 +1463,43 @@
     // Swap the gallery image. `image_tag` renders a srcset, and a browser picks
     // its source from srcset when one is present — setting `src` alone leaves the
     // old image on screen, so srcset has to be replaced alongside it.
+    let mediaSwapToken = 0;
+
     function setMainImage(src, srcset, alt) {
       if (!mainImg || !src) return;
-      if (srcset) {
-        mainImg.setAttribute('srcset', srcset);
-      } else {
-        mainImg.removeAttribute('srcset');
+      if (mainImg.getAttribute('src') === src) return;
+
+      // A browser keeps painting the old image until the new one has decoded, so
+      // decode off-screen first and swap in one go. Without this the gallery looks
+      // unresponsive on the first click for any image that is not cached yet.
+      const token = ++mediaSwapToken;
+      const preload = new Image();
+      if (srcset) preload.srcset = srcset;
+      if (mainImg.sizes) preload.sizes = mainImg.sizes;
+      preload.src = src;
+
+      function apply() {
+        if (token !== mediaSwapToken) return;
+        if (srcset) {
+          mainImg.setAttribute('srcset', srcset);
+        } else {
+          mainImg.removeAttribute('srcset');
+        }
+        mainImg.setAttribute('src', src);
+        if (alt) mainImg.setAttribute('alt', alt);
+        mainImg.classList.remove('ishaya-pdp__main-img--loading');
       }
-      mainImg.setAttribute('src', src);
-      if (alt) mainImg.setAttribute('alt', alt);
+
+      mainImg.classList.add('ishaya-pdp__main-img--loading');
+
+      if (preload.decode) {
+        preload.decode().then(apply).catch(apply);
+      } else if (preload.complete) {
+        apply();
+      } else {
+        preload.addEventListener('load', apply, { once: true });
+        preload.addEventListener('error', apply, { once: true });
+      }
     }
 
     // Thumbnails click
