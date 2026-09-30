@@ -54,6 +54,8 @@
                 fetchpriority: 'high',
                 class: 'ishaya-pdp__main-img',
                 id: 'ProductFeaturedImage',
+                widths: '600, 900, 1200, 1400',
+                sizes: '(min-width: 990px) 50vw, 100vw',
                 alt: featured_media.alt | default: product.title | escape
             }}
           {%- else -%}
@@ -88,6 +90,7 @@
                 class="ishaya-pdp__thumb-btn glass-panel{% if media == featured_media %} ishaya-pdp__thumb-btn--active{% endif %}"
                 data-media-id="{{ media.id }}"
                 data-img-src="{{ media | image_url: width: 1400 }}"
+                data-img-srcset="{{ media | image_url: width: 600 }} 600w, {{ media | image_url: width: 900 }} 900w, {{ media | image_url: width: 1200 }} 1200w, {{ media | image_url: width: 1400 }} 1400w"
                 data-img-alt="{{ media.alt | default: product.title | escape }}"
                 aria-label="Thumbnail {{ forloop.index }} of {{ product.media.size }}"
               >
@@ -157,6 +160,7 @@
                   data-available="{{ variant.available }}"
                   data-featured-media-id="{{ variant.featured_media.id }}"
                   data-featured-media-src="{% if variant.featured_media %}{{ variant.featured_media | image_url: width: 1400 }}{% endif %}"
+                  data-featured-media-srcset="{% if variant.featured_media %}{{ variant.featured_media | image_url: width: 600 }} 600w, {{ variant.featured_media | image_url: width: 900 }} 900w, {{ variant.featured_media | image_url: width: 1200 }} 1200w, {{ variant.featured_media | image_url: width: 1400 }} 1400w{% endif %}"
                   data-inventory-qty="{{ variant.inventory_quantity }}"
                 >
                   {{ variant.title }}
@@ -1452,6 +1456,20 @@
       });
     }
 
+    // Swap the gallery image. `image_tag` renders a srcset, and a browser picks
+    // its source from srcset when one is present — setting `src` alone leaves the
+    // old image on screen, so srcset has to be replaced alongside it.
+    function setMainImage(src, srcset, alt) {
+      if (!mainImg || !src) return;
+      if (srcset) {
+        mainImg.setAttribute('srcset', srcset);
+      } else {
+        mainImg.removeAttribute('srcset');
+      }
+      mainImg.setAttribute('src', src);
+      if (alt) mainImg.setAttribute('alt', alt);
+    }
+
     // Thumbnails click
     const thumbBtns = section.querySelectorAll('.ishaya-pdp__thumb-btn');
     thumbBtns.forEach(function(btn) {
@@ -1459,12 +1477,11 @@
         thumbBtns.forEach(function(b) { b.classList.remove('ishaya-pdp__thumb-btn--active'); });
         btn.classList.add('ishaya-pdp__thumb-btn--active');
 
-        const imgSrc = btn.getAttribute('data-img-src');
-        const imgAlt = btn.getAttribute('data-img-alt');
-        if (mainImg && imgSrc) {
-          mainImg.setAttribute('src', imgSrc);
-          if (imgAlt) mainImg.setAttribute('alt', imgAlt);
-        }
+        setMainImage(
+          btn.getAttribute('data-img-src'),
+          btn.getAttribute('data-img-srcset'),
+          btn.getAttribute('data-img-alt')
+        );
       });
     });
 
@@ -1542,9 +1559,10 @@
             }
 
             const variantImgSrc = matchedOption.getAttribute('data-featured-media-src');
+            const variantImgSrcset = matchedOption.getAttribute('data-featured-media-srcset');
             const variantMediaId = matchedOption.getAttribute('data-featured-media-id');
             if (variantImgSrc && mainImg) {
-              mainImg.setAttribute('src', variantImgSrc);
+              setMainImage(variantImgSrc, variantImgSrcset, null);
               if (variantMediaId) {
                 thumbBtns.forEach(function(tb) {
                   if (tb.getAttribute('data-media-id') === variantMediaId) {
