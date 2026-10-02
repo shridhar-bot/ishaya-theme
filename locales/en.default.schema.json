@@ -48,6 +48,7 @@
     "typography": "Typography"
   },
   "info": {
+    "favicon": "Shown in the browser tab and when the store is bookmarked. A square image of at least 192 x 192 px works best.",
     "logo_light": "Shown instead of the dark-mode logo while the light theme is active. Leave empty to use the same logo in both modes."
   },
   "labels": {
@@ -58,6 +59,7 @@
     "border_color": "Border color",
     "button_corner_radius": "Button corner radius",
     "customer_account_menu": "Customer account menu",
+    "favicon": "Favicon",
     "foreground": "Foreground text",
     "grid_gap": "Grid spacing",
     "grid_item_width": "Grid item width",
