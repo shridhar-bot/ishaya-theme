@@ -50,7 +50,7 @@
         "enable_sorting": true,
         "show_collection_image": true,
         "hero_style": "compact",
-        "category_menu": "",
+        "category_menu": "main-menu",
         "enable_layout_switcher": true,
         "pagination_style": "load_more",
         "slider_autoplay": false,
