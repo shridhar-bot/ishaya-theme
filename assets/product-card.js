@@ -166,12 +166,18 @@
           return data;
         });
       })
-      .then(function () {
+      .then(function (data) {
         closeAllTrays();
         setStatus(card, 'Added to bag');
 
+        // Keep the drawer contents in sync, but show the bottom sheet instead
+        // of opening the drawer. Falls back to the drawer if the sheet is missing.
         if (typeof window.refreshCartDrawer === 'function') window.refreshCartDrawer();
-        if (typeof window.openCartDrawer === 'function') window.openCartDrawer();
+        if (typeof window.showCartNotification === 'function') {
+          window.showCartNotification(data);
+        } else if (typeof window.openCartDrawer === 'function') {
+          window.openCartDrawer();
+        }
 
         document.dispatchEvent(new CustomEvent('ishaya:cart:added', { detail: { variantId: variantId } }));
       })

@@ -1625,14 +1625,22 @@
             'X-Requested-With': 'XMLHttpRequest'
           }
         })
-        .then(function(res) { return res.json(); })
+        .then(function(res) {
+          return res.json().then(function(data) {
+            if (!res.ok) throw new Error(data.description || data.message || 'Could not add to bag');
+            return data;
+          });
+        })
         .then(function(item) {
           if (addText) addText.textContent = 'ADDED TO BAG ✓';
 
           if (typeof window.refreshCartDrawer === 'function') {
             window.refreshCartDrawer();
           }
-          if (typeof window.openCartDrawer === 'function') {
+          // Bottom sheet with the highlighted product name instead of the drawer.
+          if (typeof window.showCartNotification === 'function') {
+            window.showCartNotification(item);
+          } else if (typeof window.openCartDrawer === 'function') {
             window.openCartDrawer();
           }
 
