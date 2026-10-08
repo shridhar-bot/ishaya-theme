@@ -14,6 +14,10 @@
   @param {string} [heading_tag] - Heading element for the title, defaults to h3
   @param {boolean} [eager] - Load the primary image eagerly (use for above-the-fold cards only)
 
+  Products tagged `bundle` (e.g. Shopify Bundles customized bundles, where the
+  shopper picks the contents on the product page) and products that require a
+  selling plan link to the product page instead of quick-adding.
+
   @example
   {% render 'product-card', product: product, show_secondary_image: true, show_quick_add: true %}
 {% enddoc %}
@@ -48,6 +52,15 @@
   assign has_single_variant = false
   if product.variants.size == 1
     assign has_single_variant = true
+  endif
+
+  assign needs_product_page = false
+  assign product_tags = product.tags | join: ',' | downcase | split: ','
+  if product_tags contains 'bundle'
+    assign needs_product_page = true
+  endif
+  if product.requires_selling_plan
+    assign needs_product_page = true
   endif
 
   assign primary_loading = 'lazy'
@@ -287,6 +300,16 @@
         {%- if show_quick_add -%}
           {%- if is_sold_out -%}
             <span class="ishaya-product-card__add ishaya-product-card__add--soldout" aria-disabled="true">Sold out</span>
+          {%- elsif needs_product_page -%}
+            <a
+              class="ishaya-product-card__add"
+              href="{{ product.url }}"
+              aria-label="View {{ product.title | strip_html | escape }}"
+            >
+              <span class="ishaya-product-card__quick-add-label">
+                {%- if product_tags contains 'bundle' -%}View bundle{%- else -%}Choose options{%- endif -%}
+              </span>
+            </a>
           {%- elsif has_single_variant -%}
             <button
               type="button"
@@ -312,7 +335,7 @@
       </div>
 
       {%- if show_quick_add and is_sold_out == false -%}
-        {%- if has_single_variant -%}
+        {%- if has_single_variant and needs_product_page == false -%}
           <a
             class="ishaya-product-card__buy-now"
             href="{{ routes.cart_url }}/{{ current_variant.id }}:1"

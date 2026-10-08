@@ -712,6 +712,10 @@ select:focus-visible {
   transition: border-color var(--transition-fast), background-color var(--transition-fast), color var(--transition-fast);
 }
 
+a.ishaya-product-card__add {
+  text-decoration: none;
+}
+
 .ishaya-product-card__add:hover,
 .ishaya-product-card__add[aria-expanded='true'] {
   border-color: var(--color-foreground);
