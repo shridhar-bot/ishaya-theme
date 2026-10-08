@@ -179,7 +179,23 @@
           </div>
         {%- endunless -%}
       {%- endif -%}
-    </div>
+          {%- if product.metafields.custom.show_review_rating.value == true
+      and product.metafields.custom.rating.value != blank
+      and product.metafields.custom.review_count.value != blank
+    -%}
+      <div class="ishaya-product-card__rating">
+        <span class="ishaya-product-card__rating-star">★</span>
+        <span class="ishaya-product-card__rating-score">
+          {{ product.metafields.custom.rating.value }}/5
+        </span>
+        <span class="ishaya-product-card__rating-count">
+          ({{ product.metafields.custom.review_count.value }} Reviews)
+        </span>
+      </div>
+    {%- endif -%}
+
+  </div>
+
 
     <div class="ishaya-product-card__info">
       {%- if show_vendor and product.vendor != blank -%}
@@ -189,6 +205,7 @@
       <{{ heading_tag }} class="ishaya-product-card__title">
         <a class="ishaya-product-card__title-link" href="{{ product.url }}">{{ product.title | escape }}</a>
       </{{ heading_tag }}>
+
 
       {%- if show_swatches -%}
         {%- for option in product.options_with_values -%}
@@ -208,12 +225,43 @@
                     assign css_color = value | downcase | replace: ' ', ''
                     assign swatch_style = 'background-color:' | append: css_color | append: ';'
                   endif
+                  
+                    assign swatch_image = null
+
+                      for variant in product.variants
+                        assign variant_color = ''
+
+                        if option.position == 1
+                          assign variant_color = variant.option1
+                        elsif option.position == 2
+                          assign variant_color = variant.option2
+                        elsif option.position == 3
+                          assign variant_color = variant.option3
+                        endif
+
+                        if variant_color == value
+                          if variant.featured_media != blank
+                            assign swatch_image = variant.featured_media.preview_image
+                            break
+                          elsif variant.featured_image != blank
+                            assign swatch_image = variant.featured_image
+                            break
+                          endif
+                        endif
+                      endfor
                 -%}
-                <span
+                <button
+                  type="button"
                   class="ishaya-product-card__swatch"
                   style="{{ swatch_style }}"
                   title="{{ value | escape }}"
-                ></span>
+                  aria-label="{{ value | escape }}"
+                  data-product-swatch
+                  data-option-value="{{ value | escape }}"
+                  {% if swatch_image != blank %}
+                    data-swatch-image="{{ swatch_image | image_url: width: 1000 }}"
+                  {% endif %}
+                ></button>
               {%- endfor -%}
               {%- if option.values.size > 5 -%}
                 <span class="ishaya-product-card__swatch-more">+{{ option.values.size | minus: 5 }}</span>

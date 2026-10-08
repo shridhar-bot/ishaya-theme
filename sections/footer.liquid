@@ -127,7 +127,9 @@
       </div>
     </div>
 
+    
     <!-- Desktop Bottom Bar -->
+    {% comment %}
     <div class="zb-footer-bottom">
       <div class="zb-footer-legal-links">
         <p class="zb-footer-copyright">
@@ -150,7 +152,23 @@
       <div class="zb-footer-origin">
         <p class="zb-footer-origin-text">ARCHITECTURAL SILHOUETTES &middot; CRAFTED FOR THE STREETS</p>
       </div>
+      
+       <!-- ISHAYA Bottom Legal Bar -->
+<div class="ishaya-footer-bar">
+  <span>© {{ 'now' | date: '%Y' }}, ISHAYA</span>
+  <span>·</span>
+  <a href="/policies/privacy-policy">Privacy Policy</a>
+  <span>·</span>
+  <a href="/policies/terms-of-service">Terms of Service</a>
+  <span>·</span>
+  <a href="/policies/refund-policy">Refund Policy</a>
+  <span>·</span>
+  <a href="/policies/shipping-policy">Shipping Policy</a>
+  <span>·</span>
+  <a href="/pages/contact">Contact Information</a>
+</div>
     </div>
+    {% endcomment %}
   </div>
 
   <!-- Mobile Footer View -->
@@ -263,13 +281,65 @@
         {% endform %}
       </div>
     </div>
+<style>
+    .ishaya-footer-bar {
+  width: 100%;
+  background: #09090B;
+  color: #696B76;
+  font-family: var(--font-body-family);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px;
+  padding: 14px 20px;
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: center;
+  box-sizing: border-box;
+}
 
+.ishaya-footer-bar a {
+  color: #696B76;
+  text-decoration: none;
+  font-family: var(--font-body-family);
+}
+
+.ishaya-footer-bar a:hover {
+  text-decoration: underline;
+}
+
+@media screen and (max-width: 749px) {
+  .ishaya-footer-bar {
+    gap: 5px 7px;
+    padding: 12px 10px;
+    font-size: 11px;
+  }
+}
+</style>
     <!-- Mobile Bottom Tag -->
+    {% comment %}
     <div class="zb-mobile-bottom-tag">
       <span>&copy; {{ 'now' | date: '%Y' }} ISHAYA</span>
       <span>&bull;</span>
       <span>CRAFTED FOR THE STREETS</span>
     </div>
+    {% endcomment %}
+  </div>
+  <!-- Mobile ISHAYA Legal Bar -->
+  <!-- ISHAYA Legal Bar -->
+<div class="ishaya-mobile-legal-bar">
+    <span>© {{ 'now' | date: '%Y' }}, All Rights Reserved By 320ISHAYA</span>
+    <span>·</span>
+    <a href="/policies/privacy-policy">Privacy Policy</a>
+    <span>·</span>
+    <a href="/policies/terms-of-service">Terms of Service</a>
+    <span>·</span>
+    <a href="/policies/refund-policy">Refund Policy</a>
+    <span>·</span>
+    <a href="/policies/shipping-policy">Shipping Policy</a>
+    <span>·</span>
+    <a href="/pages/contact">Contact Information</a>
   </div>
 </footer>
 
@@ -549,6 +619,7 @@
   /* ==========================================================================
      Mobile Footer Styles
      ========================================================================== */
+     
   .zb-footer-mobile {
     display: flex;
     flex-direction: column;
@@ -714,6 +785,34 @@
     text-transform: uppercase;
     color: var(--color-muted);
   }
+  /* Mobile ISHAYA Legal Bar */
+.ishaya-mobile-legal-bar {
+  width: 100%;                                                                   
+  border-top: 1px solid var(--glass-border);
+  background: #09090B;
+  color: #696B76;
+  font-family: var(--font-body-family);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  padding: 12px 10px;
+  font-size: 11px;
+  line-height: 1.4;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.ishaya-mobile-legal-bar a {
+  color: #696B76;
+  text-decoration: none;
+  font-family: var(--font-body-family);
+}
+
+.ishaya-mobile-legal-bar a:hover {
+  text-decoration: underline;
+}
 </style>
 
 {% schema %}
