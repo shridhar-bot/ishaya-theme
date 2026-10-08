@@ -17,7 +17,7 @@
           "settings": {
             "collection": "frontpage",
             "title": "",
-            "link": ""
+            "link": "shopify://collections/frontpage"
           }
         },
         "slide_wgrD87": {
@@ -25,7 +25,7 @@
           "settings": {
             "collection": "automated-collection",
             "title": "",
-            "link": ""
+            "link": "shopify://collections/automated-collection"
           }
         },
         "slide_r8qk6Q": {
@@ -33,7 +33,7 @@
           "settings": {
             "collection": "hydrogen",
             "title": "",
-            "link": ""
+            "link": "shopify://collections/hydrogen"
           }
         }
       },
@@ -44,13 +44,13 @@
       ],
       "settings": {
         "products_per_page": 16,
-        "columns_desktop": "4",
+        "columns_desktop": "6",
         "full_bleed_grid": true,
         "enable_filtering": true,
         "enable_sorting": true,
         "show_collection_image": true,
         "hero_style": "compact",
-        "category_menu": "main-menu",
+        "category_menu": "",
         "enable_layout_switcher": true,
         "pagination_style": "load_more",
         "slider_autoplay": false,
