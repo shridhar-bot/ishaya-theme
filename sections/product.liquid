@@ -7,6 +7,8 @@
     assign on_sale = true
   endif
 
+  assign size_rows = section.blocks | where: 'type', 'size_row'
+
   assign is_sold_out = true
   if current_variant.available
     assign is_sold_out = false
@@ -200,7 +202,7 @@
                           assign is_size_option = true
                         endif
                       -%}
-                      {%- if is_size_option and section.settings.size_guide_enabled and section.blocks.size > 0 -%}
+                      {%- if is_size_option and section.settings.size_guide_enabled and size_rows.size > 0 -%}
                         <button
                           type="button"
                           class="ishaya-pdp__size-guide-trigger"
@@ -289,6 +291,15 @@
               {{ form | payment_button }}
             </div>
           {% endform %}
+
+          <!-- App blocks (e.g. Shopify Bundles) -->
+          {%- for block in section.blocks -%}
+            {%- if block.type == '@app' -%}
+              <div class="ishaya-pdp__app-block" {{ block.shopify_attributes }}>
+                {% render block %}
+              </div>
+            {%- endif -%}
+          {%- endfor -%}
 
           <!-- Product information — tabbed card -->
           {%- liquid
@@ -447,7 +458,7 @@
   </div>
 </section>
 
-{%- if section.settings.size_guide_enabled and section.blocks.size > 0 -%}
+{%- if section.settings.size_guide_enabled and size_rows.size > 0 -%}
   <div class="ishaya-size-guide" id="SizeGuideModal" data-size-guide hidden>
     <div class="ishaya-size-guide__backdrop" data-size-guide-close></div>
     <div
@@ -821,6 +832,14 @@
   }
 
   /* Form & Variant Pickers */
+  .ishaya-pdp__app-block {
+    margin-top: 1rem;
+  }
+
+  .ishaya-pdp__app-block:empty {
+    display: none;
+  }
+
   .ishaya-pdp__form {
     display: flex;
     flex-direction: column;
@@ -1971,6 +1990,9 @@
     }
   ],
   "blocks": [
+    {
+      "type": "@app"
+    },
     {
       "type": "size_row",
       "name": "Size row",

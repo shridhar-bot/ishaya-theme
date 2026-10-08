@@ -111,6 +111,8 @@
                   </span>
                 {%- endunless -%}
 
+                {% render 'cart-line-details', item: item, class_prefix: 'ishaya-cart-drawer' %}
+
                 <div class="ishaya-cart-drawer__item-footer">
                   <!-- Stepper -->
                   <div class="ishaya-cart-drawer__stepper glass-panel">
@@ -139,6 +141,9 @@
 
                   <!-- Price -->
                   <div class="ishaya-cart-drawer__item-price">
+                    {%- if item.original_line_price > item.final_line_price -%}
+                      <s class="ishaya-cart-drawer__price-original">{{ item.original_line_price | money }}</s>
+                    {%- endif -%}
                     {{ item.final_line_price | money }}
                   </div>
                 </div>
@@ -184,6 +189,17 @@
       {%- endif -%}
 
       <!-- Subtotal -->
+      {%- if cart.cart_level_discount_applications.size > 0 -%}
+        <ul class="ishaya-cart-drawer__cart-discounts" role="list">
+          {%- for discount in cart.cart_level_discount_applications -%}
+            <li class="ishaya-cart-drawer__cart-discount">
+              <span>{{ discount.title | escape }}</span>
+              <span>−{{ discount.total_allocated_amount | money }}</span>
+            </li>
+          {%- endfor -%}
+        </ul>
+      {%- endif -%}
+
       <div class="ishaya-cart-drawer__subtotal-row">
         <span class="ishaya-cart-drawer__subtotal-label">SUBTOTAL</span>
         <strong class="ishaya-cart-drawer__subtotal-val" id="CartDrawerSubtotal">
@@ -250,6 +266,88 @@
   @keyframes cartSlideIn {
     from { transform: translateX(100%); }
     to { transform: translateX(0); }
+  }
+
+  /* Bundle contents, line properties and discounts (cart-line-details snippet) */
+  .ishaya-cart-drawer__bundle {
+    margin-top: 0.4rem;
+  }
+
+  .ishaya-cart-drawer__bundle-label {
+    display: block;
+    margin-bottom: 0.2rem;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .ishaya-cart-drawer__bundle-list,
+  .ishaya-cart-drawer__discounts,
+  .ishaya-cart-drawer__cart-discounts {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .ishaya-cart-drawer__bundle-item {
+    display: flex;
+    gap: 0.35rem;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: var(--color-foreground);
+  }
+
+  .ishaya-cart-drawer__bundle-qty,
+  .ishaya-cart-drawer__bundle-variant {
+    color: var(--color-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ishaya-cart-drawer__properties {
+    margin: 0.35rem 0 0;
+    font-size: 0.75rem;
+    color: var(--color-muted);
+  }
+
+  .ishaya-cart-drawer__property {
+    display: flex;
+    gap: 0.3rem;
+  }
+
+  .ishaya-cart-drawer__property dd {
+    margin: 0;
+    color: var(--color-foreground);
+  }
+
+  .ishaya-cart-drawer__discount {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-top: 0.35rem;
+    font-size: 0.72rem;
+    color: var(--color-accent);
+  }
+
+  .ishaya-cart-drawer__price-original {
+    display: block;
+    font-size: 0.75em;
+    font-weight: 400;
+    color: var(--color-muted);
+    text-decoration: line-through;
+  }
+
+  .ishaya-cart-drawer__cart-discounts {
+    margin-bottom: 0.6rem;
+  }
+
+  .ishaya-cart-drawer__cart-discount {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    font-size: 0.8rem;
+    color: var(--color-muted);
   }
 
   /* Header */
