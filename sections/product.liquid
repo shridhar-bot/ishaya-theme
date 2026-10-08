@@ -112,12 +112,26 @@
       <div class="ishaya-pdp__details">
         <div class="ishaya-pdp__rail">
           <!-- Series Tag / Vendor -->
-          <div class="ishaya-pdp__tag-row">
+          {% comment %}<div class="ishaya-pdp__tag-row">
             <span class="ishaya-pdp__vendor">
               {{ product.vendor | default: 'ISHAYA' }} // REF. {{ current_variant.sku | default: product.id }}
             </span>
           </div>
-
+          {% endcomment %}
+              {%- if product.metafields.custom.show_review_rating.value == true
+                and product.metafields.custom.rating.value != blank
+                and product.metafields.custom.review_count.value != blank
+              -%}
+                <div class="ishaya-pdp__rating">
+                  <span class="ishaya-pdp__rating-star">★</span>
+                  <span class="ishaya-pdp__rating-score">
+                    {{ product.metafields.custom.rating.value }}/5
+                  </span>
+                  <span class="ishaya-pdp__rating-count">
+                    ({{ product.metafields.custom.review_count.value }} Reviews)
+                  </span>
+                </div>
+              {%- endif -%}
           <!-- Product Title -->
           <h1 class="ishaya-pdp__title">{{ product.title }}</h1>
 
@@ -279,6 +293,9 @@
           <!-- Product information — tabbed card -->
           {%- liquid
             assign info_tabs = ''
+            if section.settings.size_chart_image != blank
+              assign info_tabs = info_tabs | append: 'size_chart,'
+            endif
             if product.description != blank
               assign info_tabs = info_tabs | append: 'description,'
             endif
@@ -302,6 +319,8 @@
                 {%- for tab in info_tabs -%}
                   {%- liquid
                     case tab
+                      when 'size_chart'
+                        assign tab_label = 'Size Chart'
                       when 'description'
                         assign tab_label = 'Description'
                       when 'details'
@@ -339,6 +358,14 @@
                 >
                   <div class="ishaya-pdp__info-body rte" data-pdp-info-body>
                     {%- case tab -%}
+                      {%- when 'size_chart' -%}
+                        {% if section.settings.size_chart_image != blank %}
+                          {{
+                              section.settings.size_chart_image
+                              | image_url: width: 1200
+                              | image_tag: class: 'ishaya-pdp__size-chart-image', loading: 'lazy'
+                          }}
+                      {% endif %}
                       {%- when 'description' -%}
                         {{ product.description }}
                       {%- when 'details' -%}
@@ -365,17 +392,55 @@
             </div>
           {%- endif -%}
 
-          <!-- Shipping / Guarantee Strip -->
-          <div class="ishaya-pdp__guarantee glass-panel">
-            <div class="ishaya-pdp__guarantee-item">
-              {% render 'icons', name: 'truck', width: 16, height: 16, class: 'ishaya-pdp__guarantee-icon' %}
-              <span>Complimentary worldwide shipping on orders over $250.</span>
-            </div>
-            <div class="ishaya-pdp__guarantee-item">
-              {% render 'icons', name: 'shield', width: 16, height: 16, class: 'ishaya-pdp__guarantee-icon' %}
-              <span>Guaranteed authentic. Numbered edition packaging.</span>
+        <!-- Product Benefits -->
+        <div class="ishaya-pdp__benefits">
+
+          <div class="ishaya-pdp__benefit">
+            {% if section.settings.benefit_1_image != blank %}
+              {{
+                section.settings.benefit_1_image
+                | image_url: width: 200
+                | image_tag: class: 'ishaya-pdp__benefit-image', loading: 'lazy'
+              }}
+            {% endif %}
+
+            <div class="ishaya-pdp__benefit-content">
+              <h3>{{ section.settings.benefit_1_heading }}</h3>
+              <p>{{ section.settings.benefit_1_text }}</p>
             </div>
           </div>
+
+          <div class="ishaya-pdp__benefit">
+            {% if section.settings.benefit_2_image != blank %}
+              {{
+                section.settings.benefit_2_image
+                | image_url: width: 200
+                | image_tag: class: 'ishaya-pdp__benefit-image', loading: 'lazy'
+              }}
+            {% endif %}
+
+            <div class="ishaya-pdp__benefit-content">
+              <h3>{{ section.settings.benefit_2_heading }}</h3>
+              <p>{{ section.settings.benefit_2_text }}</p>
+            </div>
+          </div>
+
+          <div class="ishaya-pdp__benefit">
+            {% if section.settings.benefit_3_image != blank %}
+              {{
+                section.settings.benefit_3_image
+                | image_url: width: 200
+                | image_tag: class: 'ishaya-pdp__benefit-image', loading: 'lazy'
+              }}
+            {% endif %}
+
+            <div class="ishaya-pdp__benefit-content">
+              <h3>{{ section.settings.benefit_3_heading }}</h3>
+              <p>{{ section.settings.benefit_3_text }}</p>
+            </div>
+          </div>
+
+        </div>
         </div>
       </div>
     </div>
@@ -1772,6 +1837,66 @@
   "tag": "section",
   "class": "section-product",
   "settings": [
+    {
+  "type": "image_picker",
+  "id": "size_chart_image",
+  "label": "Size Chart Image"
+},
+    {
+  "type": "header",
+  "content": "Product Benefits"
+},
+{
+  "type": "image_picker",
+  "id": "benefit_1_image",
+  "label": "Benefit 1 Image"
+},
+{
+  "type": "text",
+  "id": "benefit_1_heading",
+  "label": "Benefit 1 Heading",
+  "default": "Easy Exchange"
+},
+{
+  "type": "textarea",
+  "id": "benefit_1_text",
+  "label": "Benefit 1 Text",
+  "default": "Easy size exchange for a worry-free shopping experience."
+},
+{
+  "type": "image_picker",
+  "id": "benefit_2_image",
+  "label": "Benefit 2 Image"
+},
+{
+  "type": "text",
+  "id": "benefit_2_heading",
+  "label": "Benefit 2 Heading",
+  "default": "Premium Material"
+},
+{
+  "type": "textarea",
+  "id": "benefit_2_text",
+  "label": "Benefit 2 Text",
+  "default": "Premium quality fabric designed for everyday comfort."
+},
+{
+  "type": "image_picker",
+  "id": "benefit_3_image",
+  "label": "Benefit 3 Image"
+},
+{
+  "type": "text",
+  "id": "benefit_3_heading",
+  "label": "Benefit 3 Heading",
+  "default": "PAN India Shipping"
+},
+{
+  "type": "textarea",
+  "id": "benefit_3_text",
+  "label": "Benefit 3 Text",
+  "default": "Secure delivery across India."
+},
     {
       "type": "header",
       "content": "Size advisor"

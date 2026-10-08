@@ -227,4 +227,58 @@
   document.addEventListener('ishaya:grid:updated', syncWishlistButtons);
 
   if (document.readyState !== 'loading') syncWishlistButtons();
+    /* ----------------------------------------------------------------------
+   Product colour swatches — change ALL card images
+   ---------------------------------------------------------------------- */
+
+document.addEventListener('click', function (event) {
+  var swatch = event.target.closest('[data-product-swatch]');
+  if (!swatch) return;
+
+  event.preventDefault();
+  event.stopPropagation();
+
+  var card = swatch.closest('[data-product-card]');
+  if (!card) return;
+
+  var newImage = swatch.getAttribute('data-swatch-image');
+  if (!newImage) return;
+
+  /* Shopify // URL ne full https URL ma convert */
+  if (newImage.indexOf('//') === 0) {
+    newImage = window.location.protocol + newImage;
+  }
+
+  /* Card ma primary + hover badhi product images find karo */
+  var images = card.querySelectorAll(
+    '.ishaya-product-card__media-wrapper img'
+  );
+
+  if (!images.length) return;
+
+  images.forEach(function (img) {
+    img.removeAttribute('srcset');
+    img.removeAttribute('sizes');
+
+    img.src = newImage;
+
+    /* lazy-loading/data-src hoy to tene pan update karo */
+    if (img.hasAttribute('data-src')) {
+      img.setAttribute('data-src', newImage);
+    }
+
+    if (img.hasAttribute('data-srcset')) {
+      img.setAttribute('data-srcset', newImage);
+    }
+  });
+
+  /* Active colour dot */
+  card.querySelectorAll('[data-product-swatch]').forEach(function (item) {
+    item.classList.remove('is-active');
+    item.setAttribute('aria-pressed', 'false');
+  });
+
+  swatch.classList.add('is-active');
+  swatch.setAttribute('aria-pressed', 'true');
+}, true);
 })();

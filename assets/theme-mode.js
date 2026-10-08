@@ -5,10 +5,20 @@
   var root = document.documentElement;
 
   function currentTheme() {
-    var attr = root.getAttribute('data-theme');
-    if (attr === 'light' || attr === 'dark') return attr;
-    return window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  var stored = null;
+
+  try {
+    stored = window.localStorage.getItem(STORAGE_KEY);
+  } catch (e) {
+    /* ignore */
   }
+
+  if (stored === 'light' || stored === 'dark') {
+    return stored;
+  }
+
+  return 'light';
+}
 
   function syncButtons(theme) {
     document.querySelectorAll('[data-theme-toggle]').forEach(function (btn) {
@@ -52,5 +62,9 @@
     else if (query.addListener) query.addListener(onChange);
   }
 
-  syncButtons(currentTheme());
+  var initialTheme = currentTheme();
+root.setAttribute('data-theme', initialTheme);
+syncButtons(initialTheme);
+
 })();
+

@@ -55,6 +55,7 @@ python - <<'PY'
 import glob, json, os, re, sys
 
 SCAFFOLD = {"hello-world", "custom-section"}
+PLATFORM_SECTIONS = {"_blocks"}
 problems = []
 checked = 0
 
@@ -81,6 +82,10 @@ for path in sorted(glob.glob("templates/*.json")) + sorted(glob.glob("sections/*
         stype = (cfg or {}).get("type")
         if not stype:
             problems.append(f"{path}: section '{key}' has no type")
+            continue
+        # `_blocks` is Shopify's platform section that hosts blocks added in the
+        # theme editor (e.g. AI-generated blocks); it has no file in the theme.
+        if stype in PLATFORM_SECTIONS:
             continue
         if not os.path.isfile(f"sections/{stype}.liquid"):
             problems.append(f"{path}: section '{key}' type '{stype}' has no sections/{stype}.liquid")
