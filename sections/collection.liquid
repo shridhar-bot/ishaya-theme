@@ -1,4 +1,3 @@
-
 {%- liquid
   assign products_limit = section.settings.products_per_page | default: 16
   assign cols_desktop = section.settings.columns_desktop | default: 4
@@ -1698,6 +1697,28 @@
     text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
   }
 
+  /* Feedback while the clicked collection's page loads */
+  .ishaya-coverflow.is-loading .ishaya-coverflow__viewport {
+    cursor: progress;
+  }
+
+  .ishaya-coverflow__slide.is-loading .ishaya-coverflow__card::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 2px;
+    width: 100%;
+    background-color: #ffffff;
+    transform-origin: left center;
+    animation: ishayaCoverflowLoad 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes ishayaCoverflowLoad {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(0.9); }
+  }
+
   /* --- Dots --- */
   .ishaya-coverflow__dots {
     display: flex;
@@ -2351,18 +2372,54 @@
       });
     });
 
-    slides.forEach(function (slide, i) {
-      slide.addEventListener(
-        'click',
-        function (evt) {
-          if (i !== current) {
-            evt.preventDefault();
-            goTo(i);
-            stopAutoplay();
-          }
-        },
-        true
-      );
+    /* ---- Click a slide: show that collection's products ----
+       Any slide click centres the card and then opens that collection's page,
+       so the product grid below lists only its products. Ctrl/Cmd/Shift clicks
+       keep the browser's default (open in new tab/window). */
+    const isDesignMode = !!(window.Shopify && window.Shopify.designMode);
+    let navigating = false;
+
+    function openSlide(slide, index) {
+      const link = slide.querySelector('a');
+      const href = link ? link.getAttribute('href') : '';
+      const handle = slide.getAttribute('data-collection-handle');
+
+      const wasActive = index === current;
+      if (!wasActive) goTo(index);
+      stopAutoplay();
+
+      // Theme editor: only move the slider, don't leave the page being edited.
+      if (isDesignMode || !href || href === '#') return;
+
+      // Already on this collection: just bring the products into view.
+      if (handle && handle === currentHandle) {
+        const results = document.querySelector('[data-collection-results]');
+        if (results) {
+          const top = results.getBoundingClientRect().top + window.scrollY - 120;
+          window.scrollTo({ top: top, behavior: 'smooth' });
+        }
+        return;
+      }
+
+      if (navigating) return;
+      navigating = true;
+      root.classList.add('is-loading');
+      slide.classList.add('is-loading');
+
+      // Let the centring animation play briefly before leaving the page.
+      window.setTimeout(function () {
+        window.location.href = href;
+      }, wasActive ? 0 : 350);
+    }
+
+    // Restore the slider if the user comes back via the browser's back button.
+    window.addEventListener('pageshow', function (evt) {
+      if (!evt.persisted) return;
+      navigating = false;
+      root.classList.remove('is-loading');
+      slides.forEach(function (slide) {
+        slide.classList.remove('is-loading');
+      });
     });
 
     root.addEventListener('keydown', function (evt) {
@@ -2377,11 +2434,15 @@
       }
     });
 
-    /* ---- Pointer drag ---- */
+    /* ---- Pointer drag ----
+       Pointer capture is only taken once the pointer has actually moved. Taking
+       it on pointerdown re-targets the following click to the viewport, which
+       is why tapping a slide used to do nothing. */
+    const DRAG_THRESHOLD = 8;
     let dragStartX = 0;
     let dragging = false;
-
     let dragMoved = false;
+    let activePointerId = null;
 
     viewport.addEventListener('dragstart', function (evt) {
       evt.preventDefault();
@@ -2392,38 +2453,61 @@
       dragging = true;
       dragMoved = false;
       dragStartX = evt.clientX;
-      viewport.classList.add('is-dragging');
-      viewport.setPointerCapture(evt.pointerId);
+      activePointerId = evt.pointerId;
     });
 
     viewport.addEventListener('pointermove', function (evt) {
-      if (!dragging) return;
-      if (Math.abs(evt.clientX - dragStartX) > 8) dragMoved = true;
+      if (!dragging || evt.pointerId !== activePointerId) return;
+      if (!dragMoved && Math.abs(evt.clientX - dragStartX) > DRAG_THRESHOLD) {
+        dragMoved = true;
+        viewport.classList.add('is-dragging');
+        try {
+          viewport.setPointerCapture(evt.pointerId);
+        } catch (e) {
+          /* ignore */
+        }
+      }
     });
 
-    viewport.addEventListener('pointerup', function (evt) {
+    function endDrag(evt) {
       if (!dragging) return;
       dragging = false;
       viewport.classList.remove('is-dragging');
+      if (activePointerId !== null && viewport.hasPointerCapture && viewport.hasPointerCapture(activePointerId)) {
+        viewport.releasePointerCapture(activePointerId);
+      }
+      activePointerId = null;
 
+      if (!dragMoved || !evt) return;
       const delta = evt.clientX - dragStartX;
       if (Math.abs(delta) > 40) {
         goTo(delta > 0 ? current - 1 : current + 1);
         stopAutoplay();
       }
-    });
+    }
 
-    viewport.addEventListener(
-      'click',
-      function (evt) {
-        if (dragMoved) {
-          evt.preventDefault();
-          evt.stopPropagation();
-          dragMoved = false;
-        }
-      },
-      true
-    );
+    viewport.addEventListener('pointerup', endDrag);
+
+    viewport.addEventListener('click', function (evt) {
+      // A drag should never count as a click.
+      if (dragMoved) {
+        evt.preventDefault();
+        evt.stopPropagation();
+        dragMoved = false;
+        return;
+      }
+
+      const slide = evt.target.closest('[data-coverflow-slide]');
+      if (!slide || !root.contains(slide)) return;
+      const index = slides.indexOf(slide);
+      if (index === -1) return;
+
+      // Let modified clicks open the collection in a new tab as usual.
+      if (evt.metaKey || evt.ctrlKey || evt.shiftKey || evt.altKey || evt.button === 1) return;
+
+      evt.preventDefault();
+      openSlide(slide, index);
+    });
 
     let wheelLock = 0;
     viewport.addEventListener(
@@ -2442,8 +2526,8 @@
     );
 
     viewport.addEventListener('pointercancel', function () {
-      dragging = false;
-      viewport.classList.remove('is-dragging');
+      dragMoved = false;
+      endDrag(null);
     });
 
     /* ---- Autoplay ---- */
