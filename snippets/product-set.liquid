@@ -1,0 +1,581 @@
+{% doc %}
+  Renders "Shop the set" on the product page — a bundle built in the theme,
+  without an app. Lists the products from the `custom.bundle_products`
+  metafield (Product, list) with a size/variant picker each, keeps a live set
+  total, and adds every selected item to the bag in one click. Each line gets
+  a visible "Set" property so the cart shows which set it came from.
+
+  On a product tagged `bundle` this is the main buy box (the product's own
+  price and add-to-bag are hidden by the product section). On any other
+  product it shows under the buy form as "Complete the set".
+
+  Discounts are not applied here: create an automatic discount in Shopify
+  admin for the set's products. `note` can describe it (e.g. "10% off the
+  full set at checkout").
+
+  @param {product[]} products - The products in the set
+  @param {string} set_title - Name shown on each cart line's "Set" property
+  @param {object} [set_image] - Image shown in the added-to-bag sheet
+  @param {boolean} [is_set_mode] - True when the set replaces the buy box
+  @param {string} [note] - Short line shown under the total
+
+  @example
+  {% render 'product-set', products: product.metafields.custom.bundle_products.value, set_title: product.title %}
+{% enddoc %}
+
+{%- liquid
+  assign set_total = 0
+  assign set_compare_total = 0
+  assign set_count = 0
+  for set_product in products
+    if set_product.available
+      assign set_variant = set_product.selected_or_first_available_variant
+      assign set_total = set_total | plus: set_variant.price
+      if set_variant.compare_at_price > set_variant.price
+        assign set_compare_total = set_compare_total | plus: set_variant.compare_at_price
+      else
+        assign set_compare_total = set_compare_total | plus: set_variant.price
+      endif
+      assign set_count = set_count | plus: 1
+    endif
+  endfor
+
+  if set_image != blank
+    assign set_image_url = set_image | image_url: width: 200
+  endif
+-%}
+
+<div
+  class="ishaya-set{% if is_set_mode %} ishaya-set--main{% endif %}"
+  data-product-set
+  data-set-title="{{ set_title | escape }}"
+  data-set-image="{{ set_image_url }}"
+  data-money-format="{{ shop.money_format | escape }}"
+>
+  <div class="ishaya-set__head">
+    <h2 class="ishaya-set__heading">
+      {%- if is_set_mode -%}Build your set{%- else -%}Complete the set{%- endif -%}
+    </h2>
+    <span class="ishaya-set__count" data-set-count>{{ set_count }} of {{ products.size }} selected</span>
+  </div>
+
+  <ul class="ishaya-set__list" role="list">
+    {%- for set_product in products -%}
+      {%- assign set_variant = set_product.selected_or_first_available_variant -%}
+      <li class="ishaya-set__item{% unless set_product.available %} is-sold-out{% endunless %}" data-set-item>
+        <label class="ishaya-set__check">
+          <input
+            type="checkbox"
+            data-set-include
+            {% if set_product.available %}checked{% else %}disabled{% endif %}
+            aria-label="Include {{ set_product.title | escape }} in the set"
+          >
+          <span class="ishaya-set__checkmark" aria-hidden="true"></span>
+        </label>
+
+        <a href="{{ set_product.url }}" class="ishaya-set__media" tabindex="-1" aria-hidden="true">
+          {%- assign set_media = set_variant.featured_media | default: set_product.featured_media -%}
+          {%- if set_media -%}
+            {{
+              set_media
+              | image_url: width: 240
+              | image_tag:
+                loading: 'lazy',
+                class: 'ishaya-set__img',
+                data-set-img: '',
+                alt: set_product.title
+            }}
+          {%- else -%}
+            {{ 'product-1' | placeholder_svg_tag: 'ishaya-set__img placeholder-svg' }}
+          {%- endif -%}
+        </a>
+
+        <div class="ishaya-set__info">
+          <a href="{{ set_product.url }}" class="ishaya-set__name">{{ set_product.title | escape }}</a>
+
+          {%- if set_product.has_only_default_variant -%}
+            <input
+              type="hidden"
+              data-set-variant
+              value="{{ set_variant.id }}"
+              data-price="{{ set_variant.price }}"
+              data-compare="{{ set_variant.compare_at_price | default: 0 }}"
+            >
+          {%- else -%}
+            <select
+              class="ishaya-set__select"
+              data-set-variant
+              aria-label="Choose {{ set_product.options | join: ' / ' | escape }} for {{ set_product.title | escape }}"
+              {% unless set_product.available %}disabled{% endunless %}
+            >
+              {%- for variant in set_product.variants -%}
+                <option
+                  value="{{ variant.id }}"
+                  data-price="{{ variant.price }}"
+                  data-compare="{{ variant.compare_at_price | default: 0 }}"
+                  {% if variant.featured_media %}data-image="{{ variant.featured_media | image_url: width: 240 }}"{% endif %}
+                  {% if variant.id == set_variant.id %}selected{% endif %}
+                  {% unless variant.available %}disabled{% endunless %}
+                >
+                  {{- variant.title | escape -}}
+                  {%- unless variant.available %} — sold out{% endunless -%}
+                </option>
+              {%- endfor -%}
+            </select>
+          {%- endif -%}
+
+          {%- unless set_product.available -%}
+            <span class="ishaya-set__soldout">Sold out</span>
+          {%- endunless -%}
+        </div>
+
+        <span class="ishaya-set__price" data-set-price>
+          {%- if set_product.available -%}{{ set_variant.price | money }}{%- endif -%}
+        </span>
+      </li>
+    {%- endfor -%}
+  </ul>
+
+  <div class="ishaya-set__footer">
+    <div class="ishaya-set__total-row">
+      <span class="ishaya-set__total-label">Set total</span>
+      <span class="ishaya-set__total">
+        <s class="ishaya-set__compare" data-set-compare{% unless set_compare_total > set_total %} hidden{% endunless %}>
+          {{- set_compare_total | money -}}
+        </s>
+        <strong data-set-total>{{ set_total | money }}</strong>
+      </span>
+    </div>
+
+    {%- if note != blank -%}
+      <p class="ishaya-set__note">{{ note | escape }}</p>
+    {%- endif -%}
+
+    <button
+      type="button"
+      class="btn btn--primary ishaya-set__add"
+      data-set-add
+      {% if set_count == 0 %}disabled{% endif %}
+    >
+      <span data-set-add-label>{% if set_count == 0 %}Sold out{% else %}Add set to bag{% endif %}</span>
+    </button>
+    <p class="ishaya-set__status" data-set-status role="status" aria-live="polite"></p>
+  </div>
+</div>
+
+{% stylesheet %}
+  .ishaya-set {
+    margin-top: 1.25rem;
+    padding: 1.1rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card, 16px);
+    background-color: var(--color-surface);
+    color: var(--color-foreground);
+  }
+
+  .ishaya-set--main {
+    margin-top: 0.5rem;
+  }
+
+  .ishaya-set__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.85rem;
+  }
+
+  .ishaya-set__heading {
+    margin: 0;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .ishaya-set__count {
+    font-size: 0.72rem;
+    color: var(--color-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ishaya-set__list {
+    display: grid;
+    gap: 0.75rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .ishaya-set__item {
+    display: grid;
+    grid-template-columns: auto 64px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.75rem;
+    transition: opacity var(--transition-fast, 0.15s ease);
+  }
+
+  .ishaya-set__item.is-excluded,
+  .ishaya-set__item.is-sold-out {
+    opacity: 0.45;
+  }
+
+  .ishaya-set__check {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    cursor: pointer;
+  }
+
+  .ishaya-set__check input {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    cursor: inherit;
+  }
+
+  .ishaya-set__checkmark {
+    width: 18px;
+    height: 18px;
+    border: 1.5px solid var(--color-border);
+    border-radius: 5px;
+    background-color: var(--color-surface);
+    transition: background-color var(--transition-fast, 0.15s ease), border-color var(--transition-fast, 0.15s ease);
+  }
+
+  .ishaya-set__check input:checked + .ishaya-set__checkmark {
+    border-color: var(--color-accent);
+    background-color: var(--color-accent);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
+    background-position: center;
+    background-size: 12px;
+    background-repeat: no-repeat;
+  }
+
+  .ishaya-set__check input:focus-visible + .ishaya-set__checkmark {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .ishaya-set__check input:disabled {
+    cursor: not-allowed;
+  }
+
+  .ishaya-set__media {
+    display: block;
+    width: 64px;
+    height: 80px;
+    overflow: hidden;
+    border-radius: 10px;
+    background-color: var(--color-background);
+  }
+
+  .ishaya-set__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .ishaya-set__info {
+    display: grid;
+    gap: 0.35rem;
+    min-width: 0;
+  }
+
+  .ishaya-set__name {
+    overflow: hidden;
+    color: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ishaya-set__name:hover {
+    text-decoration: underline;
+  }
+
+  .ishaya-set__select {
+    width: 100%;
+    max-width: 180px;
+    min-height: 34px;
+    padding: 0 0.6rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-input, 8px);
+    background-color: var(--color-surface);
+    color: var(--color-foreground);
+    font: inherit;
+    font-size: 0.78rem;
+  }
+
+  .ishaya-set__soldout {
+    font-size: 0.72rem;
+    color: var(--color-muted);
+  }
+
+  .ishaya-set__price {
+    font-size: 0.85rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .ishaya-set__footer {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .ishaya-set__total-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .ishaya-set__total-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .ishaya-set__total {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    font-size: 1.05rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ishaya-set__compare {
+    font-size: 0.8rem;
+    color: var(--color-muted);
+  }
+
+  .ishaya-set__compare[hidden] {
+    display: none;
+  }
+
+  .ishaya-set__note {
+    margin: 0.4rem 0 0;
+    font-size: 0.78rem;
+    color: var(--color-muted);
+  }
+
+  .ishaya-set__add {
+    width: 100%;
+    margin-top: 0.9rem;
+  }
+
+  .ishaya-set__add.is-loading {
+    opacity: 0.7;
+    pointer-events: none;
+  }
+
+  .ishaya-set__status {
+    min-height: 1em;
+    margin: 0.5rem 0 0;
+    font-size: 0.75rem;
+    color: var(--color-muted);
+  }
+
+  .ishaya-set__status.is-error {
+    color: var(--color-error, #c0392b);
+  }
+
+  @media (max-width: 480px) {
+    .ishaya-set__item {
+      grid-template-columns: auto 56px minmax(0, 1fr);
+    }
+
+    .ishaya-set__media {
+      width: 56px;
+      height: 70px;
+    }
+
+    .ishaya-set__price {
+      grid-column: 3;
+      margin-top: -0.25rem;
+    }
+  }
+{% endstylesheet %}
+
+{% javascript %}
+  (function () {
+    function formatMoney(cents, format) {
+      var value = (Number(cents) || 0) / 100;
+      function fmt(decimals, thousands, decimal) {
+        var parts = value.toFixed(decimals).split('.');
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, thousands);
+        return parts.join(decimal);
+      }
+      return String(format || '${' + '{amount}}').replace(/\{\{\s*(\w+)\s*\}\}/, function (_, key) {
+        switch (key) {
+          case 'amount_no_decimals': return fmt(0, ',', '.');
+          case 'amount_with_comma_separator': return fmt(2, '.', ',');
+          case 'amount_no_decimals_with_comma_separator': return fmt(0, '.', ',');
+          case 'amount_with_apostrophe_separator': return fmt(2, "'", '.');
+          default: return fmt(2, ',', '.');
+        }
+      });
+    }
+
+    function selectedOption(control) {
+      return control.tagName === 'SELECT' ? control.options[control.selectedIndex] : control;
+    }
+
+    function initSet(root) {
+      if (root.hasAttribute('data-set-ready')) return;
+      root.setAttribute('data-set-ready', '');
+
+      var moneyFormat = root.getAttribute('data-money-format');
+      var items = Array.prototype.slice.call(root.querySelectorAll('[data-set-item]'));
+      var totalEl = root.querySelector('[data-set-total]');
+      var compareEl = root.querySelector('[data-set-compare]');
+      var countEl = root.querySelector('[data-set-count]');
+      var addBtn = root.querySelector('[data-set-add]');
+      var addLabel = root.querySelector('[data-set-add-label]');
+      var statusEl = root.querySelector('[data-set-status]');
+
+      function selection() {
+        return items
+          .map(function (item) {
+            var include = item.querySelector('[data-set-include]');
+            var control = item.querySelector('[data-set-variant]');
+            if (!include || !control || !include.checked || include.disabled || control.disabled) return null;
+            var option = selectedOption(control);
+            if (!option || option.disabled) return null;
+            return {
+              id: Number(control.value),
+              price: Number(option.getAttribute('data-price')) || 0,
+              compare: Number(option.getAttribute('data-compare')) || 0
+            };
+          })
+          .filter(Boolean);
+      }
+
+      function update() {
+        var picked = selection();
+        var total = 0;
+        var compare = 0;
+        picked.forEach(function (p) {
+          total += p.price;
+          compare += p.compare > p.price ? p.compare : p.price;
+        });
+
+        items.forEach(function (item) {
+          var include = item.querySelector('[data-set-include]');
+          var control = item.querySelector('[data-set-variant]');
+          var priceEl = item.querySelector('[data-set-price]');
+          var option = control ? selectedOption(control) : null;
+          item.classList.toggle('is-excluded', !!include && !include.checked);
+          if (priceEl && option && !(include && include.disabled)) {
+            priceEl.textContent = formatMoney(option.getAttribute('data-price'), moneyFormat);
+          }
+        });
+
+        if (totalEl) totalEl.textContent = formatMoney(total, moneyFormat);
+        if (compareEl) {
+          compareEl.textContent = formatMoney(compare, moneyFormat);
+          compareEl.hidden = !(compare > total);
+        }
+        if (countEl) countEl.textContent = picked.length + ' of ' + items.length + ' selected';
+        if (addBtn) addBtn.disabled = picked.length === 0;
+        if (addLabel) addLabel.textContent = picked.length === 0 ? 'Select an item' : 'Add set to bag';
+        return { picked: picked, total: total };
+      }
+
+      function setStatus(message, isError) {
+        if (!statusEl) return;
+        statusEl.textContent = message || '';
+        statusEl.classList.toggle('is-error', !!isError);
+      }
+
+      root.addEventListener('change', function (evt) {
+        var control = evt.target.closest('[data-set-variant]');
+        if (control && control.tagName === 'SELECT') {
+          var option = selectedOption(control);
+          var image = option && option.getAttribute('data-image');
+          var img = control.closest('[data-set-item]').querySelector('[data-set-img]');
+          if (image && img) {
+            img.removeAttribute('srcset');
+            img.src = image;
+          }
+        }
+        setStatus('');
+        update();
+      });
+
+      if (addBtn) {
+        addBtn.addEventListener('click', function () {
+          var state = update();
+          if (!state.picked.length || addBtn.classList.contains('is-loading')) return;
+
+          var setTitle = root.getAttribute('data-set-title') || '';
+          var payload = {
+            items: state.picked.map(function (p) {
+              return { id: p.id, quantity: 1, properties: { Set: setTitle } };
+            })
+          };
+
+          addBtn.classList.add('is-loading');
+          if (addLabel) addLabel.textContent = 'Adding…';
+          setStatus('');
+
+          var root_url = window.Shopify && window.Shopify.routes ? window.Shopify.routes.root : '/';
+          fetch(root_url + 'cart/add.js', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: JSON.stringify(payload)
+          })
+            .then(function (res) {
+              return res.json().then(function (data) {
+                if (!res.ok) throw new Error(data.description || data.message || 'Could not add the set to your bag');
+                return data;
+              });
+            })
+            .then(function () {
+              if (typeof window.refreshCartDrawer === 'function') window.refreshCartDrawer();
+              if (typeof window.showCartNotification === 'function') {
+                window.showCartNotification({
+                  product_title: setTitle,
+                  variant_title: state.picked.length + (state.picked.length === 1 ? ' item' : ' items'),
+                  quantity: 1,
+                  final_price: state.total,
+                  image: root.getAttribute('data-set-image') || ''
+                });
+              } else if (typeof window.openCartDrawer === 'function') {
+                window.openCartDrawer();
+              }
+              setStatus('Added to your bag');
+            })
+            .catch(function (err) {
+              setStatus(err.message || 'Could not add the set to your bag', true);
+            })
+            .finally(function () {
+              addBtn.classList.remove('is-loading');
+              update();
+            });
+        });
+      }
+
+      update();
+    }
+
+    function initAll() {
+      document.querySelectorAll('[data-product-set]').forEach(initSet);
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initAll);
+    } else {
+      initAll();
+    }
+    document.addEventListener('shopify:section:load', initAll);
+  })();
+{% endjavascript %}

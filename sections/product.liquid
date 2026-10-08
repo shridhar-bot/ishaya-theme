@@ -9,6 +9,15 @@
 
   assign size_rows = section.blocks | where: 'type', 'size_row'
 
+  assign set_products = product.metafields.custom.bundle_products.value
+  assign is_set_mode = false
+  if set_products != blank
+    assign product_tags = product.tags | join: ',' | downcase | split: ','
+    if product_tags contains 'bundle'
+      assign is_set_mode = true
+    endif
+  endif
+
   assign is_sold_out = true
   if current_variant.available
     assign is_sold_out = false
@@ -112,7 +121,7 @@
 
       <!-- Right Column: Product Details Rail -->
       <div class="ishaya-pdp__details">
-        <div class="ishaya-pdp__rail">
+        <div class="ishaya-pdp__rail{% if is_set_mode %} ishaya-pdp__rail--set{% endif %}">
           <!-- Series Tag / Vendor -->
           {% comment %}<div class="ishaya-pdp__tag-row">
             <span class="ishaya-pdp__vendor">
@@ -292,14 +301,16 @@
             </div>
           {% endform %}
 
-          <!-- App blocks (e.g. Shopify Bundles) -->
-          {%- for block in section.blocks -%}
-            {%- if block.type == '@app' -%}
-              <div class="ishaya-pdp__app-block" {{ block.shopify_attributes }}>
-                {% render block %}
-              </div>
-            {%- endif -%}
-          {%- endfor -%}
+          {%- if set_products != blank -%}
+            {%- assign set_title = product.metafields.custom.bundle_title.value | default: product.title -%}
+            {% render 'product-set',
+              products: set_products,
+              set_title: set_title,
+              set_image: product.featured_media,
+              is_set_mode: is_set_mode,
+              note: product.metafields.custom.bundle_note.value
+            %}
+          {%- endif -%}
 
           <!-- Product information — tabbed card -->
           {%- liquid
@@ -518,7 +529,7 @@
   </div>
 {%- endif -%}
 
-{%- if section.settings.sticky_buy_bar_enabled -%}
+{%- if section.settings.sticky_buy_bar_enabled and is_set_mode == false -%}
   <div class="ishaya-sticky-buy" id="StickyBuyBar" data-sticky-buy aria-hidden="true">
     <div class="ishaya-sticky-buy__media">
       {%- if featured_media != blank -%}
@@ -832,11 +843,10 @@
   }
 
   /* Form & Variant Pickers */
-  .ishaya-pdp__app-block {
-    margin-top: 1rem;
-  }
-
-  .ishaya-pdp__app-block:empty {
+  /* Shop the set: the set builder replaces the product's own buy box */
+  .ishaya-pdp__rail--set .ishaya-pdp__price-block,
+  .ishaya-pdp__rail--set .ishaya-pdp__stock-status,
+  .ishaya-pdp__rail--set .ishaya-pdp__form {
     display: none;
   }
 
@@ -1990,9 +2000,6 @@
     }
   ],
   "blocks": [
-    {
-      "type": "@app"
-    },
     {
       "type": "size_row",
       "name": "Size row",
