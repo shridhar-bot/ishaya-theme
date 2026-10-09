@@ -712,10 +712,6 @@ select:focus-visible {
   transition: border-color var(--transition-fast), background-color var(--transition-fast), color var(--transition-fast);
 }
 
-a.ishaya-product-card__add {
-  text-decoration: none;
-}
-
 .ishaya-product-card__add:hover,
 .ishaya-product-card__add[aria-expanded='true'] {
   border-color: var(--color-foreground);
@@ -928,4 +924,45 @@ a.ishaya-product-card__add {
 
 .ishaya-product-card__title-link::after {
   pointer-events: none !important;
+}
+/* ISHAYA - Size Selector Visibility Fix */
+
+.ishaya-product-card__size-selector,
+.ishaya-product-card__size-tray,
+.ishaya-product-card__variant-tray {
+  color: #ffffff !important;
+}
+
+.ishaya-product-card__size-selector button,
+.ishaya-product-card__size-tray button,
+.ishaya-product-card__variant-tray button {
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.45) !important;
+}
+
+.ishaya-product-card__size-selector button:hover,
+.ishaya-product-card__size-tray button:hover,
+.ishaya-product-card__variant-tray button:hover {
+  background: #ffffff !important;
+  color: #111111 !important;
+}
+
+.ishaya-product-card__size-selector button.is-active,
+.ishaya-product-card__size-tray button.is-active,
+.ishaya-product-card__variant-tray button.is-active {
+  background: #ffffff !important;
+  color: #111111 !important;
+  border-color: #ffffff !important;
+}
+/* ISHAYA - Remove white gap behind floating header */
+body:has(.ishaya-welcome-strip) {
+  background-color: #101010;
+}
+/* ISHAYA - Hero background behind floating header */
+body:has(.ishaya-welcome-strip) #main-content {
+  margin-top: -3.5rem;
+}
+
+body:has(.ishaya-welcome-strip) #main-content > *:first-child {
+  position: relative;
 }

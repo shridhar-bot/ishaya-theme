@@ -1,0 +1,313 @@
+
+{% comment %}
+  320ISHAYA Premium Offer Popup
+  Image upload, clickable offer, close button,
+  delay control and responsive layout.
+{% endcomment %}
+
+{% if section.settings.enable_popup and section.settings.offer_image != blank %}
+
+<div
+  id="ishaya-popup-{{ section.id }}"
+  class="ishaya-offer-popup"
+  data-delay="{{ section.settings.popup_delay | times: 1000 }}"
+  aria-hidden="true"
+>
+  <div class="ishaya-popup-overlay"></div>
+
+  <div
+    class="ishaya-popup-content"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Special offer"
+    tabindex="-1"
+  >
+    <button
+      type="button"
+      class="ishaya-popup-close"
+      aria-label="Close offer"
+    >
+      &times;
+    </button>
+
+    {% if section.settings.offer_link != blank %}
+      <a
+        href="{{ section.settings.offer_link }}"
+        class="ishaya-popup-image-link"
+        aria-label="View special offer"
+      >
+    {% else %}
+      <div class="ishaya-popup-image-link">
+    {% endif %}
+
+      {{
+        section.settings.offer_image
+        | image_url: width: 1200
+        | image_tag:
+          class: 'ishaya-popup-image',
+          loading: 'eager',
+          alt: '320ISHAYA Special Offer'
+      }}
+
+    {% if section.settings.offer_link != blank %}
+      </a>
+    {% else %}
+      </div>
+    {% endif %}
+
+  </div>
+</div>
+
+<style>
+  #ishaya-popup-{{ section.id }} {
+    position: fixed;
+    inset: 0;
+    z-index: 2147483000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+
+  #ishaya-popup-{{ section.id }}.ishaya-active {
+    display: flex;
+  }
+
+  #ishaya-popup-{{ section.id }} .ishaya-popup-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.78);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+
+  #ishaya-popup-{{ section.id }} .ishaya-popup-content {
+    position: relative;
+    width: fit-content;
+    max-width: min(440px, 100%);
+    max-height: calc(100dvh - 40px);
+    border-radius: 14px;
+    animation: ishayaPopupIn 0.4s ease forwards;
+  }
+
+  #ishaya-popup-{{ section.id }} .ishaya-popup-image-link {
+    display: block;
+    line-height: 0;
+    border-radius: 14px;
+    overflow: hidden;
+    cursor: pointer;
+  }
+
+  #ishaya-popup-{{ section.id }} .ishaya-popup-image {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: calc(100dvh - 40px);
+    object-fit: contain;
+    border-radius: 14px;
+  }
+
+  #ishaya-popup-{{ section.id }} .ishaya-popup-close {
+    position: absolute;
+    top: -16px;
+    right: -16px;
+    width: 38px;
+    height: 38px;
+    border: none;
+    border-radius: 50%;
+    background: #ffffff;
+    color: #111111;
+    font-size: 27px;
+    line-height: 1;
+    cursor: pointer;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    transition: transform 0.2s ease;
+  }
+
+  #ishaya-popup-{{ section.id }} .ishaya-popup-close:hover {
+    transform: scale(1.1);
+  }
+
+  @keyframes ishayaPopupIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px) scale(0.94);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @media (max-width: 600px) {
+    #ishaya-popup-{{ section.id }} {
+      padding: 24px;
+    }
+
+    #ishaya-popup-{{ section.id }} .ishaya-popup-content {
+      max-width: min(360px, 100%);
+      max-height: calc(100dvh - 48px);
+    }
+
+    #ishaya-popup-{{ section.id }} .ishaya-popup-image {
+      max-height: calc(100dvh - 48px);
+    }
+
+    #ishaya-popup-{{ section.id }} .ishaya-popup-close {
+      width: 34px;
+      height: 34px;
+      top: -13px;
+      right: -13px;
+      font-size: 24px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #ishaya-popup-{{ section.id }} .ishaya-popup-content {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+(function () {
+  var popupId = 'ishaya-popup-{{ section.id }}';
+  var timer = null;
+  var previousFocus = null;
+  var popup = null;
+
+  function initIshayaPopup() {
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
+    }
+
+    popup = document.getElementById(popupId);
+
+    if (!popup) return;
+
+    var closeButton = popup.querySelector('.ishaya-popup-close');
+    var overlay = popup.querySelector('.ishaya-popup-overlay');
+    var content = popup.querySelector('.ishaya-popup-content');
+    var delay = parseInt(popup.dataset.delay, 10) || 10000;
+
+    function closePopup() {
+      popup.classList.remove('ishaya-active');
+      popup.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+
+      if (previousFocus && previousFocus.isConnected) {
+        previousFocus.focus();
+      }
+    }
+
+    function openPopup() {
+      if (!popup.isConnected) return;
+
+      previousFocus = document.activeElement;
+      popup.classList.add('ishaya-active');
+      popup.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      closeButton.focus();
+    }
+
+    closeButton.onclick = closePopup;
+    overlay.onclick = closePopup;
+
+    popup.onkeydown = function (event) {
+      if (event.key === 'Escape') {
+        closePopup();
+      }
+
+      if (event.key === 'Tab') {
+        var focusable = Array.from(
+          popup.querySelectorAll('button, a[href]')
+        ).filter(function (element) {
+          return !element.disabled;
+        });
+
+        if (!focusable.length) return;
+
+        var first = focusable[0];
+        var last = focusable[focusable.length - 1];
+
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
+    };
+
+    timer = setTimeout(openPopup, delay);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initIshayaPopup);
+  } else {
+    initIshayaPopup();
+  }
+
+  document.addEventListener('shopify:section:load', function (event) {
+    if (event.target.querySelector('#' + popupId)) {
+      initIshayaPopup();
+    }
+  });
+
+  document.addEventListener('shopify:section:unload', function (event) {
+    if (event.target.querySelector('#' + popupId)) {
+      if (timer) clearTimeout(timer);
+      document.body.style.overflow = '';
+    }
+  });
+})();
+</script>
+
+{% endif %}
+
+{% schema %}
+{
+  "name": "ISHAYA Offer Popup",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "enable_popup",
+      "label": "Enable Offer Popup",
+      "default": true
+    },
+    {
+      "type": "image_picker",
+      "id": "offer_image",
+      "label": "Upload Offer Image"
+    },
+    {
+      "type": "url",
+      "id": "offer_link",
+      "label": "Offer Redirect URL"
+    },
+    {
+      "type": "range",
+      "id": "popup_delay",
+      "label": "Popup Delay (Seconds)",
+      "min": 1,
+      "max": 30,
+      "step": 1,
+      "unit": "s",
+      "default": 10
+    }
+  ],
+  "presets": [
+    {
+      "name": "ISHAYA Offer Popup"
+    }
+  ]
+}
+{% endschema %}

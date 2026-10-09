@@ -82,8 +82,6 @@
                     </span>
                   {%- endunless -%}
 
-                  {% render 'cart-line-details', item: item, class_prefix: 'ishaya-cart-page' %}
-
                   <div class="ishaya-cart-page__item-footer">
                     <!-- Quantity Stepper -->
                     <div class="ishaya-cart-page__stepper glass-panel">
@@ -159,34 +157,46 @@
             </div>
 
             <!-- Order Note -->
-            {%- if settings.show_order_notes -%}
-              <details class="ishaya-cart-page__note-details">
-                <summary class="ishaya-cart-page__note-summary">
-                  <span>Special Instructions / Order Note</span>
-                  {% render 'icons', name: 'chevron-down', width: 12, height: 12 %}
-                </summary>
-                <textarea
-                  name="note"
-                  id="CartPageOrderNote"
-                  class="ishaya-cart-page__note-textarea"
-                  placeholder="Special delivery notes or packaging requests..."
-                >{{ cart.note | escape }}</textarea>
-              </details>
-            {%- endif -%}
+            <!-- ISHAYA Full Cart Discount -->
+<div class="ishaya-page-discount">
+  <label for="CartPageDiscountCode">HAVE A DISCOUNT CODE?</label>
+
+  <div class="ishaya-page-discount__form">
+    <input
+      type="text"
+      id="CartPageDiscountCode"
+      placeholder="Enter discount code"
+      autocomplete="off"
+    >
+    <button type="button" id="CartPageApplyDiscount">APPLY</button>
+  </div>
+
+  <p id="CartPageDiscountMessage" aria-live="polite"></p>
+
+  {% if cart.cart_level_discount_applications.size > 0 %}
+    <div class="ishaya-page-discount__applied">
+      {% for discount in cart.cart_level_discount_applications %}
+        <span>{{ discount.title | escape }} Applied</span>
+      {% endfor %}
+      <button type="button" id="CartPageRemoveDiscount">REMOVE</button>
+    </div>
+  {% endif %}
+</div>
+
+{% if cart.total_discount > 0 %}
+  <div class="ishaya-page-discount__saving">
+    <span>
+      DISCOUNT
+      {% for discount in cart.cart_level_discount_applications %}
+        ({{ discount.title | escape }})
+      {% endfor %}
+    </span>
+    <strong>-{{ cart.total_discount | money }}</strong>
+  </div>
+{% endif %}
 
             <!-- Subtotal & Disclaimers -->
             <div class="ishaya-cart-page__subtotal-section">
-              {%- if cart.cart_level_discount_applications.size > 0 -%}
-                <ul class="ishaya-cart-page__cart-discounts" role="list">
-                  {%- for discount in cart.cart_level_discount_applications -%}
-                    <li class="ishaya-cart-page__cart-discount">
-                      <span>{{ discount.title | escape }}</span>
-                      <span>−{{ discount.total_allocated_amount | money }}</span>
-                    </li>
-                  {%- endfor -%}
-                </ul>
-              {%- endif -%}
-
               <div class="ishaya-cart-page__subtotal-row">
                 <span class="ishaya-cart-page__subtotal-label">Subtotal</span>
                 <strong class="ishaya-cart-page__subtotal-amount">{{ cart.total_price | money }}</strong>
@@ -603,88 +613,6 @@
   }
 
   /* Subtotal */
-  /* Bundle contents, line properties and discounts (cart-line-details snippet) */
-  .ishaya-cart-page__bundle {
-    margin-top: 0.4rem;
-  }
-
-  .ishaya-cart-page__bundle-label {
-    display: block;
-    margin-bottom: 0.2rem;
-    font-size: 0.62rem;
-    font-weight: 700;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--color-muted);
-  }
-
-  .ishaya-cart-page__bundle-list,
-  .ishaya-cart-page__discounts,
-  .ishaya-cart-page__cart-discounts {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .ishaya-cart-page__bundle-item {
-    display: flex;
-    gap: 0.35rem;
-    font-size: 0.75rem;
-    line-height: 1.5;
-    color: var(--color-foreground);
-  }
-
-  .ishaya-cart-page__bundle-qty,
-  .ishaya-cart-page__bundle-variant {
-    color: var(--color-muted);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .ishaya-cart-page__properties {
-    margin: 0.35rem 0 0;
-    font-size: 0.75rem;
-    color: var(--color-muted);
-  }
-
-  .ishaya-cart-page__property {
-    display: flex;
-    gap: 0.3rem;
-  }
-
-  .ishaya-cart-page__property dd {
-    margin: 0;
-    color: var(--color-foreground);
-  }
-
-  .ishaya-cart-page__discount {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    margin-top: 0.35rem;
-    font-size: 0.72rem;
-    color: var(--color-accent);
-  }
-
-  .ishaya-cart-page__price-original {
-    display: block;
-    font-size: 0.75em;
-    font-weight: 400;
-    color: var(--color-muted);
-    text-decoration: line-through;
-  }
-
-  .ishaya-cart-page__cart-discounts {
-    margin-bottom: 0.6rem;
-  }
-
-  .ishaya-cart-page__cart-discount {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    font-size: 0.8rem;
-    color: var(--color-muted);
-  }
-
   .ishaya-cart-page__subtotal-section {
     display: flex;
     flex-direction: column;
@@ -823,6 +751,72 @@
       max-width: 140px;
     }
   }
+  .ishaya-page-discount {
+  margin: 10px 0 14px;
+}
+
+.ishaya-page-discount label {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .7px;
+}
+
+.ishaya-page-discount__form {
+  display: flex;
+  gap: 8px;
+}
+
+#CartPageDiscountCode {
+  flex: 1;
+  min-width: 0;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font-size: 13px;
+}
+
+#CartPageApplyDiscount {
+  border: 0;
+  border-radius: 8px;
+  padding: 0 18px;
+  background: #111;
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+#CartPageDiscountMessage {
+  margin: 6px 0 0;
+  font-size: 12px;
+}
+
+#CartPageDiscountMessage:empty {
+  display: none;
+}
+
+.ishaya-page-discount__applied,
+.ishaya-page-discount__saving {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin: 10px 0;
+  font-size: 13px;
+}
+
+#CartPageRemoveDiscount {
+  border: 0;
+  background: transparent;
+  color: #c62828;
+  font-weight: 700;
+  cursor: pointer;
+}
 </style>
 
 <script>
@@ -858,7 +852,70 @@
     }
   })();
 </script>
+<script>
+(function () {
+  async function updateCartDiscount(code, button) {
+    const message = document.getElementById('CartPageDiscountMessage');
 
+    button.disabled = true;
+    if (message) message.textContent = 'Updating discount...';
+
+    try {
+      const root = window.Shopify?.routes?.root || '/';
+
+      const response = await fetch(root + 'cart/update.js', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ discount: code })
+      });
+
+      if (!response.ok) throw new Error('Request failed');
+
+      const cart = await response.json();
+
+      const applied = (cart.discount_codes || []).some(function (item) {
+        return item.code.toUpperCase() === code.toUpperCase()
+          && item.applicable === true;
+      });
+
+      if (code && !applied) {
+        if (message) message.textContent =
+          'This discount code is not applicable to your cart.';
+        return;
+      }
+
+      window.location.reload();
+    } catch (error) {
+      if (message) message.textContent =
+        'Could not update discount. Please try again.';
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  document.getElementById('CartPageApplyDiscount')
+    ?.addEventListener('click', function () {
+      const code = document.getElementById('CartPageDiscountCode')
+        .value.trim().toUpperCase();
+
+      if (!code) {
+        document.getElementById('CartPageDiscountMessage')
+          .textContent = 'Please enter a discount code.';
+        return;
+      }
+
+      updateCartDiscount(code, this);
+    });
+
+  document.getElementById('CartPageRemoveDiscount')
+    ?.addEventListener('click', function () {
+      updateCartDiscount('', this);
+    });
+})();
+</script>
 {% schema %}
 {
   "name": "Cart Page",

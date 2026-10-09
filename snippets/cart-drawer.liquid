@@ -106,12 +106,52 @@
                 </div>
 
                 {%- unless item.product.has_only_default_variant -%}
-                  <span class="ishaya-cart-drawer__item-variant">
-                    {{ item.variant.title }}
-                  </span>
-                {%- endunless -%}
+                <div class="ishaya-cart-drawer__size-row">
+                  {%- for option in item.product.options_with_values -%}
+                    {%- assign option_name = option.name | downcase -%}
 
-                {% render 'cart-line-details', item: item, class_prefix: 'ishaya-cart-drawer' %}
+                    {%- if option_name == 'size' -%}
+                      <label class="ishaya-cart-drawer__size-label">
+                        SIZE
+                        <select
+                          class="ishaya-cart-drawer__size-select"
+                          data-cart-size-change
+                          data-line-key="{{ item.key }}"
+                          data-current-variant="{{ item.variant.id }}"
+                          aria-label="Change size for {{ item.product.title | escape }}"
+                        >
+                          {%- assign size_index = forloop.index0 -%}
+
+                          {%- for variant in item.product.variants -%}
+                            {%- assign same_other_options = true -%}
+
+                            {%- for product_option in item.product.options_with_values -%}
+                              {%- assign option_index = forloop.index0 -%}
+
+                              {%- unless option_index == size_index -%}
+                                {%- if variant.options[option_index] != item.variant.options[option_index] -%}
+                                  {%- assign same_other_options = false -%}
+                                {%- endif -%}
+                              {%- endunless -%}
+                            {%- endfor -%}
+
+                            {%- if same_other_options -%}
+                              <option
+                                value="{{ variant.id }}"
+                                {% if variant.id == item.variant.id %}selected{% endif %}
+                                {% unless variant.available %}disabled{% endunless %}
+                              >
+                                {{ variant.options[size_index] }}
+                                {% unless variant.available %} - Sold Out{% endunless %}
+                              </option>
+                            {%- endif -%}
+                          {%- endfor -%}
+                        </select>
+                      </label>
+                    {%- endif -%}
+                  {%- endfor -%}
+                </div>
+              {%- endunless -%}
 
                 <div class="ishaya-cart-drawer__item-footer">
                   <!-- Stepper -->
@@ -141,9 +181,6 @@
 
                   <!-- Price -->
                   <div class="ishaya-cart-drawer__item-price">
-                    {%- if item.original_line_price > item.final_line_price -%}
-                      <s class="ishaya-cart-drawer__price-original">{{ item.original_line_price | money }}</s>
-                    {%- endif -%}
                     {{ item.final_line_price | money }}
                   </div>
                 </div>
@@ -174,32 +211,264 @@
       class="ishaya-cart-drawer__footer{% if cart.item_count == 0 %} ishaya-cart-drawer__footer--hidden{% endif %}"
       id="CartDrawerFooter"
     >
-      {%- if settings.show_order_notes -%}
-        <details class="ishaya-cart-drawer__note-details">
-          <summary class="ishaya-cart-drawer__note-summary">
-            <span>Special Instructions / Order Note</span>
-            {% render 'icons', name: 'chevron-down', width: 10, height: 10 %}
-          </summary>
-          <textarea
-            id="CartDrawerOrderNote"
-            class="ishaya-cart-drawer__note-textarea"
-            placeholder="Add delivery instructions or archival packaging notes..."
-          >{{ cart.note | escape }}</textarea>
-        </details>
-      {%- endif -%}
+      
+       
+<!-- ISHAYA Discount Code -->
+<div class="ishaya-discount-box">
+  <label for="IshayaDiscountCode">
+    HAVE A DISCOUNT CODE?
+  </label>
 
+  <form id="IshayaDiscountForm">
+    <input
+      type="text"
+      id="IshayaDiscountCode"
+      placeholder="Enter discount code"
+      autocomplete="off"
+    >
+    <button type="submit">APPLY</button>
+  </form>
+
+  <p id="IshayaDiscountMessage" aria-live="polite"></p>
+    {% if cart.cart_level_discount_applications.size > 0 %}
+  <div class="ishaya-applied-discount">
+    {% for discount in cart.cart_level_discount_applications %}
+      <span>{{ discount.title | escape }} Applied</span>
+    {% endfor %}
+
+    <button type="button" id="IshayaRemoveDiscount">
+      REMOVE
+    </button>
+  </div>
+{% endif %}
+</div>
+
+<style>
+.ishaya-discount-box {
+  margin: 14px 0 20px;
+}
+
+.ishaya-discount-box label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+}
+
+#IshayaDiscountForm {
+  display: flex;
+  gap: 8px;
+}
+
+#IshayaDiscountCode {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 14px;
+  background: transparent;
+  color: inherit;
+}
+
+#IshayaDiscountForm button {
+  border: 0;
+  border-radius: 8px;
+  background: #111;
+  color: #fff;
+  padding: 0 18px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+#IshayaDiscountMessage {
+  font-size: 12px;
+  margin-top: 8px;
+}
+.ishaya-applied-discount {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+#IshayaRemoveDiscount {
+  border: 0;
+  background: transparent;
+  color: #c62828;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+/* ISHAYA - Compact Premium Cart Footer */
+
+.ishaya-discount-box {
+  margin: 8px 0 10px !important;
+}
+
+.ishaya-discount-box label {
+  font-size: 11px !important;
+  letter-spacing: 0.6px !important;
+  margin-bottom: 6px !important;
+}
+
+#IshayaDiscountForm {
+  gap: 7px !important;
+}
+
+#IshayaDiscountCode {
+  padding: 9px 11px !important;
+  font-size: 13px !important;
+  min-height: 40px !important;
+}
+
+#IshayaDiscountForm button {
+  padding: 0 15px !important;
+  font-size: 12px !important;
+  min-height: 40px !important;
+}
+
+#IshayaDiscountMessage:empty {
+  display: none !important;
+}
+
+#IshayaDiscountMessage {
+  margin: 5px 0 0 !important;
+  font-size: 11px !important;
+}
+
+.ishaya-applied-discount {
+  margin-top: 6px !important;
+}
+
+.ishaya-cart-drawer__subtotal-row {
+  margin-top: 5px !important;
+  margin-bottom: 5px !important;
+}
+
+.ishaya-cart-drawer__tax-disclaimer {
+  margin-top: 5px !important;
+  margin-bottom: 8px !important;
+  font-size: 11px !important;
+}
+
+/* Reduce spacing around order note */
+.ishaya-cart-drawer__note-details {
+  margin-bottom: 4px !important;
+}
+/* ISHAYA - Extra Compact Cart Footer */
+
+.ishaya-cart-drawer__note-details {
+  margin: 0 0 2px !important;
+  padding: 0 !important;
+}
+
+.ishaya-cart-drawer__note-details > summary {
+  padding-top: 5px !important;
+  padding-bottom: 5px !important;
+}
+
+.ishaya-discount-box {
+  margin: 4px 0 6px !important;
+  padding: 0 !important;
+}
+
+.ishaya-discount-box label {
+  margin-bottom: 5px !important;
+}
+
+#IshayaDiscountCode,
+#IshayaDiscountForm button {
+  min-height: 38px !important;
+}
+
+#IshayaDiscountMessage:empty {
+  display: none !important;
+  margin: 0 !important;
+}
+
+.ishaya-cart-drawer__subtotal-row {
+  margin: 0 !important;
+  padding: 5px 0 !important;
+}
+
+.ishaya-cart-drawer__tax-disclaimer {
+  margin: 3px 0 7px !important;
+}
+/* ISHAYA - Compact Cart Drawer Footer */
+
+/* Discount section */
+.ishaya-discount-box {
+  margin: 0 0 8px !important;
+  padding: 0 !important;
+}
+
+.ishaya-discount-box label {
+  margin-bottom: 6px !important;
+}
+
+#IshayaDiscountCode {
+  min-height: 40px !important;
+  padding: 9px 12px !important;
+}
+
+#IshayaDiscountForm button {
+  min-height: 40px !important;
+  padding: 0 16px !important;
+}
+
+/* Subtotal */
+.ishaya-cart-drawer__subtotal-row {
+  margin: 0 !important;
+  padding: 5px 0 !important;
+}
+
+/* Tax information */
+.ishaya-cart-drawer__tax-disclaimer {
+  margin: 4px 0 10px !important;
+  padding: 0 !important;
+  line-height: 1.4 !important;
+}
+
+/* Checkout button */
+.ishaya-cart-drawer__checkout-btn {
+  min-height: 44px !important;
+  height: 44px !important;
+  padding: 0 18px !important;
+  font-size: 12px !important;
+  letter-spacing: 1.3px !important;
+  line-height: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Footer links */
+.ishaya-cart-drawer__checkout-btn + * {
+  margin-top: 8px !important;
+}
+</style>
+<!-- End ISHAYA Discount Code -->
+      {% if cart.total_discount > 0 %}
+  <div class="ishaya-cart-drawer__subtotal-row"
+       style="color:#16803c; margin-bottom:10px;">
+    <span class="ishaya-cart-drawer__subtotal-label">
+      DISCOUNT
+      {% for discount in cart.cart_level_discount_applications %}
+        ({{ discount.title | escape }})
+      {% endfor %}
+    </span>
+
+    <strong class="ishaya-cart-drawer__subtotal-val">
+      -{{ cart.total_discount | money }}
+    </strong>
+  </div>
+{% endif %}
       <!-- Subtotal -->
-      {%- if cart.cart_level_discount_applications.size > 0 -%}
-        <ul class="ishaya-cart-drawer__cart-discounts" role="list">
-          {%- for discount in cart.cart_level_discount_applications -%}
-            <li class="ishaya-cart-drawer__cart-discount">
-              <span>{{ discount.title | escape }}</span>
-              <span>−{{ discount.total_allocated_amount | money }}</span>
-            </li>
-          {%- endfor -%}
-        </ul>
-      {%- endif -%}
-
       <div class="ishaya-cart-drawer__subtotal-row">
         <span class="ishaya-cart-drawer__subtotal-label">SUBTOTAL</span>
         <strong class="ishaya-cart-drawer__subtotal-val" id="CartDrawerSubtotal">
@@ -266,88 +535,6 @@
   @keyframes cartSlideIn {
     from { transform: translateX(100%); }
     to { transform: translateX(0); }
-  }
-
-  /* Bundle contents, line properties and discounts (cart-line-details snippet) */
-  .ishaya-cart-drawer__bundle {
-    margin-top: 0.4rem;
-  }
-
-  .ishaya-cart-drawer__bundle-label {
-    display: block;
-    margin-bottom: 0.2rem;
-    font-size: 0.62rem;
-    font-weight: 700;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--color-muted);
-  }
-
-  .ishaya-cart-drawer__bundle-list,
-  .ishaya-cart-drawer__discounts,
-  .ishaya-cart-drawer__cart-discounts {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .ishaya-cart-drawer__bundle-item {
-    display: flex;
-    gap: 0.35rem;
-    font-size: 0.75rem;
-    line-height: 1.5;
-    color: var(--color-foreground);
-  }
-
-  .ishaya-cart-drawer__bundle-qty,
-  .ishaya-cart-drawer__bundle-variant {
-    color: var(--color-muted);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .ishaya-cart-drawer__properties {
-    margin: 0.35rem 0 0;
-    font-size: 0.75rem;
-    color: var(--color-muted);
-  }
-
-  .ishaya-cart-drawer__property {
-    display: flex;
-    gap: 0.3rem;
-  }
-
-  .ishaya-cart-drawer__property dd {
-    margin: 0;
-    color: var(--color-foreground);
-  }
-
-  .ishaya-cart-drawer__discount {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    margin-top: 0.35rem;
-    font-size: 0.72rem;
-    color: var(--color-accent);
-  }
-
-  .ishaya-cart-drawer__price-original {
-    display: block;
-    font-size: 0.75em;
-    font-weight: 400;
-    color: var(--color-muted);
-    text-decoration: line-through;
-  }
-
-  .ishaya-cart-drawer__cart-discounts {
-    margin-bottom: 0.6rem;
-  }
-
-  .ishaya-cart-drawer__cart-discount {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    font-size: 0.8rem;
-    color: var(--color-muted);
   }
 
   /* Header */
@@ -740,9 +927,83 @@
   .ishaya-cart-drawer__view-cart-link:hover {
     color: var(--color-foreground);
   }
+  /* ISHAYA - Cart Size Selector */
+
+.ishaya-cart-drawer__size-row {
+  margin-top: 10px;
+}
+
+.ishaya-cart-drawer__size-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--color-muted);
+}
+
+.ishaya-cart-drawer__size-select {
+  min-width: 72px;
+  padding: 7px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: var(--color-foreground);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ishaya-cart-drawer__size-select:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+@media (max-width: 749px) {
+  .ishaya-cart-drawer__size-row {
+    margin-top: 8px;
+  }
+
+  .ishaya-cart-drawer__size-select {
+    min-width: 65px;
+    padding: 6px 9px;
+    font-size: 12px;
+  }
+}
 </style>
 
 <script>
+  // ISHAYA - Remove discount
+document.addEventListener('click', async function(event) {
+  if (event.target.id !== 'IshayaRemoveDiscount') return;
+
+  const button = event.target;
+  button.disabled = true;
+  button.textContent = 'REMOVING...';
+
+  try {
+    const root = window.Shopify?.routes?.root || '/';
+
+    const response = await fetch(root + 'cart/update.js', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ discount: '' })
+    });
+
+    if (!response.ok) throw new Error('Failed to remove discount');
+
+    await window.refreshCartDrawer();
+
+  } catch (error) {
+    button.disabled = false;
+    button.textContent = 'REMOVE';
+    alert('Could not remove discount. Please try again.');
+  }
+});
   (function() {
     const drawer = document.getElementById('CartDrawer');
     if (!drawer) return;
@@ -782,7 +1043,66 @@
       current.innerHTML = next.innerHTML;
       current.className = next.className;
     }
+    // ISHAYA - Apply discount without leaving cart drawer
+document.addEventListener('submit', async function(event) {
+  if (event.target.id !== 'IshayaDiscountForm') return;
 
+  event.preventDefault();
+
+  const form = event.target;
+  const input = form.querySelector('#IshayaDiscountCode');
+  const message = document.getElementById('IshayaDiscountMessage');
+  const button = form.querySelector('button');
+
+  const code = input.value.trim().toUpperCase();
+
+  if (!code) {
+    message.textContent = 'Please enter a discount code.';
+    return;
+  }
+
+  button.disabled = true;
+  message.textContent = 'Checking discount...';
+
+  try {
+    const response = await fetch(
+      (window.Shopify?.routes?.root || '/') + 'cart/update.js',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ discount: code })
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Discount request failed');
+    }
+
+    const cart = await response.json();
+
+    // Refresh totals using Shopify's cart data
+    await window.refreshCartDrawer();
+
+    const newInput = document.getElementById('IshayaDiscountCode');
+    const newMessage = document.getElementById('IshayaDiscountMessage');
+
+    if (newInput) newInput.value = code;
+
+    if (newMessage) {
+      newMessage.textContent =
+        'Code submitted. Final discount eligibility is confirmed at checkout.';
+    }
+
+  } catch (error) {
+    message.textContent =
+      'Unable to check discount. Please try again.';
+  } finally {
+    button.disabled = false;
+  }
+});
     window.refreshCartDrawer = function() {
       return fetch(sectionUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
         .then(function(res) { return res.json(); })
@@ -858,6 +1178,111 @@
     }
 
     // Auto-save Order Note on blur (delegated so it survives drawer re-renders)
+    // ISHAYA - Change cart size
+
+let cartSizeUpdating = false;
+
+drawer.addEventListener('change', async function(e) {
+  const select = e.target.closest('[data-cart-size-change]');
+  if (!select) return;
+
+  const oldVariant = String(select.dataset.currentVariant);
+  const newVariant = String(select.value);
+  const oldKey = select.dataset.lineKey;
+
+  if (oldVariant === newVariant) return;
+
+  if (cartSizeUpdating) {
+    select.value = oldVariant;
+    return;
+  }
+
+  cartSizeUpdating = true;
+  select.disabled = true;
+
+  const checkoutBtn = drawer.querySelector('#CartDrawerCheckoutBtn');
+
+  if (checkoutBtn) {
+    checkoutBtn.style.pointerEvents = 'none';
+    checkoutBtn.setAttribute('aria-disabled', 'true');
+  }
+
+  const request = async (url, body) => {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.description || data.message || 'Cart update failed');
+    }
+
+    return data;
+  };
+
+  let addedQuantity = 0;
+
+  try {
+    const cart = await fetch('/cart.js').then(r => r.json());
+    const oldItem = cart.items.find(item => item.key === oldKey);
+
+    if (!oldItem) throw new Error('Cart item not found');
+
+    const quantity = oldItem.quantity;
+
+    const addBody = {
+      items: [{
+        id: Number(newVariant),
+        quantity: quantity,
+        properties: oldItem.properties || {}
+      }]
+    };
+
+    if (oldItem.selling_plan_allocation) {
+      addBody.items[0].selling_plan =
+        oldItem.selling_plan_allocation.selling_plan.id;
+    }
+
+    await request('/cart/add.js', addBody);
+    addedQuantity = quantity;
+
+    await request('/cart/change.js', {
+      id: oldKey,
+      quantity: 0
+    });
+
+    await window.refreshCartDrawer();
+
+    document.dispatchEvent(new CustomEvent('ishaya:cart:updated'));
+
+  } catch (error) {
+    console.error('ISHAYA size change error:', error);
+
+    if (addedQuantity > 0) {
+      console.warn('New variant was added. Check cart before retrying.');
+    }
+
+    alert(
+      'Size update could not be completed. Please check your shopping bag before trying again.'
+    );
+
+    await window.refreshCartDrawer();
+
+  } finally {
+    cartSizeUpdating = false;
+
+    if (checkoutBtn) {
+      checkoutBtn.style.pointerEvents = '';
+      checkoutBtn.removeAttribute('aria-disabled');
+    }
+  }
+});
     drawer.addEventListener('change', function(e) {
       const noteTextarea = e.target.closest('#CartDrawerOrderNote');
       if (!noteTextarea) return;
