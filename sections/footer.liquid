@@ -284,7 +284,7 @@
 <style>
     .ishaya-footer-bar {
   width: 100%;
-  background: #09090B;
+  background: #101010;
   color: #696B76;
   font-family: var(--font-body-family);
   display: flex;
@@ -316,6 +316,23 @@
     font-size: 11px;
   }
 }
+/* ISHAYA Footer - Light & Dark Mode */
+
+:root[data-theme="light"] .shopify-section-group-footer-group,
+:root[data-theme="light"] #shopify-section-footer {
+  --footer-bg: #fafafa;
+  --footer-text: #111111;
+  --footer-muted: #666670;
+  --footer-border: #e5e5e5;
+}
+
+:root[data-theme="dark"] .shopify-section-group-footer-group,
+:root[data-theme="dark"] #shopify-section-footer {
+  --footer-bg: #111111;
+  --footer-text: #ffffff;
+  --footer-muted: #b0b0b8;
+  --footer-border: #333333;
+}
 </style>
     <!-- Mobile Bottom Tag -->
     {% comment %}
@@ -344,14 +361,113 @@
 </footer>
 
 <style>
+  /* Footer Color Test */
+/* ISHAYA FOOTER — UNIFIED LIGHT & DARK MODE */
+
+.zb-footer {
+  --ishaya-footer-bg: #fafafa;
+  --ishaya-footer-text: #111111;
+  --ishaya-footer-muted: #666670;
+  --ishaya-footer-border: #e5e5e5;
+  --ishaya-footer-surface: #ffffff;
+
+  background: var(--ishaya-footer-bg) !important;
+  color: var(--ishaya-footer-text) !important;
+}
+
+:root[data-theme="dark"] .zb-footer,
+html.dark .zb-footer,
+body.dark .zb-footer {
+  --ishaya-footer-bg: #101010;
+  --ishaya-footer-text: #f5f5f5;
+  --ishaya-footer-muted: #b0b0b8;
+  --ishaya-footer-border: #333333;
+  --ishaya-footer-surface: #1c1c1c;
+}
+
+.zb-footer .zb-footer-heading,
+.zb-footer .zb-footer-brand-title,
+.zb-footer .zb-mobile-footer-title,
+.zb-footer .zb-accordion-title,
+.zb-footer .zb-mobile-newsletter-title {
+  color: var(--ishaya-footer-text) !important;
+}
+
+.zb-footer .zb-footer-brand-statement,
+.zb-footer .zb-footer-link,
+.zb-footer .zb-footer-connect-row,
+.zb-footer .zb-footer-newsletter-text,
+.zb-footer .zb-mobile-newsletter-text,
+.zb-footer .zb-accordion-link,
+.zb-footer .zb-footer-connect-row span {
+  color: var(--ishaya-footer-muted) !important;
+}
+
+.zb-footer .zb-accordion-card,
+.zb-footer .zb-mobile-newsletter-card {
+  background: var(--ishaya-footer-surface) !important;
+  border-color: var(--ishaya-footer-border) !important;
+}
+
+.zb-footer .zb-newsletter-input {
+  color: var(--ishaya-footer-text) !important;
+  border-color: var(--ishaya-footer-border) !important;
+}
+
+.zb-footer .zb-mobile-social-btn,
+.zb-footer .zb-accordion-chevron {
+  color: var(--ishaya-footer-muted) !important;
+  border-color: var(--ishaya-footer-border) !important;
+}
+
+.zb-footer .zb-footer-divider,
+.zb-footer .zb-accordion-body {
+  border-color: var(--ishaya-footer-border) !important;
+}
+
+.zb-footer .ishaya-mobile-legal-bar {
+  background: #101010 !important;
+  color: #b0b0b8 !important;
+}
+
+.zb-footer .ishaya-mobile-legal-bar a,
+.zb-footer .ishaya-mobile-legal-bar span {
+  color: #b0b0b8 !important;
+}
   .zb-footer {
-    width: 100%;
-    background: var(--color-background);
-    color: var(--color-foreground);
-    position: relative;
-    z-index: 10;
-    margin-top: auto;
-  }
+  width: 100%;
+  background: #fafafa;
+  color: #111111;
+  position: relative;
+  z-index: 10;
+  margin-top: auto;
+}
+
+/* Dark Mode */
+:root[data-theme="dark"] .zb-footer {
+  background: #101010;
+  color: #ffffff;
+}
+/* Footer Text - Both Modes */
+.zb-footer h2,
+.zb-footer h3,
+.zb-footer h4,
+.zb-footer p,
+.zb-footer a,
+.zb-footer span,
+.zb-footer label {
+  color: #111111;
+}
+
+:root[data-theme="dark"] .zb-footer h2,
+:root[data-theme="dark"] .zb-footer h3,
+:root[data-theme="dark"] .zb-footer h4,
+:root[data-theme="dark"] .zb-footer p,
+:root[data-theme="dark"] .zb-footer a,
+:root[data-theme="dark"] .zb-footer span,
+:root[data-theme="dark"] .zb-footer label {
+  color: #ffffff;
+}
   .zb-footer-divider {
     height: 1px;
     width: 100%;
@@ -419,12 +535,13 @@
     font-weight: 700;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: var(--color-foreground);
+    color: inherit;
     line-height: 1;
   }
   .zb-footer-brand-statement {
     font-size: 0.625rem; /* 10px */
-    color: var(--color-muted);
+    color: inherit;
+    opacity: 0.7;
     line-height: 2;
     letter-spacing: 0.05em;
     max-width: 18rem;
@@ -813,8 +930,87 @@
 .ishaya-mobile-legal-bar a:hover {
   text-decoration: underline;
 }
-</style>
+/* ISHAYA FINAL FOOTER BACKGROUND FIX */
 
+/* ISHAYA FINAL PREMIUM BLACK FOOTER */
+
+html body .zb-footer,
+html[data-theme="light"] body .zb-footer,
+html[data-theme="dark"] body .zb-footer {
+  --ishaya-footer-bg: #101010;
+  --ishaya-footer-text: #ffffff;
+  --ishaya-footer-muted: #b0b0b8;
+  --ishaya-footer-border: #333333;
+  --ishaya-footer-surface: #1c1c1c;
+
+  background: #101010 !important;
+  background-color: #101010 !important;
+  color: #ffffff !important;
+}
+
+html body .zb-footer .zb-footer-desktop,
+html body .zb-footer .zb-footer-mobile {
+  background: transparent !important;
+  color: #ffffff !important;
+}
+
+html body .zb-footer .zb-footer-heading,
+html body .zb-footer .zb-footer-brand-title,
+html body .zb-footer .zb-mobile-footer-title,
+html body .zb-footer .zb-accordion-title,
+html body .zb-footer .zb-mobile-newsletter-title {
+  color: #ffffff !important;
+}
+
+html body .zb-footer .zb-footer-brand-statement,
+html body .zb-footer .zb-footer-link,
+html body .zb-footer .zb-footer-connect-row,
+html body .zb-footer .zb-footer-newsletter-text,
+html body .zb-footer .zb-mobile-newsletter-text,
+html body .zb-footer .zb-accordion-link {
+  color: #b0b0b8 !important;
+}
+
+html body .zb-footer .zb-footer-logo-img {
+  filter: brightness(0) invert(1) !important;
+}
+
+html body .zb-footer .zb-newsletter-submit-btn {
+  background: #ffffff !important;
+  color: #101010 !important;
+}
+
+html body .zb-footer .zb-newsletter-input {
+  color: #ffffff !important;
+  border-color: #444444 !important;
+}
+
+html body .zb-footer .zb-accordion-card,
+html body .zb-footer .zb-mobile-newsletter-card {
+  background: #1c1c1c !important;
+  border-color: #333333 !important;
+}
+/* ISHAYA - MATCH COPYRIGHT BAR WITH FOOTER */
+
+html body .zb-footer .ishaya-footer-bar,
+html body .ishaya-footer-bar,
+html body .ishaya-mobile-legal-bar {
+  background: #101010 !important;
+  background-color: #101010 !important;
+  border-top-color: #101010 !important;
+}
+
+html body .ishaya-footer-bar,
+html body .ishaya-mobile-legal-bar {
+  color: #b0b0b8 !important;
+}
+
+html body .ishaya-footer-bar a,
+html body .ishaya-mobile-legal-bar a {
+  color: #b0b0b8 !important;
+}
+</style>
+ 
 {% schema %}
 {
   "name": "t:general.footer",

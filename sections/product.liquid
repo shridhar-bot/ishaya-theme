@@ -7,17 +7,6 @@
     assign on_sale = true
   endif
 
-  assign size_rows = section.blocks | where: 'type', 'size_row'
-
-  assign set_products = product.metafields.custom.bundle_products.value
-  assign is_set_mode = false
-  if set_products != blank
-    assign product_tags = product.tags | join: ',' | downcase | split: ','
-    if product_tags contains 'bundle'
-      assign is_set_mode = true
-    endif
-  endif
-
   assign is_sold_out = true
   if current_variant.available
     assign is_sold_out = false
@@ -121,7 +110,7 @@
 
       <!-- Right Column: Product Details Rail -->
       <div class="ishaya-pdp__details">
-        <div class="ishaya-pdp__rail{% if is_set_mode %} ishaya-pdp__rail--set{% endif %}">
+        <div class="ishaya-pdp__rail">
           <!-- Series Tag / Vendor -->
           {% comment %}<div class="ishaya-pdp__tag-row">
             <span class="ishaya-pdp__vendor">
@@ -133,15 +122,15 @@
                 and product.metafields.custom.rating.value != blank
                 and product.metafields.custom.review_count.value != blank
               -%}
-                <div class="ishaya-pdp__rating">
+                <a href="#product-reviews" class="ishaya-pdp__rating" style="color: inherit; text-decoration: none; cursor: pointer;">
                   <span class="ishaya-pdp__rating-star">★</span>
                   <span class="ishaya-pdp__rating-score">
                     {{ product.metafields.custom.rating.value }}/5
                   </span>
-                  <span class="ishaya-pdp__rating-count">
-                    ({{ product.metafields.custom.review_count.value }} Reviews)
-                  </span>
-                </div>
+                    <span class="ishaya-pdp__rating-count">
+                      ({{ product.metafields.custom.review_count.value }} Reviews)
+                    </span>
+                </a>
               {%- endif -%}
           <!-- Product Title -->
           <h1 class="ishaya-pdp__title">{{ product.title }}</h1>
@@ -211,7 +200,7 @@
                           assign is_size_option = true
                         endif
                       -%}
-                      {%- if is_size_option and section.settings.size_guide_enabled and size_rows.size > 0 -%}
+                      {%- if is_size_option and section.settings.size_guide_enabled and section.blocks.size > 0 -%}
                         <button
                           type="button"
                           class="ishaya-pdp__size-guide-trigger"
@@ -301,16 +290,107 @@
             </div>
           {% endform %}
 
-          {%- if set_products != blank -%}
-            {%- assign set_title = product.metafields.custom.bundle_title.value | default: product.title -%}
-            {% render 'product-set',
-              products: set_products,
-              set_title: set_title,
-              set_image: product.featured_media,
-              is_set_mode: is_set_mode,
-              note: product.metafields.custom.bundle_note.value
-            %}
-          {%- endif -%}
+          <!-- ISHAYA - Write a Review -->
+          <details class="ishaya-pdp__review-box">
+            <summary class="ishaya-pdp__review-trigger">
+              WRITE A REVIEW
+              <span aria-hidden="true">+</span>
+            </summary>
+
+            <div class="ishaya-pdp__review-panel">
+              <h3>SHARE YOUR EXPERIENCE</h3>
+              <p>Tell us what you think about this product.</p>
+
+              {% form 'contact', id: 'IshayaReviewForm' %}
+                {% if form.posted_successfully? %}
+                  <p class="ishaya-pdp__review-success">
+                    Thank you! Your review has been submitted.
+                  </p>
+                {% endif %}
+
+                {% if form.errors %}
+                  <div class="ishaya-pdp__review-error">
+                    {{ form.errors | default_errors }}
+                  </div>
+                {% endif %}
+
+                <input
+                  type="hidden"
+                  name="contact[Product]"
+                  value="{{ product.title | escape }}"
+                >
+
+                <input
+                  type="hidden"
+                  name="contact[Product URL]"
+                  value="{{ shop.url }}{{ product.url }}"
+                >
+
+                <label for="IshayaReviewName">YOUR NAME</label>
+                <input
+                  id="IshayaReviewName"
+                  type="text"
+                  name="contact[name]"
+                  placeholder="Enter your name"
+                  required
+                >
+  
+                <label for="IshayaReviewLocation">YOUR LOCATION</label>
+                <input
+                  id="IshayaReviewLocation"
+                  type="text"
+                  name="contact[Location]"
+                  placeholder="City, State (e.g. Surat, Gujarat)"
+                  maxlength="100"
+                  required
+                >
+                  
+                <label for="IshayaReviewEmail">EMAIL ADDRESS</label>
+                <input
+                  id="IshayaReviewEmail"
+                  type="email"
+                  name="contact[email]"
+                  placeholder="Enter your email"
+                  required
+                >
+
+                <label for="IshayaReviewRating">YOUR RATING</label>
+                <select
+                  id="IshayaReviewRating"
+                  name="contact[Rating]"
+                  required
+                >
+                  <option value="5 Stars">★★★★★ - Excellent</option>
+                  <option value="4 Stars">★★★★☆ - Good</option>
+                  <option value="3 Stars">★★★☆☆ - Average</option>
+                  <option value="2 Stars">★★☆☆☆ - Poor</option>
+                  <option value="1 Star">★☆☆☆☆ - Bad</option>
+                </select>
+
+                <label for="IshayaReviewTitle">REVIEW TITLE</label>
+                <input
+                  id="IshayaReviewTitle"
+                  type="text"
+                  name="contact[Review Title]"
+                  placeholder="Give your review a title"
+                  required
+                >
+
+                <label for="IshayaReviewMessage">YOUR REVIEW</label>
+                <textarea
+                  id="IshayaReviewMessage"
+                  name="contact[body]"
+                  rows="5"
+                  placeholder="Share your experience with this T-shirt..."
+                  required
+                ></textarea>
+
+                <button type="submit" class="ishaya-pdp__review-submit">
+                  SUBMIT REVIEW
+                </button>
+              {% endform %}
+            </div>
+          </details>
 
           <!-- Product information — tabbed card -->
           {%- liquid
@@ -469,7 +549,7 @@
   </div>
 </section>
 
-{%- if section.settings.size_guide_enabled and size_rows.size > 0 -%}
+{%- if section.settings.size_guide_enabled and section.blocks.size > 0 -%}
   <div class="ishaya-size-guide" id="SizeGuideModal" data-size-guide hidden>
     <div class="ishaya-size-guide__backdrop" data-size-guide-close></div>
     <div
@@ -529,7 +609,7 @@
   </div>
 {%- endif -%}
 
-{%- if section.settings.sticky_buy_bar_enabled and is_set_mode == false -%}
+{%- if section.settings.sticky_buy_bar_enabled -%}
   <div class="ishaya-sticky-buy" id="StickyBuyBar" data-sticky-buy aria-hidden="true">
     <div class="ishaya-sticky-buy__media">
       {%- if featured_media != blank -%}
@@ -559,10 +639,10 @@
     </button>
   </div>
 {%- endif -%}
-
+ 
 <style>
   .ishaya-pdp {
-    padding-top: 5.5rem;
+    padding-top: 9rem;
     padding-bottom: clamp(4rem, 8vw, 7rem);
     background-color: var(--color-background);
     color: var(--color-foreground);
@@ -598,7 +678,7 @@
 
   @media (max-width: 767px) {
     .ishaya-pdp {
-      padding-top: 4.5rem;
+      padding-top: 8rem;
     }
   }
 
@@ -843,13 +923,6 @@
   }
 
   /* Form & Variant Pickers */
-  /* Shop the set: the set builder replaces the product's own buy box */
-  .ishaya-pdp__rail--set .ishaya-pdp__price-block,
-  .ishaya-pdp__rail--set .ishaya-pdp__stock-status,
-  .ishaya-pdp__rail--set .ishaya-pdp__form {
-    display: none;
-  }
-
   .ishaya-pdp__form {
     display: flex;
     flex-direction: column;
@@ -1458,6 +1531,125 @@
       transform: none;
     }
   }
+/* ISHAYA - Mobile Sticky Bar Product Title */
+
+@media screen and (max-width: 749px) {
+  .ishaya-sticky-buy__title {
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    line-height: 1.3 !important;
+    letter-spacing: 0.01em !important;
+  }
+}
+
+/* ISHAYA - Write a Review */
+.ishaya-pdp__review-box {
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-surface);
+  overflow: hidden;
+}
+
+.ishaya-pdp__review-trigger {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 20px;
+  cursor: pointer;
+  color: var(--color-foreground);
+  font-family: sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  list-style: none;
+}
+
+.ishaya-pdp__review-trigger::-webkit-details-marker {
+  display: none;
+}
+
+.ishaya-pdp__review-trigger span {
+  font-size: 23px;
+  font-weight: 400;
+}
+
+.ishaya-pdp__review-box[open] .ishaya-pdp__review-trigger span {
+  transform: rotate(45deg);
+}
+
+.ishaya-pdp__review-panel {
+  padding: 0 20px 22px;
+  color: var(--color-foreground);
+}
+
+.ishaya-pdp__review-panel h3 {
+  font-size: 17px;
+  margin: 5px 0;
+}
+
+.ishaya-pdp__review-panel p {
+  font-size: 13px;
+  color: var(--color-muted);
+  margin-bottom: 18px;
+}
+
+.ishaya-pdp__review-panel form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ishaya-pdp__review-panel label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.ishaya-pdp__review-panel input,
+.ishaya-pdp__review-panel select,
+.ishaya-pdp__review-panel textarea {
+  width: 100%;
+  min-height: 46px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font: inherit;
+  font-size: 14px;
+}
+
+.ishaya-pdp__review-panel textarea {
+  resize: vertical;
+}
+
+.ishaya-pdp__review-submit {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 8px;
+  border: none;
+  border-radius: 9px;
+  background: var(--color-foreground);
+  color: var(--color-background);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+}
+
+.ishaya-pdp__review-success {
+  color: #16a34a !important;
+}
+
+@media (max-width: 749px) {
+  .ishaya-pdp__review-trigger {
+    padding: 16px;
+  }
+
+  .ishaya-pdp__review-panel {
+    padding: 0 16px 18px;
+  }
+}
 
 </style>
 
@@ -1719,22 +1911,14 @@
             'X-Requested-With': 'XMLHttpRequest'
           }
         })
-        .then(function(res) {
-          return res.json().then(function(data) {
-            if (!res.ok) throw new Error(data.description || data.message || 'Could not add to bag');
-            return data;
-          });
-        })
+        .then(function(res) { return res.json(); })
         .then(function(item) {
           if (addText) addText.textContent = 'ADDED TO BAG ✓';
 
           if (typeof window.refreshCartDrawer === 'function') {
             window.refreshCartDrawer();
           }
-          // Bottom sheet with the highlighted product name instead of the drawer.
-          if (typeof window.showCartNotification === 'function') {
-            window.showCartNotification(item);
-          } else if (typeof window.openCartDrawer === 'function') {
+          if (typeof window.openCartDrawer === 'function') {
             window.openCartDrawer();
           }
 

@@ -293,7 +293,7 @@
 
   /* Heading */
   .ishaya-hero__heading {
-    font-size: clamp(2.5rem, 7.5vw, 6.25rem);
+    font-size: clamp(2rem, 5vw, 4.5rem);
     font-weight: 900;
     line-height: 0.96;
     letter-spacing: -0.02em;
@@ -304,7 +304,7 @@
 
   /* Subheading */
   .ishaya-hero__subheading {
-    font-size: clamp(0.95rem, 1.8vw, 1.25rem);
+    font-size: clamp(0.8rem, 1.2vw, 1rem);  
     font-weight: 400;
     line-height: 1.6;
     color: #d4d4d8;
@@ -402,6 +402,61 @@
       font-size: 0.65rem;
     }
   }
+  
+/* ISHAYA - PREMIUM MOBILE HERO FIX */
+@media screen and (max-width: 768px) {
+
+  /* Main Heading */
+  .ishaya-hero__heading {
+    font-size: clamp(1.85rem, 7.5vw, 2.5rem) !important;
+    line-height: 1.12 !important;
+    letter-spacing: -0.025em !important;
+    margin-top: 0 !important;
+    margin-bottom: 14px !important;
+    text-wrap: balance;
+  }
+
+  /* Description */
+  .ishaya-hero__subheading {
+    font-size: 13px !important;
+    line-height: 1.65 !important;
+    letter-spacing: 0 !important;
+    max-width: 100% !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+
+  /* Button Container */
+  .ishaya-hero__actions {
+    display: flex !important;
+    width: 100% !important;
+    margin-top: 24px !important;
+    gap: 10px !important;
+    justify-content: flex-start !important;
+  }
+
+  /* Shop Button */
+  .ishaya-hero__btn {
+    width: auto !important;
+    max-width: 60% !important;
+    min-height: 46px !important;
+    padding: 12px 22px !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.09em !important;
+    border-radius: 50px !important;
+    line-height: 1.3 !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Button Icon */
+  .ishaya-hero__btn svg {
+    width: 16px !important;
+    height: 16px !important;
+    flex-shrink: 0 !important;
+  }
+}
+
 </style>
 
 <script>

@@ -1,0 +1,131 @@
+{% # theme-check-disable OrphanedSnippet %}
+<!-- ISHAYA Moving Welcome Offer -->
+<div class="ishaya-welcome-strip" role="region" aria-label="First order offer">
+  <a href="{{ routes.all_products_collection_url }}" class="ishaya-welcome-strip__link">
+    <div class="ishaya-welcome-strip__track">
+      {% for i in (1..2) %}
+        <div class="ishaya-welcome-strip__group"{% if i == 2 %} aria-hidden="true"{% endif %}>
+          {% for j in (1..4) %}
+            <span class="ishaya-welcome-strip__item">
+              ✦ FIRST ORDER 10% OFF
+              <strong>USE CODE: WELCOME10</strong>
+              ✦ SHOP NOW
+            </span>
+          {% endfor %}
+        </div>
+      {% endfor %}
+    </div>
+  </a>
+</div>
+
+
+<style>
+/* ISHAYA Premium Moving Offer Bar */
+.ishaya-welcome-strip {
+  position: relative;
+  z-index: 101;
+  display: block;
+  width: 100%;
+  height: 40px;
+  margin: 0;
+  overflow: hidden;
+  background: #101010;
+  color: #ffffff;
+}
+
+.ishaya-welcome-strip__link {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  color: inherit;
+  text-decoration: none;
+}
+
+.ishaya-welcome-strip__track {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  height: 100%;
+  animation: ishayaWelcomeScroll 35s linear infinite;
+}
+
+.ishaya-welcome-strip__group {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: 100%;
+}
+
+.ishaya-welcome-strip__item {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: 100%;
+  padding: 0 28px;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 1.1px;
+}
+
+.ishaya-welcome-strip__item strong {
+  color: #e8c78b;
+  margin: 0 12px;
+  font-weight: 800;
+}
+
+.ishaya-welcome-strip:hover .ishaya-welcome-strip__track {
+  animation-play-state: paused;
+}
+
+@keyframes ishayaWelcomeScroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* Mobile */
+@media (max-width: 749px) {
+  .ishaya-welcome-strip {
+    height: 40px;
+  }
+
+  .ishaya-welcome-strip__item {
+    font-size: 10px;
+    padding: 0 18px;
+    letter-spacing: 0.8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ishaya-welcome-strip__track {
+    animation: none;
+  }
+}
+@media (max-width: 767px) {
+  .ishaya-welcome-strip {
+    height: 40px;
+    min-height: 40px;
+    z-index: 101;
+  }
+
+  .ishaya-welcome-strip__link,
+  .ishaya-welcome-strip__track,
+  .ishaya-welcome-strip__group {
+    height: 100%;
+    align-items: center;
+  }
+
+  .ishaya-welcome-strip__item {
+    font-size: 10px;
+    line-height: 1.2;
+    padding: 0 18px;
+  }
+}
+</style>
